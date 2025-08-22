@@ -1,31 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<url>
-		<loc>https://docs.karmanivero.us/npm-package-template-ts/index.html</loc>
-		<lastmod>2025-08-17T10:37:32.242Z</lastmod>
+		<loc>https://docs.karmanivero.us/rrstack/index.html</loc>
+		<lastmod>2025-08-22T04:26:49.987Z</lastmod>
 	</url>
 	<url>
-		<loc>https://docs.karmanivero.us/npm-package-template-ts/modules.html</loc>
-		<lastmod>2025-08-17T10:37:32.242Z</lastmod>
+		<loc>https://docs.karmanivero.us/rrstack/modules.html</loc>
+		<lastmod>2025-08-22T04:26:49.987Z</lastmod>
 	</url>
 	<url>
-		<loc>https://docs.karmanivero.us/npm-package-template-ts/hierarchy.html</loc>
-		<lastmod>2025-08-17T10:37:32.242Z</lastmod>
+		<loc>https://docs.karmanivero.us/rrstack/hierarchy.html</loc>
+		<lastmod>2025-08-22T04:26:49.987Z</lastmod>
 	</url>
 	<url>
-		<loc>https://docs.karmanivero.us/npm-package-template-ts/documents/CHANGELOG.html</loc>
-		<lastmod>2025-08-17T10:37:32.242Z</lastmod>
+		<loc>https://docs.karmanivero.us/rrstack/types/FooTarget.html</loc>
+		<lastmod>2025-08-22T04:26:49.987Z</lastmod>
 	</url>
 	<url>
-		<loc>https://docs.karmanivero.us/npm-package-template-ts/modules/index.html</loc>
-		<lastmod>2025-08-17T10:37:32.242Z</lastmod>
-	</url>
-	<url>
-		<loc>https://docs.karmanivero.us/npm-package-template-ts/types/index.FooTarget.html</loc>
-		<lastmod>2025-08-17T10:37:32.242Z</lastmod>
-	</url>
-	<url>
-		<loc>https://docs.karmanivero.us/npm-package-template-ts/functions/index.foo.html</loc>
-		<lastmod>2025-08-17T10:37:32.242Z</lastmod>
+		<loc>https://docs.karmanivero.us/rrstack/functions/foo.html</loc>
+		<lastmod>2025-08-22T04:26:49.987Z</lastmod>
 	</url>
 </urlset>

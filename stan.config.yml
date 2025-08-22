@@ -1,0 +1,14 @@
+stanPath: .stan
+includes: []
+excludes:
+  - assets
+  - docs
+  - package-lock.json
+  - '*.local'
+scripts:
+  typecheck: npm run typecheck
+  lint: npm run lint:fix
+  test: npm run test
+  build: npm run stan:build
+  docs: npm run stan:docs
+  knip: npm run knip

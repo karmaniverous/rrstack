@@ -1,4 +1,7 @@
-import { createRequire } from 'node:module';
+/** See <stanPath>/system/stan.project.md for global requirements. */
+import { builtinModules } from 'node:module';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import aliasPlugin, { type Alias } from '@rollup/plugin-alias';
 import commonjsPlugin from '@rollup/plugin-commonjs';
@@ -6,123 +9,83 @@ import jsonPlugin from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import terserPlugin from '@rollup/plugin-terser';
 import typescriptPlugin from '@rollup/plugin-typescript';
-import fs from 'fs-extra';
-import type { InputOptions, OutputOptions, RollupOptions } from 'rollup';
+import type {
+  InputOptions,
+  OutputOptions,
+  Plugin,
+  RollupOptions,
+} from 'rollup';
 import dtsPlugin from 'rollup-plugin-dts';
 
-const require = createRequire(import.meta.url);
-type Package = Record<string, Record<string, string> | undefined>;
-const pkg = require('./package.json') as Package;
+const outputPath = 'dist';
 
-import { packageName } from './src/util/packageName';
+// Path alias @ -> <abs>/src (absolute to avoid module duplication warnings in Rollup)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const srcAbs = path.resolve(__dirname, 'src');
+const aliases: Alias[] = [{ find: '@', replacement: srcAbs }];
+const alias = aliasPlugin({ entries: aliases });
 
-const outputPath = `dist`;
+// Treat Node built-ins and node: specifiers as external.
+const nodeExternals = new Set([
+  ...builtinModules,
+  ...builtinModules.map((m) => `node:${m}`),
+]);
 
-const commonPlugins = [
-  commonjsPlugin(),
-  jsonPlugin(),
-  nodeResolve(),
-  typescriptPlugin(),
+// Runtime deps that must not be bundled (rely on package assets / fallbacks)
+const externalPkgs = new Set<string>([
+  'clipboardy', // requires platform fallback binaries at runtime; bundling breaks resolution
+]);
+
+const makePlugins = (minify: boolean, extras: Plugin[] = []): Plugin[] => {
+  const base: Plugin[] = [
+    alias,
+    nodeResolve({ exportConditions: ['node', 'module', 'default'] }),
+    commonjsPlugin(),
+    jsonPlugin(),
+    typescriptPlugin(),
+    ...extras,
+  ];
+  return minify
+    ? [...base, terserPlugin({ format: { comments: false } })]
+    : base;
+};
+
+const commonInputOptions = (
+  minify: boolean,
+  extras: Plugin[] = [],
+): InputOptions => ({
+  plugins: makePlugins(minify, extras),
+  onwarn(warning, defaultHandler) {
+    defaultHandler(warning);
+  },
+  external: (id) =>
+    nodeExternals.has(id) ||
+    externalPkgs.has(id) ||
+    // also treat deep subpath imports as external (e.g., clipboardy/fallbacks/...)
+    Array.from(externalPkgs).some((p) => id === p || id.startsWith(`${p}/`)),
+});
+
+const outCommon = (dest: string): OutputOptions[] => [
+  { dir: `${dest}/mjs`, format: 'esm', sourcemap: false },
+  { dir: `${dest}/cjs`, format: 'cjs', sourcemap: false },
 ];
 
-const commonAliases: Alias[] = [];
-
-const commonInputOptions: InputOptions = {
+export const buildLibrary = (dest: string): RollupOptions => ({
   input: 'src/index.ts',
-  external: [
-    ...Object.keys((pkg as unknown as Package).dependencies ?? {}),
-    ...Object.keys((pkg as unknown as Package).peerDependencies ?? {}),
-    'tslib',
-  ],
-  plugins: [aliasPlugin({ entries: commonAliases }), ...commonPlugins],
-};
+  output: outCommon(dest),
+  ...commonInputOptions(
+    true,
+  ),
+});
 
-const iifeCommonOutputOptions: OutputOptions = {
-  name: packageName ?? 'unknown',
-};
+export const buildTypes = (dest: string): RollupOptions => ({
+  input: 'src/index.ts',
+  output: [{ dir: `${dest}/types`, format: 'esm' }],
+  plugins: [dtsPlugin()],
+});
 
-const cliCommands = await fs.readdir('src/cli');
-
-const config: RollupOptions[] = [
-  // ESM output.
-  {
-    ...commonInputOptions,
-    output: [
-      {
-        dir: `${outputPath}/mjs`,
-        extend: true,
-        format: 'esm',
-        preserveModules: true,
-      },
-    ],
-  },
-
-  // IIFE output.
-  {
-    ...commonInputOptions,
-    plugins: [
-      aliasPlugin({
-        entries: commonAliases,
-      }),
-      commonPlugins,
-    ],
-    output: [
-      {
-        ...iifeCommonOutputOptions,
-        extend: true,
-        file: `${outputPath}/index.iife.js`,
-        format: 'iife',
-      },
-
-      // Minified IIFE output.
-      {
-        ...iifeCommonOutputOptions,
-        extend: true,
-        file: `${outputPath}/index.iife.min.js`,
-        format: 'iife',
-        plugins: [terserPlugin()],
-      },
-    ],
-  },
-
-  // CommonJS output.
-  {
-    ...commonInputOptions,
-    output: [
-      {
-        dir: `${outputPath}/cjs`,
-        extend: true,
-        format: 'cjs',
-        preserveModules: true,
-      },
-    ],
-  },
-
-  // Type definitions output.
-  {
-    ...commonInputOptions,
-    plugins: [commonInputOptions.plugins, dtsPlugin()],
-    output: [
-      {
-        extend: true,
-        file: `${outputPath}/index.d.ts`,
-        format: 'esm',
-      },
-    ],
-  },
-
-  // CLI output.
-  ...cliCommands.map<RollupOptions>((c) => ({
-    ...commonInputOptions,
-    input: `src/cli/${c}/index.ts`,
-    output: [
-      {
-        dir: `${outputPath}/cli/${c}`,
-        extend: true,
-        format: 'esm',
-      },
-    ],
-  })),
+export default [
+  buildLibrary(outputPath),
+  buildTypes(outputPath),
 ];
-
-export default config;
