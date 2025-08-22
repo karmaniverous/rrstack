@@ -32,6 +32,6 @@
     // [req-4] Test environment globals.
     "types": ["node", "vitest/globals"]
   },
-  "exclude": ["coverage", "dist", "docs", "node_modules"],
+  "exclude": ["coverage", "dist", "docs", "node_modules", ".stan"],
   "include": ["**/*"]
 }

@@ -18,21 +18,19 @@ Tasks:
   - Fix any warnings that mask real problems (see below).
 - Docs warning
   - Current: typedoc warns “CHANGELOG.md did not match any files.”
-  - Options (choose one):
-    • Add a minimal CHANGELOG.md at repo root and include it in projectDocuments (recommended), OR
-    • Remove "projectDocuments": ["./CHANGELOG.md"] from typedoc.json.
+  - Decision: Added minimal CHANGELOG.md at repo root and kept projectDocuments in typedoc.json. [DONE]
 - Knip cleanup
-  - Current: Unused devDependencies: @types/eslint__js, @types/eslint-config-prettier.
-  - Options:
-    • Remove them from devDependencies, OR
-    • Use them explicitly (if they were intended), then re-run knip.
+  - Current: Unused devDependencies: @types/eslint__js, @types/eslint-config-prettier, @types/fs-extra, fs-extra.
+  - Decision: Removed unused devDependencies and deleted unused file src/util/packageName.ts. [DONE]
 - CI/workflows sanity
   - Confirm GitHub workflow(s) are still valid post-integration (.github/workflows/sync.yml uses a reusable workflow; ensure secrets configured).
 - Rollup/TypeScript baseline
   - Confirm rollup builds without warnings (beyond the known incremental plugin note).
   - Ensure src/cli dynamic enumeration (readdir('src/cli')) is valid; if CLI is optional, guard against missing folder (not urgent since folder exists).
+  - Decision: Excluded ".stan" from tsconfig to prevent typechecking generated artifacts. [DONE]
 - ESLint/Prettier
   - Run npm run lint and ensure formatting/linting remains deterministic; no unintended changes.
+  - Decision: Ignored ".stan/**/*" in ESLint flat config to avoid linting generated artifacts. [DONE]
 - .stan guardrails
   - Verify stan.config.yml excludes and outputs are correct.
   - Ensure .stan paths remain committed per STAN policy (system docs and future todo/refactor entries).

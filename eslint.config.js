@@ -18,6 +18,7 @@ export default tseslint.config(
       'dist/**/*',
       'docs/**/*',
       'node_modules/**/*',
+      '.stan/**/*',
     ],
   },
   eslint.configs.recommended,
