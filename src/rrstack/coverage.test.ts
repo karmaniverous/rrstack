@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import { Frequency } from 'rrule';
+import { describe, expect, it } from 'vitest';
+
 import { compileRule } from './compile';
 import { computeOccurrenceEndMs, ruleCoversInstant } from './coverage';
 

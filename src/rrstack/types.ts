@@ -5,7 +5,7 @@
  * - Keep module small and testable (SRP).
  */
 
-import type { Options as RRuleOptions, Frequency } from 'rrule';
+import type { Frequency,Options as RRuleOptions } from 'rrule';
 
 export const EPOCH_MIN_MS = 0;
 export const EPOCH_MAX_MS = 2_147_483_647_000; // 2038-01-19T03:14:07Z
@@ -49,4 +49,4 @@ export interface RRStackJsonV1 {
 }
 
 // Re-export useful rrule types so consumers can import from package API.
-export type { Options as RRuleOptions, Frequency } from 'rrule';
+export type { Frequency,Options as RRuleOptions } from 'rrule';

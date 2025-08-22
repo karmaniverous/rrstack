@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
 import { Frequency } from 'rrule';
+import { describe, expect, it } from 'vitest';
+
 import { compileRule } from './compile';
-import { getSegments, classifyRange } from './sweep';
+import { classifyRange,getSegments } from './sweep';
 
 describe('sweep', () => {
   it('yields cascaded segments with blackout override', () => {

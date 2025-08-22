@@ -6,10 +6,11 @@
  * - Conservative horizon for enumeration (calendar units → 32/366 days).
  */
 
-import { Duration } from 'luxon';
-import { EPOCH_MAX_MS, EPOCH_MIN_MS, type instantStatus, type rangeStatus } from './types';
+import type { Duration } from 'luxon';
+
 import type { CompiledRule } from './compile';
 import { computeOccurrenceEndMs, enumerateStarts, ruleCoversInstant } from './coverage';
+import { EPOCH_MAX_MS, EPOCH_MIN_MS, type instantStatus, type rangeStatus } from './types';
 
 type Edge = { t: number; type: 'start' | 'end'; ruleIndex: number };
 

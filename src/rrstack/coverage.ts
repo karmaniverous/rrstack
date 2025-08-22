@@ -6,6 +6,7 @@
  */
 
 import { DateTime } from 'luxon';
+
 import type { CompiledRule } from './compile';
 
 export const computeOccurrenceEndMs = (

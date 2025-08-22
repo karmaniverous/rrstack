@@ -6,14 +6,15 @@
  * - Keep implementation small/testable; no side effects.
  */
 
-import { RRule, type Options as RRuleOptions } from 'rrule';
 import { Duration } from 'luxon';
+import { type Options as RRuleOptions,RRule } from 'rrule';
+
 import {
   EPOCH_MAX_MS,
   EPOCH_MIN_MS,
+  type instantStatus,
   type RuleJson,
   type RuleOptionsJson,
-  type instantStatus,
 } from './types';
 
 export interface CompiledRule {

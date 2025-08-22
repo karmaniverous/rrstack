@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { EPOCH_MIN_MS, EPOCH_MAX_MS } from './types';
+
+import { EPOCH_MAX_MS,EPOCH_MIN_MS } from './types';
 
 describe('types', () => {
   it('exports domain constants', () => {

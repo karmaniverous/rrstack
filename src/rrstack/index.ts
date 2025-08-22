@@ -6,17 +6,17 @@
  * - Pure library surface; no side effects (no prints/exits).
  */
 
-import { compileRule, type CompiledRule } from './compile';
+import { type CompiledRule,compileRule } from './compile';
+import { ruleCoversInstant } from './coverage';
+import { classifyRange, getEffectiveBounds, getSegments as sweepSegments } from './sweep';
 import {
   EPOCH_MAX_MS,
   EPOCH_MIN_MS,
-  type RRStackJsonV1,
-  type RuleJson,
   type instantStatus,
   type rangeStatus,
+  type RRStackJsonV1,
+  type RuleJson,
 } from './types';
-import { classifyRange, getEffectiveBounds, getSegments as sweepSegments } from './sweep';
-import { ruleCoversInstant } from './coverage';
 
 export class RRStack {
   private timezone: string;

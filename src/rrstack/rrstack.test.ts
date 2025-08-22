@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import { Frequency } from 'rrule';
+import { describe, expect, it } from 'vitest';
+
 import { RRStack } from './';
 
 describe('RRStack', () => {
