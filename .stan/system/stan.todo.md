@@ -16,6 +16,7 @@ Tasks:
 - Scripts green across the board
   - Verify: npm run typecheck, npm run lint, npm run test, npm run build, npm run docs
   - Fix any warnings that mask real problems (see below).
+  - Status: Verified from attached outputs (typecheck/lint/test/build/docs/knip all clean). [DONE]
 - Docs warning
   - Current: typedoc warns “CHANGELOG.md did not match any files.”
   - Decision: Added minimal CHANGELOG.md at repo root and kept projectDocuments in typedoc.json. [DONE]
@@ -24,18 +25,22 @@ Tasks:
   - Decision: Removed unused devDependencies and deleted unused file src/util/packageName.ts. [DONE]
 - CI/workflows sanity
   - Confirm GitHub workflow(s) are still valid post-integration (.github/workflows/sync.yml uses a reusable workflow; ensure secrets configured).
+  - Status: Manual validation pending in GitHub; repo-side config unchanged. [PENDING]
 - Rollup/TypeScript baseline
   - Confirm rollup builds without warnings (beyond the known incremental plugin note).
   - Ensure src/cli dynamic enumeration (readdir('src/cli')) is valid; if CLI is optional, guard against missing folder (not urgent since folder exists).
   - Decision: Excluded ".stan" from tsconfig to prevent typechecking generated artifacts. [DONE]
+  - Status: Build successful; only known @rollup/plugin-typescript incremental warning present. [DONE]
 - ESLint/Prettier
   - Run npm run lint and ensure formatting/linting remains deterministic; no unintended changes.
   - Decision: Ignored ".stan/**/*" in ESLint flat config to avoid linting generated artifacts. [DONE]
 - .stan guardrails
   - Verify stan.config.yml excludes and outputs are correct.
   - Ensure .stan paths remain committed per STAN policy (system docs and future todo/refactor entries).
+  - Status: Verified. [DONE]
 - Freeze baseline
   - After the above, commit a “stabilize template” change so future diffs isolate RRStack work.
+  - Status: Captured here; subsequent work proceeds under RRStack. [DONE]
 
 --------------------------------------------------------------------------------
 
@@ -228,7 +233,6 @@ Segments over a range:
     • If e.t > prevT: emit segment [prevT, e.t) with prevStatus.
     • Apply edge: toggle covering[e.ruleIndex] according to type.
     • Recompute status: iterate covering from 0..n-1; the last true wins; if none, 'blackout'.
-    • Set prevT = e.t; prevStatus = recomputed.
   - End at to (a sentinel edge ensures closure).
 
 Effective bounds:
@@ -244,31 +248,12 @@ Effective bounds:
 
 5) Module split (services-first; keep files short)
 
-- src/rrstack/types.ts
-  - Export public types: instantStatus, rangeStatus, RuleOptionsJson, RuleJson, RRStackJsonV1.
-  - Re-export or import rrule types (Frequency, Options, WeekdayStr, etc.). No re-declared token unions.
-- src/rrstack/compile.ts
-  - compileRule(rule: RuleJson, timezone: string): CompiledRule
-  - toRRuleOptions(options: RuleOptionsJson, timezone: string): RRuleOptions
-  - Validations (bounds clamped to domain; duration valid).
-- src/rrstack/coverage.ts
-  - ruleCoversInstant(compiledRule, tMs, timezone): boolean
-  - computeOccurrenceEndMs(compiledRule, startMs, timezone): number
-  - enumerateStarts(rule, fromMs, toMs, horizonMs): number[]
-- src/rrstack/sweep.ts
-  - getSegments(compiledRules[], fromMs, toMs, timezone): Iterable<{ start, end, status }>
-  - classifyRange(...): rangeStatus (built on getSegments)
-  - getEffectiveBounds(...): { start?, end?, empty }
-- src/rrstack/index.ts
-  - RRStack class façade: constructor, serialization, ordering (swapRules/ruleUp/ruleDown/ruleToTop/ruleToBottom), isActiveAt, getSegments, classifyRange, getEffectiveBounds.
-- Tests (co-located):
-  - types.test.ts (light)
-  - compile.test.ts
-  - coverage.test.ts (covers DST)
-  - sweep.test.ts
-  - rrstack.test.ts (integration; example scenario; bounds; ordering).
-
-All modules targeted to stay well under ~300 LOC; split above enforces SRP and testability.
+- src/rrstack/types.ts — added
+- src/rrstack/compile.ts — added
+- src/rrstack/coverage.ts — added
+- src/rrstack/sweep.ts — added
+- src/rrstack/index.ts — added façade
+- Tests co-located for each module — added
 
 --------------------------------------------------------------------------------
 
@@ -285,49 +270,36 @@ All modules targeted to stay well under ~300 LOC; split above enforces SRP and t
 
 --------------------------------------------------------------------------------
 
-7) Tests (outline)
+7) Tests (status)
 
-- Timezone/DST correctness:
-  - Zone with DST (America/Chicago). Verify 5–6am windows across DST transitions remain consistent via Luxon addition.
-- Rule cascade semantics:
-  - Active then blackout overlap → blackout segments prevail.
-  - Blackout then active overlap → re-activated segments prevail.
-  - Non-overlapping leave baseline intact.
-- Bounds:
-  - Open-start/End rules produce undefined side only if activity touches domain edge and remains active at that instant despite later rules.
-  - Finite starts/ends respected; clamped correctly.
-- Range classification:
-  - Entirely active → 'active'
-  - Entirely blackout → 'blackout'
-  - Mixed → 'partial'
-- Example scenario (3 rules) with explicit dates to cover July behavior and 20th re-activation.
+- Added smoke/unit tests:
+  - types.test.ts (constants)
+  - compile.test.ts (rule compilation + enumeration)
+  - coverage.test.ts (window coverage)
+  - sweep.test.ts (cascade semantics)
+  - rrstack.test.ts (façade + reordering)
+- Follow-ups: DST transition tests and the 3-rule example scenario (America/Chicago).
 
 --------------------------------------------------------------------------------
 
 8) Long-file scan (source files > ~300 LOC)
 
-Scanned current src/*:
-- src/foo.ts (~30 LOC)
-- src/index.ts (<20 LOC)
-- src/cli/mycli/*.ts (each <50 LOC)
-- No source files exceed ~300 LOC. Planned modules will be kept small by design.
+- New modules are all well under 300 LOC.
+- No existing module exceeds ~300 LOC.
 
 --------------------------------------------------------------------------------
 
 9) Next steps (implementation plan)
 
-- First, complete “0) Top Priority — Stabilize template baseline”.
-- Then proceed:
-  - Add dependencies: rrule, luxon (and zod optionally).
-  - Implement src/rrstack/types.ts (public types).
-  - Implement src/rrstack/compile.ts with tests.
-  - Implement src/rrstack/coverage.ts with tests.
-  - Implement src/rrstack/sweep.ts (segments, classifyRange, bounds) with tests.
-  - Implement src/rrstack/index.ts (RRStack class) with tests.
-  - Provide example tests for the 3-rule scenario and DST edges.
-  - Wire exports in src/index.ts.
+- Add the 3-rule example scenario test (America/Chicago) to validate cascade and DST.
+- Add DST edge tests (spring forward/fall back) with Luxon zone math.
+- Optional: integrate rrule TZ provider if required for stricter TZ handling across all environments.
+- Consider performance guardrails (maxEdges/maxOccurrences) for pathological rules.
 
-Notes:
-- All internal property names are camelCase (starts, ends).
-- Range end is exclusive across methods.
-- getSegments defaults (from,to) to domain edges but callers should pass finite windows in practice.
+--------------------------------------------------------------------------------
+
+Progress Update (2025-08-22 UTC)
+
+- Baseline stabilized; scripts green across typecheck/lint/test/build/docs/knip.
+- Introduced RRStack skeleton (types, compile, coverage, sweep, façade) with tests.
+- Next: add DST transition tests and 3-rule scenario (America/Chicago).
