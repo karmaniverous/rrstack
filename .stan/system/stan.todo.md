@@ -1,3 +1,61 @@
+# APPLY THIS DIFF!!
+
+diff --git a/./.stan/system/stan.todo.md b/./.stan/system/stan.todo.md
+--- a/./.stan/system/stan.todo.md
++++ b/./.stan/system/stan.todo.md
+@@ -100,17 +100,24 @@
+ 
+ 5) Module split (services-first; keep files short)
+ 
+-- src/rrstack/types.ts — added
+-- src/rrstack/compile.ts — added
+-- src/rrstack/coverage.ts — added
+-- src/rrstack/sweep.ts — added
+-- src/rrstack/index.ts — added façade
+-- Tests co-located for each module — added
++- src/rrstack/types.ts — RuleOptionsJson derives from RRuleOptions (omit
++  dtstart/until/tzid); all props optional except freq; adds starts/ends (ms).
++- src/rrstack/compile.ts — uses radash shake to drop undefineds and avoid
++  verbose manual copies; duration validation simplified (positive ms).
++- src/rrstack/coverage.ts — unchanged interface.
++- src/rrstack/sweep.ts — fixed Duration inspection via toObject(); horizon
++  calculation remains conservative.
++- src/rrstack/RRStack.ts — moved class from src/rrstack/index.ts into its own
++  file (SRP).
++- src/rrstack/index.ts — barrel export only.
+ 
+ --------------------------------------------------------------------------------
+ 
+ 6) Validation & constraints
+ 
+-- Domain constants:
++- Domain constants remain:
+   - EPOCH_MIN_MS = 0
+   - EPOCH_MAX_MS = 2_147_483_647_000
+ - Token types:
+   - Derive from rrule package (Frequency, Options, WeekdayStr, Weekday).
+ - Performance guardrails (initial):
+   - Limit per-call enumeration by horizon; later add optional maxEdges/maxOccurrences if needed.
+ - No CLI work; library only.
++- Vitest config updated to exclude/watchExclude .rollup.cache to prevent hangs
++  and duplicate discovery.
+ 
+ --------------------------------------------------------------------------------
+ 
+ 7) Tests (status)
+ 
+-- Added smoke/unit tests:
+-  - types.test.ts (constants)
+-  - compile.test.ts (rule compilation + enumeration)
+-  - coverage.test.ts (window coverage)
+-  - sweep.test.ts (cascade semantics)
+-  - rrstack.test.ts (façade + reordering)
++- Added smoke/unit tests previously:
++  - types.test.ts, compile.test.ts, coverage.test.ts, sweep.test.ts, rrstack.test.ts
+ - Follow-ups: DST transition tests and the 3-rule example scenario (America/Chicago).
++- Vitest now excludes .rollup.cache to prevent hangs/duplicates.
+
+
 # RRStack — Requirements and Development Plan
 
 Last updated: 2025-08-22 (UTC)

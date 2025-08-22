@@ -6,7 +6,7 @@
  * - Conservative horizon for enumeration (calendar units → 32/366 days).
  */
 
-import type { Duration } from 'luxon';
+import { Duration } from 'luxon';
 
 import type { CompiledRule } from './compile';
 import { computeOccurrenceEndMs, enumerateStarts, ruleCoversInstant } from './coverage';
@@ -15,7 +15,7 @@ import { EPOCH_MAX_MS, EPOCH_MIN_MS, type instantStatus, type rangeStatus } from
 type Edge = { t: number; type: 'start' | 'end'; ruleIndex: number };
 
 const horizonMsFor = (dur: Duration): number => {
-  const v = dur.values;
+  const v = dur.toObject();
   if ((v.years ?? 0) > 0) return 366 * 24 * 60 * 60 * 1000; // 366 days
   if ((v.months ?? 0) > 0) return 32 * 24 * 60 * 60 * 1000; // 32 days
   // For other units, safe millisecond conversion

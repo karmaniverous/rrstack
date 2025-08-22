@@ -6,15 +6,16 @@
  * - Keep implementation small/testable; no side effects.
  */
 
+import { shake } from 'radash';
 import { Duration } from 'luxon';
-import { type Options as RRuleOptions,RRule } from 'rrule';
+import { RRule, type Options as RRuleOptions } from 'rrule';
 
 import {
   EPOCH_MAX_MS,
   EPOCH_MIN_MS,
-  type instantStatus,
   type RuleJson,
   type RuleOptionsJson,
+  type instantStatus,
 } from './types';
 
 export interface CompiledRule {
@@ -35,29 +36,16 @@ export const toRRuleOptions = (
   const dtstartMs = Math.max(options.starts ?? EPOCH_MIN_MS, EPOCH_MIN_MS);
   const untilMs = Math.min(options.ends ?? EPOCH_MAX_MS, EPOCH_MAX_MS);
 
-  const rr: RRuleOptions = {
-    // rrule recurrence options (pass-through where provided)
-    freq: options.freq,
-    interval: options.interval,
-    wkst: options.wkst,
-    count: options.count,
-    bysetpos: options.bysetpos,
-    bymonth: options.bymonth,
-    bymonthday: options.bymonthday,
-    byyearday: options.byyearday,
-    byweekno: options.byweekno,
-    byweekday: options.byweekday,
-    byhour: options.byhour,
-    byminute: options.byminute,
-    bysecond: options.bysecond,
-
-    // time boundaries
+  // Exclude JSON-only fields, keep rrule-native ones, and drop undefined entries.
+  const { starts: _s, ends: _e, ...rrLike } = options as Record<string, unknown>;
+  const partial: Partial<RRuleOptions> = {
+    ...(rrLike as Partial<RRuleOptions>),
     tzid: timezone,
     dtstart: new Date(dtstartMs),
     until: new Date(untilMs),
   };
 
-  return rr;
+  return shake(partial) as RRuleOptions;
 };
 
 export const compileRule = (
@@ -68,14 +56,8 @@ export const compileRule = (
   if (!duration.isValid) {
     throw new Error(`Invalid ISO duration: ${rule.duration}`);
   }
-  // Reject non-positive durations; for calendar units, a zero-ish check uses millisecond part and value flags.
-  const hasCalUnits =
-    (duration.years ?? 0) > 0 ||
-    (duration.months ?? 0) > 0 ||
-    (duration.weeks ?? 0) > 0 ||
-    (duration.days ?? 0) > 0;
-  const msOnly = duration.as('milliseconds');
-  if (!hasCalUnits && (msOnly === 0 || !isFinite(msOnly) || msOnly < 0)) {
+  const ms = duration.as('milliseconds');
+  if (!Number.isFinite(ms) || ms <= 0) {
     throw new Error(`Duration must be positive: ${rule.duration}`);
   }
 

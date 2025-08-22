@@ -181,6 +181,26 @@ Patch generation guidelines (compatible with “stan patch”)
 - Renames: prefer delete+add (two hunks) unless a simple `diff --git` rename applies cleanly.
 - Binary: do not include binary patches.
 
+Artifact‑aware file mode selection (REQUIRED)
+
+- Decide “new vs modify vs delete” based on the newest attached archive(s):
+  - If a path does NOT exist in the latest archive, treat it as a NEW file and use `/dev/null` + `new file mode`.
+  - If a path exists in the archive, emit a MODIFY patch (no `/dev/null`).
+  - Emit DELETE patches only when the path exists in the archive; otherwise do not attempt deletions.
+  - This prevents “does not exist in index” failures when applying patches.
+
+Patch hygiene and separation (REQUIRED)
+
+- The patch fence MUST contain only unified‑diff bytes (from `diff --git` through the last hunk).
+- Do not append explanations, commit messages, or any prose in the same fence.
+- Present the commit message in a separate code fence, never inside the patch fence.
+- Ensure the patch ends with a final newline and contains no markdown fences (```), banners, or extraneous lines.
+- Before emitting, self‑check:
+  1) patch starts with `diff --git`,
+  2) no lines after the last hunk header/body other than a trailing newline,
+  3) hunks and counts are consistent,
+  4) paths consistently use `a/<path>` and `b/<path>` (p1).
+
 Hunk hygiene (jsdiff‑compatible; REQUIRED)
 
 - Every hunk body line MUST begin with one of:
