@@ -6,6 +6,41 @@ This document captures requirements, architecture, contracts, and the implementa
 
 --------------------------------------------------------------------------------
 
+0) Top Priority — Stabilize template baseline (pre-implementation)
+
+Goals:
+- Ensure the template is green and reproducible before adding new code.
+- Resolve current warnings and cleanup items introduced during STAN integration.
+
+Tasks:
+- Scripts green across the board
+  - Verify: npm run typecheck, npm run lint, npm run test, npm run build, npm run docs
+  - Fix any warnings that mask real problems (see below).
+- Docs warning
+  - Current: typedoc warns “CHANGELOG.md did not match any files.”
+  - Options (choose one):
+    • Add a minimal CHANGELOG.md at repo root and include it in projectDocuments (recommended), OR
+    • Remove "projectDocuments": ["./CHANGELOG.md"] from typedoc.json.
+- Knip cleanup
+  - Current: Unused devDependencies: @types/eslint__js, @types/eslint-config-prettier.
+  - Options:
+    • Remove them from devDependencies, OR
+    • Use them explicitly (if they were intended), then re-run knip.
+- CI/workflows sanity
+  - Confirm GitHub workflow(s) are still valid post-integration (.github/workflows/sync.yml uses a reusable workflow; ensure secrets configured).
+- Rollup/TypeScript baseline
+  - Confirm rollup builds without warnings (beyond the known incremental plugin note).
+  - Ensure src/cli dynamic enumeration (readdir('src/cli')) is valid; if CLI is optional, guard against missing folder (not urgent since folder exists).
+- ESLint/Prettier
+  - Run npm run lint and ensure formatting/linting remains deterministic; no unintended changes.
+- .stan guardrails
+  - Verify stan.config.yml excludes and outputs are correct.
+  - Ensure .stan paths remain committed per STAN policy (system docs and future todo/refactor entries).
+- Freeze baseline
+  - After the above, commit a “stabilize template” change so future diffs isolate RRStack work.
+
+--------------------------------------------------------------------------------
+
 1) Requirements (confirmed)
 
 - Purpose: Manage a stack (ordered set) of recurrence rules (rrule) to determine when an “offer” is active vs blacked out.
@@ -283,14 +318,16 @@ Scanned current src/*:
 
 9) Next steps (implementation plan)
 
-- Add dependencies: rrule, luxon (and zod optionally).
-- Implement src/rrstack/types.ts (public types).
-- Implement src/rrstack/compile.ts with tests.
-- Implement src/rrstack/coverage.ts with tests.
-- Implement src/rrstack/sweep.ts (segments, classifyRange, bounds) with tests.
-- Implement src/rrstack/index.ts (RRStack class) with tests.
-- Provide example tests for the 3-rule scenario and DST edges.
-- Wire exports in src/index.ts.
+- First, complete “0) Top Priority — Stabilize template baseline”.
+- Then proceed:
+  - Add dependencies: rrule, luxon (and zod optionally).
+  - Implement src/rrstack/types.ts (public types).
+  - Implement src/rrstack/compile.ts with tests.
+  - Implement src/rrstack/coverage.ts with tests.
+  - Implement src/rrstack/sweep.ts (segments, classifyRange, bounds) with tests.
+  - Implement src/rrstack/index.ts (RRStack class) with tests.
+  - Provide example tests for the 3-rule scenario and DST edges.
+  - Wire exports in src/index.ts.
 
 Notes:
 - All internal property names are camelCase (starts, ends).
