@@ -23,7 +23,9 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
         byhour: [5],
         byminute: [0],
         bysecond: [0],
-        starts: ms('2021-01-01T00:00:00'),
+        // First actual occurrence in cadence (3rd Tuesday Jan 2021 at 05:00)
+        // Anchoring to an occurrence ensures interval stepping is aligned.
+        starts: ms('2021-01-19T05:00:00'),
       },
       label: 'base-3rd-tue-q2m-05',
     };

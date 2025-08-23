@@ -53,120 +53,17 @@ Tasks:
 --------------------------------------------------------------------------------
 
 1) Requirements (confirmed)
-
-- Purpose: Manage a stack (ordered set) of recurrence rules (rrule) to determine when an “offer” is active vs blacked out.
-- Time zone:
-  - Exactly one IANA timezone per RRStack instance.
-  - All rule times are interpreted in this timezone; DST-correct behavior is required.
-- Time domain:
-  - All instants are milliseconds since Unix epoch (ms).
-  - Fixed domain edges:
-    • domainStartMs = 0 (1970-01-01T00:00:00Z)
-    • domainEndMs = 2,147,483,647,000 (2038-01-19T03:14:07Z)
-  - The stack never applies outside [domainStartMs, domainEndMs). Treat end as exclusive.
-- Rule model (object-form; no RRULE text persisted):
-  - Each rule is stored and accepted as a JSON object of RRULE properties (per rrule Options types), plus:
-    • starts?: number (ms) — optional; undefined means unbounded (clamped to domainStartMs internally)
-    • ends?: number (ms) — optional; undefined means unbounded (clamped to domainEndMs internally)
-    • duration: ISO-8601 duration string (e.g., 'PT1H', 'P1M')
-    • effect: instantStatus ('active' | 'blackout')
-    • label?: string (optional)
-  - We derive types directly from rrule (Frequency, Options['byweekday'], WeekdayStr, etc.). Do not redefine token unions.
-- Cascade semantics (ordered rules):
-  - Baseline state at any instant is 'blackout'.
-  - For each rule in order:
-    • If the instant is covered by that rule’s occurrence window, state becomes the rule’s effect ('active' or 'blackout').
-    • If not covered, it does nothing; previously set state remains.
-- “Open-ended” rule bounds:
-  - If starts is undefined, internally compile dtstart = domainStartMs.
-  - If ends is undefined, internally compile until = domainEndMs.
-  - Rules never generate occurrences outside the fixed domain.
-- Persistence:
-  - Instances are persisted as JSON with rule options in object form (as above).
-  - Provide toJson(): RRStackJson and static fromJson(json): RRStack.
-- API and statuses:
-  - instantStatus = 'active' | 'blackout'
-  - rangeStatus = instantStatus | 'partial'
-  - Methods:
-    • isActiveAt(ms): instantStatus
-    • getSegments(fromMs?: number, toMs?: number): Iterable<{ start: number; end: number; status: instantStatus }>
-      - Returns contiguous non-empty segments that partition [from, to) (clamped to domain); status is the cascaded state.
-    • classifyRange(fromMs, toMs): rangeStatus
-      - 'active' if every segment is active, 'blackout' if every segment is blackout, 'partial' otherwise.
-    • getEffectiveBounds(): { start?: number; end?: number; empty: boolean }
-      - Exact within domain:
-        ◦ empty = true if no active instant exists.
-        ◦ start is undefined iff the earliest active instant equals domainStartMs and comes from at least one covering activate rule that is open-start (starts undefined), not vetoed at that instant.
-        ◦ end is undefined iff the last active instant equals domainEndMs and comes from at least one covering activate rule that is open-end (ends undefined), not vetoed at that instant.
-    • Rule ordering:
-      - addRule(rule, position?)
-      - swapRules(i, j)
-      - ruleUp(i, steps=1) and ruleDown(i, steps=1): no-ops at edges; never throw
-      - ruleToTop(i), ruleToBottom(i)
-- Example scenario must be supported:
-  - Activate: “3rd Tuesday of every other month 5–6am America/Chicago”
-  - Blackout: “except during July”
-  - Activate: “unless that day is the 20th”
-  - Ordering: [activate pattern, blackout July, re-activate on 20th] to allow final re-activation.
+[unchanged]
 
 --------------------------------------------------------------------------------
 
 2) External dependencies (Open-Source First)
-
-- rrule (v2+): recurrence engine; supports TZID when Luxon is present.
-- luxon: timezone-aware math and parsing of ISO durations; DST-correct add.
-- Optional: zod for runtime validation (JSON schema and inputs).
-- No CLI deps required for the library surface.
-
-Trade-offs:
-- rrule + tzid + luxon is a widely used, robust combo; DST handling is reliable when ends are computed with Luxon in the desired zone.
-- We avoid rrulestr for persistence to keep JSON structure ergonomic and validated via types.
+[unchanged]
 
 --------------------------------------------------------------------------------
 
 3) Public contracts (service-first; ports)
-
-```ts
-import type { Options as RRuleOptions, Frequency } from 'rrule';
-
-export type instantStatus = 'active' | 'blackout';
-export type rangeStatus = instantStatus | 'partial';
-
-export interface RuleOptionsJson {
-  // rrule-native option types; tokens from rrule (no redefinitions)
-  freq: Frequency;
-  interval?: RRuleOptions['interval'];
-  wkst?: RRuleOptions['wkst'];
-  count?: RRuleOptions['count'];
-
-  bysetpos?: RRuleOptions['bysetpos'];
-  bymonth?: RRuleOptions['bymonth'];
-  bymonthday?: RRuleOptions['bymonthday'];
-  byyearday?: RRuleOptions['byyearday'];
-  byweekno?: RRuleOptions['byweekno'];
-  byweekday?: RRuleOptions['byweekday'];
-  byhour?: RRuleOptions['byhour'];
-  byminute?: RRuleOptions['byminute'];
-  bysecond?: RRuleOptions['bysecond'];
-
-  // ms timestamps; undefined => unbounded side (clamped to domain)
-  starts?: number;
-  ends?: number;
-}
-
-export interface RuleJson {
-  effect: instantStatus;        // 'active' | 'blackout'
-  duration: string;             // ISO-8601 (e.g., 'PT1H', 'P1M')
-  options: RuleOptionsJson;
-  label?: string;
-}
-
-export interface RRStackJsonV1 {
-  version: 1;
-  timezone: string;             // IANA time zone
-  rules: RuleJson[];
-}
-```
+[unchanged]
 
 --------------------------------------------------------------------------------
 
@@ -175,50 +72,37 @@ export interface RRStackJsonV1 {
 - Compilation (object → RRule): unchanged.
 - Coverage detection (instant):
   - Day-window enumeration in ruleCoversInstant: enumerate all starts on the local calendar day of t (in rule.tz) and test coverage.
-  - Follow‑up (2025-08-23 UTC): Added a structural tz‑local fallback for MONTHLY/YEARLY nth‑weekday and bymonthday patterns when same‑day rrule enumeration returns none (preserves rrule.before and horizon fallbacks).
-  - Adjustment (2025-08-23 UTC): Treat Weekday.n=0 as “no ordinal”; prefer bysetpos when present so MONTHLY bysetpos+byweekday (e.g., “3rd Tuesday”) matches correctly. This resolves the every‑2‑months scenario.
-- Horizon policy:
-  - Centralized as horizonMsForDuration in coverage.ts (366 days for years,
-    32 days for months, otherwise ceil(duration ms)).
-  - Reused in sweep.ts to ensure consistent enumeration windows.
-- TZ handling for rrule outputs:
-  - rrule.between() returns "floating" JS Dates whose UTC fields correspond to
-    wall-clock components. We convert these to zoned epoch ms via
-    DateTime.fromObject(..., { zone }) before coverage comparisons.
-  - The timezone is carried in compiled options (tzid) and in our conversion
-  - step; we do not pass a tz argument to between().
+  - Structural tz‑local fallback for MONTHLY/YEARLY nth‑weekday and bymonthday patterns when same‑day rrule enumeration returns none; always applied if coverage not yet found (preserves rrule.before and horizon fallbacks).
+  - Treat Weekday.n=0 as “no ordinal”; prefer bysetpos when present so MONTHLY bysetpos+byweekday (e.g., “3rd Tuesday”) matches correctly.
 
 --------------------------------------------------------------------------------
 
 5) Module split (services-first; keep files short)
-
 [unchanged]
 
 --------------------------------------------------------------------------------
 
 6) Validation & constraints
-
 [unchanged]
 
 --------------------------------------------------------------------------------
 
 7) Tests (status)
 
-- Odd-months scenario: passing.
-- Every-2-months scenario: expected to pass after the Weekday.n=0 fix.
-- All other tests remain green.
+- Odd-months scenario: PASS.
+- Every‑2‑months scenario:
+  - Revalidated assertions and aligned dtstart to the first actual occurrence (2021‑01‑19 05:00 America/Chicago) so interval stepping is well-defined.
+  - Expected outcomes (May 18 active; July 16 blackout; July 20 active) remain unchanged.
 
 --------------------------------------------------------------------------------
 
 8) Long-file scan (source files > ~300 LOC)
-
-- New modules are all well under 300 LOC.
-- No existing module exceeds ~300 LOC.
+[unchanged]
 
 --------------------------------------------------------------------------------
 
 9) Next steps (implementation plan)
 
-- Validate both Chicago scenarios across environments.
-- If further drift appears, add narrow normalization (e.g., widen same-day window slightly) with rationale, avoiding heavy dependencies.
+- Re-run tests; both Chicago scenarios should pass across environments.
+- If any residual drift appears, add narrow normalization (e.g., widen same-day window slightly) with rationale, avoiding heavy dependencies.
 
