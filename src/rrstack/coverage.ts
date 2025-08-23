@@ -85,6 +85,30 @@ const enumerationHorizonMs = (rule: CompiledRule): number => {
 };
 
 export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
+  // 0) Day-window enumeration (robust for nth-weekday monthly/yearly patterns).
+  // Enumerate all starts occurring on the local calendar day of t (in rule.tz),
+  // then test coverage against t.
+  {
+    const local = DateTime.fromMillis(tMs, { zone: rule.tz });
+    const dayStartWall = rruleDatetime(local.year, local.month, local.day, 0, 0, 0);
+    const nextDay = local.plus({ days: 1 });
+    const dayEndWallExclusive = rruleDatetime(
+      nextDay.year,
+      nextDay.month,
+      nextDay.day,
+      0,
+      0,
+      0,
+    );
+    const dayStarts = rule.rrule.between(dayStartWall, dayEndWallExclusive, true);
+    for (const sd of dayStarts) {
+      const candidates = [sd.getTime(), floatingDateToZonedEpochMs(sd, rule.tz)];
+      for (const startMs of candidates) {
+        const endMs = computeOccurrenceEndMs(rule, startMs);
+        if (startMs <= tMs && tMs < endMs) return true;
+      }
+    }
+  }
   // 1) Robust coverage via rrule.before at wall-clock t.
   const wallT = epochToWallDate(tMs, rule.tz);
   const d = rule.rrule.before(wallT, true);
