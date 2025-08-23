@@ -71,7 +71,10 @@ const floatingDateToZonedEpochMs = (d: Date, tz: string): number => {
  */
 const enumerationHorizonMs = (rule: CompiledRule): number => {
   const freq = rule.options.freq;
-  const interval = Math.max(1, rule.options.interval ?? 1);
+  const interval =
+    typeof rule.options.interval === 'number' && rule.options.interval > 0
+      ? rule.options.interval
+      : 1;
   const day = 24 * 60 * 60 * 1000;
 
   if (freq === Frequency.YEARLY) return (366 * interval + 1) * day;
