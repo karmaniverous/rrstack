@@ -1,5 +1,5 @@
 /// <reference types="vitest" />
-import { configDefaults,defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
@@ -10,6 +10,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
+      exclude: [
+        '**/rollup.config.*',
+        '**/stan.rollup.config.*',
+        '**/*.config.*',
+        '**/rollup.config-*.mjs',
+      ],
     },
   },
 });

@@ -38,7 +38,7 @@ export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
   const horizon = horizonMsForDuration(rule.duration);
   const windowStart = new Date(tMs - horizon);
   const windowEnd = new Date(tMs);
-  const starts = rule.rrule.between(windowStart, windowEnd, true);
+  const starts = rule.rrule.between(windowStart, windowEnd, true, rule.tz);
 
   for (const d of starts) {
     const startMs = d.getTime();
@@ -60,6 +60,6 @@ export const enumerateStarts = (
 ): number[] => {
   const windowStart = new Date(fromMs - Math.max(0, horizonMs));
   const windowEnd = new Date(toMs);
-  const starts = rule.rrule.between(windowStart, windowEnd, true);
+  const starts = rule.rrule.between(windowStart, windowEnd, true, rule.tz);
   return starts.map((d) => d.getTime());
 };
