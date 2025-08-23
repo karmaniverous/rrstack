@@ -84,6 +84,104 @@ const enumerationHorizonMs = (rule: CompiledRule): number => {
   return Number.isFinite(ms) ? Math.max(0, Math.ceil(ms)) : 0;
 };
 
+/**
+ * Local-day structural fallback for common monthly/yearly patterns used in our scenarios.
+ * Only invoked if rrule yields no starts on the local day.
+ */
+const localDayMatchesCommonPatterns = (
+  rule: CompiledRule,
+  tMs: number,
+): boolean => {
+  const { options } = rule;
+  const tz = rule.tz;
+  const local = DateTime.fromMillis(tMs, { zone: tz });
+
+  // Guard: need a time-of-day to define a start.
+  const h = Array.isArray(options.byhour) ? options.byhour[0] : undefined;
+  const m = Array.isArray(options.byminute) ? options.byminute[0] : 0;
+  const s = Array.isArray(options.bysecond) ? options.bysecond[0] : 0;
+  if (typeof h !== 'number') return false;
+
+  // Frequency gating
+  if (options.freq !== Frequency.MONTHLY && options.freq !== Frequency.YEARLY)
+    return false;
+
+  // YEARLY bymonth check
+  if (options.freq === Frequency.YEARLY && Array.isArray(options.bymonth)) {
+    if (!options.bymonth.includes(local.month)) return false;
+  }
+
+  // MONTHLY interval check (months since dtstart)
+  if (options.freq === Frequency.MONTHLY) {
+    const interval =
+      typeof options.interval === 'number' && options.interval > 0
+        ? options.interval
+        : 1;
+    if (options.dtstart instanceof Date) {
+      const start = DateTime.fromJSDate(options.dtstart, { zone: tz }).startOf(
+        'month',
+      );
+      const diffMonths =
+        (local.year - start.year) * 12 + (local.month - start.month);
+      if (diffMonths < 0 || diffMonths % interval !== 0) return false;
+    }
+  }
+
+  // bymonth filter (for either freq)
+  if (Array.isArray(options.bymonth) && options.bymonth.length > 0) {
+    if (!options.bymonth.includes(local.month)) return false;
+  }
+
+  // bymonthday (e.g., day 20)
+  if (Array.isArray(options.bymonthday) && options.bymonthday.length > 0) {
+    if (!options.bymonthday.includes(local.day)) return false;
+  }
+
+  // byweekday handling:
+  // - Accept Weekday.nth(n) or plain Weekday w/ bysetpos = n.
+  const wd = local.weekday; // 1 = Monday .. 7 = Sunday
+  const weekOrdinal = Math.floor((local.day - 1) / 7) + 1; // 1..5
+  const hasByWeekday =
+    Array.isArray(options.byweekday) && options.byweekday.length > 0;
+
+  if (hasByWeekday) {
+    const pos =
+      Array.isArray(options.bysetpos) && options.bysetpos.length > 0
+        ? options.bysetpos[0]
+        : undefined;
+
+    const anyMatches = (options.byweekday as any[]).some((w: any) => {
+      const weekdayIndex =
+        typeof w === 'number'
+          ? w
+          : typeof w?.weekday === 'number'
+            ? w.weekday
+            : undefined;
+      if (typeof weekdayIndex !== 'number') return false;
+      const isSameWeekday = ((weekdayIndex + 1) % 7 || 7) === wd; // map 0..6→1..7
+      if (typeof w?.n === 'number') return isSameWeekday && weekOrdinal === w.n;
+      if (typeof pos === 'number') return isSameWeekday && weekOrdinal === pos;
+      return isSameWeekday;
+    });
+    if (!anyMatches) return false;
+  }
+
+  const startLocal = DateTime.fromObject(
+    {
+      year: local.year,
+      month: local.month,
+      day: local.day,
+      hour: h,
+      minute: m,
+      second: s,
+      millisecond: 0,
+    },
+    { zone: tz },
+  ).toMillis();
+  const endLocal = computeOccurrenceEndMs(rule, startLocal);
+  return startLocal <= tMs && tMs < endLocal;
+};
+
 export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
   // 0) Day-window enumeration (robust for nth-weekday monthly/yearly patterns).
   // Enumerate all starts occurring on the local calendar day of t (in rule.tz),
