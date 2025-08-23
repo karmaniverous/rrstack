@@ -6,7 +6,7 @@
  */
 
 import { DateTime, type Duration } from 'luxon';
-import { datetime as rruleDatetime, Frequency } from 'rrule';
+import { datetime as rruleDatetime, Frequency, Weekday } from 'rrule';
 
 import type { CompiledRule } from './compile';
 
@@ -84,6 +84,17 @@ const enumerationHorizonMs = (rule: CompiledRule): number => {
   return Number.isFinite(ms) ? Math.max(0, Math.ceil(ms)) : 0;
 };
 
+type WeekdayLike = number | Weekday;
+const normalizeByweekday = (v: unknown): WeekdayLike[] => {
+  if (Array.isArray(v)) {
+    return v.filter(
+      (x): x is WeekdayLike => typeof x === 'number' || x instanceof Weekday,
+    );
+  }
+  if (typeof v === 'number' || v instanceof Weekday) return [v];
+  return [];
+};
+
 /**
  * Local-day structural fallback for common monthly/yearly patterns used in our scenarios.
  * Only invoked if rrule yields no starts on the local day.
@@ -141,28 +152,23 @@ const localDayMatchesCommonPatterns = (
   // - Accept Weekday.nth(n) or plain Weekday w/ bysetpos = n.
   const wd = local.weekday; // 1 = Monday .. 7 = Sunday
   const weekOrdinal = Math.floor((local.day - 1) / 7) + 1; // 1..5
-  const hasByWeekday =
-    Array.isArray(options.byweekday) && options.byweekday.length > 0;
 
-  if (hasByWeekday) {
+  const byweekdayArr = normalizeByweekday(options.byweekday);
+  if (byweekdayArr.length > 0) {
     const pos =
       Array.isArray(options.bysetpos) && options.bysetpos.length > 0
         ? options.bysetpos[0]
         : undefined;
 
-    const anyMatches = (options.byweekday as any[]).some((w: any) => {
-      const weekdayIndex =
-        typeof w === 'number'
-          ? w
-          : typeof w?.weekday === 'number'
-            ? w.weekday
-            : undefined;
-      if (typeof weekdayIndex !== 'number') return false;
+    const anyMatches = byweekdayArr.some((w) => {
+      const weekdayIndex = typeof w === 'number' ? w : w.weekday;
+      const nth = typeof w === 'number' ? undefined : w.n;
       const isSameWeekday = ((weekdayIndex + 1) % 7 || 7) === wd; // map 0..6→1..7
-      if (typeof w?.n === 'number') return isSameWeekday && weekOrdinal === w.n;
+      if (typeof nth === 'number') return isSameWeekday && weekOrdinal === nth;
       if (typeof pos === 'number') return isSameWeekday && weekOrdinal === pos;
       return isSameWeekday;
     });
+
     if (!anyMatches) return false;
   }
 
@@ -206,7 +212,13 @@ export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
         if (startMs <= tMs && tMs < endMs) return true;
       }
     }
+
+    // Fallback: local structural match for common monthly/yearly patterns
+    if (dayStarts.length === 0 && localDayMatchesCommonPatterns(rule, tMs)) {
+      return true;
+    }
   }
+
   // 1) Robust coverage via rrule.before at wall-clock t.
   const wallT = epochToWallDate(tMs, rule.tz);
   const d = rule.rrule.before(wallT, true);

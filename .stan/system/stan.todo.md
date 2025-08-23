@@ -174,8 +174,8 @@ export interface RRStackJsonV1 {
 
 - Compilation (object → RRule): unchanged.
 - Coverage detection (instant):
-  - Added robust day-window enumeration in ruleCoversInstant: enumerate all starts on the local calendar day of t (in rule.tz) and test coverage. This addresses nth-weekday monthly/yearly rules across time zones.
-  - Retain rrule.before-based check and frequency/interval-aware fallback enumeration.
+  - Day-window enumeration in ruleCoversInstant: enumerate all starts on the local calendar day of t (in rule.tz) and test coverage.
+  - Follow‑up (2025-08-23 UTC): Added a structural tz‑local fallback for MONTHLY/YEARLY nth‑weekday and bymonthday patterns when same‑day rrule enumeration returns none (preserves rrule.before and horizon fallbacks).
 - Horizon policy:
   - Centralized as horizonMsForDuration in coverage.ts (366 days for years,
     32 days for months, otherwise ceil(duration ms)).
