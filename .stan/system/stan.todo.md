@@ -285,7 +285,8 @@ Effective bounds:
 
 - Added smoke/unit tests previously:
   - types.test.ts, compile.test.ts, coverage.test.ts, sweep.test.ts, rrstack.test.ts
-- Follow-ups: DST transition tests and the 3-rule example scenario (America/Chicago).
+- Added 3-rule scenario: scenario.chicago.test.ts (America/Chicago). [DONE]
+- Follow-ups: DST transition tests (spring forward/fall back).
 - Vitest now excludes .rollup.cache to prevent hangs/duplicates.
 
 --------------------------------------------------------------------------------
