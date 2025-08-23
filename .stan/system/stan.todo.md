@@ -93,6 +93,10 @@ Tasks:
 - Every‑2‑months scenario:
   - Revalidated assertions and aligned dtstart to the first actual occurrence (2021‑01‑19 05:00 America/Chicago) so interval stepping is well-defined.
   - Expected outcomes (May 18 active; July 16 blackout; July 20 active) remain unchanged.
+- Added regression test: daily at 09:00 starting at midnight (America/Chicago)
+  - Validates that a dtstart which doesn’t align with an occurrence still yields
+    the first occurrence at the configured time on the start date, and none before.
+  - Confirms requirement (1) support without changes to engine behavior.
 
 --------------------------------------------------------------------------------
 
