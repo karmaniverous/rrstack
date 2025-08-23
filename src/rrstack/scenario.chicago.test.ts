@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { Frequency,RRule } from 'rrule';
+import { Frequency, RRule } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { RRStack } from './';
@@ -19,15 +19,14 @@ describe('Scenario (America/Chicago): 3-rule cascade', () => {
       options: {
         freq: Frequency.MONTHLY,
         interval: 2,
-        bysetpos: 3,
-        byweekday: [RRule.TU],
+        byweekday: [RRule.TU.nth(3)],
         byhour: [5],
         byminute: [0],
         bysecond: [0],
-        // Anchor interval so that July 2021 is included (Jan, Mar, May, Jul, ...)
-        starts: ms('2021-01-01T00:00:00'),
+        // Anchor on an actual occurrence so the 2-month interval advances from it.
+        starts: ms('2021-01-19T05:00:00'),
       },
-      label: 'base-3rd-tue-q2h-05',
+      label: 'base-3rd-tue-q2m-05',
     };
 
     // Blackout July occurrences (same structural criteria, month = 7)
@@ -37,8 +36,7 @@ describe('Scenario (America/Chicago): 3-rule cascade', () => {
       options: {
         freq: Frequency.YEARLY,
         bymonth: [7],
-        bysetpos: 3,
-        byweekday: [RRule.TU],
+        byweekday: [RRule.TU.nth(3)],
         byhour: [5],
         byminute: [0],
         bysecond: [0],
@@ -72,8 +70,8 @@ describe('Scenario (America/Chicago): 3-rule cascade', () => {
     const may18_0530 = ms('2021-05-18T05:30:00');
     expect(stack.isActiveAt(may18_0530)).toBe('active');
 
-    const jul16_2019_0530 = ms('2019-07-16T05:30:00');
-    expect(stack.isActiveAt(jul16_2019_0530)).toBe('blackout');
+    const jul18_2023_0530 = ms('2023-07-18T05:30:00');
+    expect(stack.isActiveAt(jul18_2023_0530)).toBe('blackout');
 
     const jul20_2021_0530 = ms('2021-07-20T05:30:00');
     expect(stack.isActiveAt(jul20_2021_0530)).toBe('active');
