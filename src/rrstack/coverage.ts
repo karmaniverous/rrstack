@@ -6,6 +6,7 @@
  */
 
 import { DateTime, type Duration } from 'luxon';
+import { datetime as rruleDatetime } from 'rrule';
 
 import type { CompiledRule } from './compile';
 
@@ -32,16 +33,44 @@ export const horizonMsForDuration = (dur: Duration): number => {
   return Number.isFinite(ms) ? Math.max(0, Math.ceil(ms)) : 0;
 };
 
+/**
+ * Convert an epoch instant to a "floating" Date representing the same local
+ * wall-clock timestamp in the given timezone, for use with rrule.between().
+ */
+const epochToWallDate = (ms: number, tz: string): Date => {
+  const d = DateTime.fromMillis(ms, { zone: tz });
+  return rruleDatetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
+};
+
+/**
+ * Convert a "floating" Date returned by rrule.between() to an epoch instant
+ * in the given IANA timezone.
+ */
+const floatingDateToZonedEpochMs = (d: Date, tz: string): number => {
+  return DateTime.fromObject(
+    {
+      year: d.getUTCFullYear(),
+      month: d.getUTCMonth() + 1,
+      day: d.getUTCDate(),
+      hour: d.getUTCHours(),
+      minute: d.getUTCMinutes(),
+      second: d.getUTCSeconds(),
+      millisecond: d.getUTCMilliseconds(),
+    },
+    { zone: tz },
+  ).toMillis();
+};
+
 export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
   // Enumerate starts within a conservative window and test coverage.
-  // rrule returns Dates as real instants (epoch) when tzid is set.
+  // Use wall-clock window boundaries in the rule timezone for robust behavior.
   const horizon = horizonMsForDuration(rule.duration);
-  const windowStart = new Date(tMs - horizon);
-  const windowEnd = new Date(tMs);
+  const windowStart = epochToWallDate(tMs - horizon, rule.tz);
+  const windowEnd = epochToWallDate(tMs, rule.tz);
   const starts = rule.rrule.between(windowStart, windowEnd, true);
 
   for (const d of starts) {
-    const startMs = d.getTime();
+    const startMs = floatingDateToZonedEpochMs(d, rule.tz);
     const endMs = computeOccurrenceEndMs(rule, startMs);
     if (startMs <= tMs && tMs < endMs) return true;
   }
@@ -58,8 +87,8 @@ export const enumerateStarts = (
   toMs: number,
   horizonMs: number,
 ): number[] => {
-  const windowStart = new Date(fromMs - Math.max(0, horizonMs));
-  const windowEnd = new Date(toMs);
+  const windowStart = epochToWallDate(fromMs - Math.max(0, horizonMs), rule.tz);
+  const windowEnd = epochToWallDate(toMs, rule.tz);
   const starts = rule.rrule.between(windowStart, windowEnd, true);
-  return starts.map((d) => d.getTime());
+  return starts.map((d) => floatingDateToZonedEpochMs(d, rule.tz));
 };
