@@ -62,19 +62,15 @@ const floatingDateToZonedEpochMs = (d: Date, tz: string): number => {
 };
 
 export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
-  // Enumerate starts within a conservative window and test coverage.
-  // Use wall-clock window boundaries in the rule timezone for robust behavior.
-  const horizon = horizonMsForDuration(rule.duration);
-  const windowStart = epochToWallDate(tMs - horizon, rule.tz);
-  const windowEnd = epochToWallDate(tMs, rule.tz);
-  const starts = rule.rrule.between(windowStart, windowEnd, true);
+  // Robust coverage: find the most recent start at/before t in wall-clock time,
+  // then check [start, end) with Luxon.
+  const wallT = epochToWallDate(tMs, rule.tz);
+  const startFloating = rule.rrule.before(wallT, true);
+  if (!startFloating) return false;
 
-  for (const d of starts) {
-    const startMs = floatingDateToZonedEpochMs(d, rule.tz);
-    const endMs = computeOccurrenceEndMs(rule, startMs);
-    if (startMs <= tMs && tMs < endMs) return true;
-  }
-  return false;
+  const startMs = floatingDateToZonedEpochMs(startFloating, rule.tz);
+  const endMs = computeOccurrenceEndMs(rule, startMs);
+  return startMs <= tMs && tMs < endMs;
 };
 
 /**
