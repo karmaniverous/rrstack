@@ -10,8 +10,8 @@ import type { CompiledRule } from './compile';
 import {
   computeOccurrenceEndMs,
   enumerateStarts,
-  ruleCoversInstant,
   horizonMsForDuration,
+  ruleCoversInstant,
 } from './coverage';
 import { EPOCH_MAX_MS, EPOCH_MIN_MS, type instantStatus, type rangeStatus } from './types';
 
