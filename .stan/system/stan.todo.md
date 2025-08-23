@@ -175,8 +175,8 @@ export interface RRStackJsonV1 {
 - Coverage detection (instant):
   - ruleCoversInstant now enumerates candidate starts within a conservative
     horizon using rrule.between() and tests coverage with Luxon-based end times.
-  - This approach is more robust across environments than relying on
-    rrule.before() alone.
+  - With tzid present, rrule.between() returns Dates as real instants (epoch).
+    We therefore use d.getTime() directly (no reconversion).
 - Horizon policy:
   - Centralized as horizonMsForDuration in coverage.ts (366 days for years,
     32 days for months, otherwise ceil(duration ms)).
