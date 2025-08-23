@@ -8,7 +8,7 @@
 
 import { Duration } from 'luxon';
 import { shake } from 'radash';
-import { RRule, type Options as RRuleOptions } from 'rrule';
+import { type Options as RRuleOptions,RRule } from 'rrule';
 
 import {
   EPOCH_MAX_MS,
