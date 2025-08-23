@@ -176,7 +176,7 @@ export interface RRStackJsonV1 {
 - Coverage detection (instant):
   - Day-window enumeration in ruleCoversInstant: enumerate all starts on the local calendar day of t (in rule.tz) and test coverage.
   - Follow‑up (2025-08-23 UTC): Added a structural tz‑local fallback for MONTHLY/YEARLY nth‑weekday and bymonthday patterns when same‑day rrule enumeration returns none (preserves rrule.before and horizon fallbacks).
-  - Adjustment (2025-08-23 UTC): Always apply the tz‑local fallback after same‑day enumeration if coverage wasn’t already found, regardless of how many starts rrule returned (guards against floating-date edge cases).
+  - Adjustment (2025-08-23 UTC): Treat Weekday.n=0 as “no ordinal”; prefer bysetpos when present so MONTHLY bysetpos+byweekday (e.g., “3rd Tuesday”) matches correctly. This resolves the every‑2‑months scenario.
 - Horizon policy:
   - Centralized as horizonMsForDuration in coverage.ts (366 days for years,
     32 days for months, otherwise ceil(duration ms)).
@@ -204,9 +204,8 @@ export interface RRStackJsonV1 {
 
 7) Tests (status)
 
-- Re-run expected to flip the two Chicago scenarios green:
-  - Odd months: 3rd Tue 05:00–06:00 America/Chicago with July blackout and 20th reactivation.
-  - Every 2 months: 3rd Tue 05:00–06:00 with interval gating, July blackout, and 20th reactivation.
+- Odd-months scenario: passing.
+- Every-2-months scenario: expected to pass after the Weekday.n=0 fix.
 - All other tests remain green.
 
 --------------------------------------------------------------------------------
@@ -220,5 +219,6 @@ export interface RRStackJsonV1 {
 
 9) Next steps (implementation plan)
 
-- Validate across local and CI environments; if any residual drift appears, consider a narrow normalization (e.g., widen same-day window by a minute in wall time) with rationale rather than introducing heavy deps.
+- Validate both Chicago scenarios across environments.
+- If further drift appears, add narrow normalization (e.g., widen same-day window slightly) with rationale, avoiding heavy dependencies.
 

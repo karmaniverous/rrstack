@@ -164,7 +164,9 @@ const localDayMatchesCommonPatterns = (
       const weekdayIndex = typeof w === 'number' ? w : w.weekday;
       const nth = typeof w === 'number' ? undefined : w.n;
       const isSameWeekday = ((weekdayIndex + 1) % 7 || 7) === wd; // map 0..6→1..7
-      if (typeof nth === 'number') return isSameWeekday && weekOrdinal === nth;
+      // Use nth only when it is a non-zero ordinal. When omitted, Weekday.n is 0.
+      if (typeof nth === 'number' && nth !== 0)
+        return isSameWeekday && weekOrdinal === nth;
       if (typeof pos === 'number') return isSameWeekday && weekOrdinal === pos;
       return isSameWeekday;
     });
