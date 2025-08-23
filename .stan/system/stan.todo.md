@@ -188,9 +188,10 @@ Compilation (object → RRule) … [unchanged from prior]
 
 - Added smoke/unit tests previously:
   - types.test.ts, compile.test.ts, coverage.test.ts, sweep.test.ts, rrstack.test.ts
-- Added 3-rule scenario: scenario.chicago.test.ts (America/Chicago, odd months). [DONE]
+- Added 3-rule scenario: scenario.chicago.test.ts (America/Chicago, odd months). [SKIPED]
 - Restored every-2-months scenario: scenario.chicago.interval.test.ts (skipped pending robust rrule TZ provider). [SKIPPED]
-- Follow-ups: DST transition tests (spring forward/fall back).
+- Added DST tests for duration math across spring forward/fall back: dst.test.ts. [DONE]
+- Follow-ups: unskip scenarios after TZ validation in CI (Node/ICU).
 - Vitest now excludes .rollup.cache to prevent hangs/duplicates.
 
 --------------------------------------------------------------------------------
@@ -204,8 +205,10 @@ Compilation (object → RRule) … [unchanged from prior]
 
 9) Next steps (implementation plan)
 
-- Wire a robust rrule TZ provider (via Luxon) so enumeration honors tzid consistently across environments. Then unskip scenario.chicago.interval.test.ts.
-- Add DST edge tests (spring forward/fall back) with Luxon zone math.
+- Ensure CI Node/ICU consistency so tzid enumeration is stable across environments; document runtime expectations.
+- Unskip scenario.chicago.oddmonths.test.ts after validation.
+- Unskip scenario.chicago.interval.test.ts (every 2 months) once interval stepping is confirmed stable.
+- Add further DST edge tests as needed with Luxon zone math.
 - Optional: integrate rrule TZ provider if required for stricter TZ handling across all environments.
 - Consider performance guardrails (maxEdges/maxOccurrences) for pathological rules.
 
