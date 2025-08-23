@@ -18,15 +18,15 @@ describe('Scenario (America/Chicago): 3-rule cascade', () => {
       duration: 'PT1H',
       options: {
         freq: Frequency.MONTHLY,
-        interval: 2,
+        bymonth: [1, 3, 5, 7, 9, 11],
         byweekday: [RRule.TU.nth(3)],
         byhour: [5],
         byminute: [0],
         bysecond: [0],
-        // Anchor on an actual occurrence so the 2-month interval advances from it.
+        // Anchor on an actual occurrence so month list advances from it.
         starts: ms('2021-01-19T05:00:00'),
       },
-      label: 'base-3rd-tue-q2m-05',
+      label: 'base-3rd-tue-oddmonths-05',
     };
 
     // Blackout July occurrences (same structural criteria, month = 7)
