@@ -214,7 +214,7 @@ export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
     }
 
     // Fallback: local structural match for common monthly/yearly patterns
-    if (dayStarts.length === 0 && localDayMatchesCommonPatterns(rule, tMs)) {
+    if (localDayMatchesCommonPatterns(rule, tMs)) {
       return true;
     }
   }
