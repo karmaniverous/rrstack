@@ -6,16 +6,16 @@
  * - Keep implementation small/testable; no side effects.
  */
 
-import { shake } from 'radash';
 import { Duration } from 'luxon';
+import { shake } from 'radash';
 import { RRule, type Options as RRuleOptions } from 'rrule';
 
 import {
   EPOCH_MAX_MS,
   EPOCH_MIN_MS,
+  type instantStatus,
   type RuleJson,
   type RuleOptionsJson,
-  type instantStatus,
 } from './types';
 
 export interface CompiledRule {
@@ -36,10 +36,14 @@ export const toRRuleOptions = (
   const dtstartMs = Math.max(options.starts ?? EPOCH_MIN_MS, EPOCH_MIN_MS);
   const untilMs = Math.min(options.ends ?? EPOCH_MAX_MS, EPOCH_MAX_MS);
 
-  // Exclude JSON-only fields, keep rrule-native ones, and drop undefined entries.
-  const { starts: _s, ends: _e, ...rrLike } = options as Record<string, unknown>;
+  // Create a shallow copy and remove JSON-only fields, keep rrule-native ones.
+  const rrLikeRaw: Record<string, unknown> = {
+    ...(options as Record<string, unknown>),
+  };
+  delete rrLikeRaw.starts;
+  delete rrLikeRaw.ends;
   const partial: Partial<RRuleOptions> = {
-    ...(rrLike as Partial<RRuleOptions>),
+    ...(rrLikeRaw as Partial<RRuleOptions>),
     tzid: timezone,
     dtstart: new Date(dtstartMs),
     until: new Date(untilMs),

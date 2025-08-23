@@ -6,7 +6,7 @@
  * - Conservative horizon for enumeration (calendar units → 32/366 days).
  */
 
-import { Duration } from 'luxon';
+import type { Duration } from 'luxon';
 
 import type { CompiledRule } from './compile';
 import { computeOccurrenceEndMs, enumerateStarts, ruleCoversInstant } from './coverage';

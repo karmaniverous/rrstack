@@ -37,6 +37,7 @@ Tasks:
 - Vitest config compatibility
   - Current: Vitest v3 can expose configDefaults.watchExclude as a RegExp; spreading it causes a TypeError.
   - Decision: Normalize configDefaults.exclude/watchExclude to arrays before extending with '**/.rollup.cache/**'. [DONE]
+  - Also: Increased global testTimeout to 20000ms to avoid timeouts with rrule enumeration. [DONE]
 - .stan guardrails
   - Verify stan.config.yml excludes and outputs are correct.
   - Ensure .stan paths remain committed per STAN policy (system docs and future todo/refactor entries).

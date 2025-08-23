@@ -5,7 +5,7 @@
  * - Keep module small and testable (SRP).
  */
 
-import type { Frequency, Options as RRuleOptions } from 'rrule';
+import type { Options as RRuleOptions } from 'rrule';
 
 export const EPOCH_MIN_MS = 0;
 export const EPOCH_MAX_MS = 2_147_483_647_000; // 2038-01-19T03:14:07Z
