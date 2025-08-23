@@ -1,6 +1,6 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-08-22 (UTC)
+Last updated: 2025-08-23 (UTC)
 
 This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
@@ -20,6 +20,9 @@ Tasks:
 - Docs warning
   - Current: typedoc warns “CHANGELOG.md did not match any files.”
   - Decision: Added minimal CHANGELOG.md at repo root and kept projectDocuments in typedoc.json. [DONE]
+- Docs note (new)
+  - Current: TypeDoc warns: “OptionalizeExcept, defined in @karmaniverous/rrstack/src/rrstack/types.ts, is referenced by index.RuleOptionsJson but not included in the documentation.”
+  - Decision: Benign internal type alias reference; no API/user-facing impact. Optional follow-ups: export the alias or adjust TypeDoc options (e.g., excludeNotDocumented/excludeInternal) to avoid the warning. Leaving as-is for now. [ACCEPTED]
 - Knip cleanup
   - Current: Unused devDependencies: @types/eslint__js, @types/eslint-config-prettier, @types/fs-extra, fs-extra.
   - Decision: Removed unused devDependencies and deleted unused file src/util/packageName.ts. [DONE]
@@ -214,9 +217,9 @@ Compilation (object → RRule) … [unchanged from prior]
 
 --------------------------------------------------------------------------------
 
-Progress Update (2025-08-22 UTC)
+Progress Update (2025-08-23 UTC)
 
-- Baseline stabilized; scripts green across typecheck/lint/test/build/docs/knip.
-- Introduced RRStack skeleton (types, compile, coverage, sweep, façade) with tests.
-- Applied Vitest config compatibility fix (normalize configDefaults.exclude/watchExclude to arrays) and increased global testTimeout.
-- Added 3-rule scenario test (odd months) and restored the original q2-months scenario (skipped pending TZ provider).
+- Re-ran scripts: all green again (typecheck/lint/build/docs/knip). Tests: 10 passed, 2 skipped.
+- Build: only known @rollup/plugin-typescript incremental warning and Luxon circular-dependency notices from Rollup (harmless).
+- Docs: 1 TypeDoc warning on internal alias OptionalizeExcept (acknowledged; optional follow-up).
+- Baseline stabilization stands; continuing RRStack feature work per plan above.
