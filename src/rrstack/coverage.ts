@@ -63,14 +63,22 @@ const floatingDateToZonedEpochMs = (d: Date, tz: string): number => {
 
 export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
   // Robust coverage: find the most recent start at/before t in wall-clock time,
-  // then check [start, end) with Luxon.
+  // then check [start, end) with Luxon. Accept either epoch or "floating" Date shape.
   const wallT = epochToWallDate(tMs, rule.tz);
-  const startFloating = rule.rrule.before(wallT, true);
-  if (!startFloating) return false;
+  const d = rule.rrule.before(wallT, true);
+  if (!d) return false;
 
-  const startMs = floatingDateToZonedEpochMs(startFloating, rule.tz);
-  const endMs = computeOccurrenceEndMs(rule, startMs);
-  return startMs <= tMs && tMs < endMs;
+  // Candidate 1: treat rrule output as true epoch Date
+  const startMsEpoch = d.getTime();
+  const endMsEpoch = computeOccurrenceEndMs(rule, startMsEpoch);
+  if (startMsEpoch <= tMs && tMs < endMsEpoch) return true;
+
+  // Candidate 2: treat rrule output as "floating" (UTC fields = wall-clock in tz)
+  const startMsFloat = floatingDateToZonedEpochMs(d, rule.tz);
+  const endMsFloat = computeOccurrenceEndMs(rule, startMsFloat);
+  if (startMsFloat <= tMs && tMs < endMsFloat) return true;
+
+  return false;
 };
 
 /**
@@ -86,5 +94,5 @@ export const enumerateStarts = (
   const windowStart = epochToWallDate(fromMs - Math.max(0, horizonMs), rule.tz);
   const windowEnd = epochToWallDate(toMs, rule.tz);
   const starts = rule.rrule.between(windowStart, windowEnd, true);
-  return starts.map((d) => floatingDateToZonedEpochMs(d, rule.tz));
+  return starts.map((date) => floatingDateToZonedEpochMs(date, rule.tz));
 };
