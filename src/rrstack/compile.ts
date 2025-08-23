@@ -6,9 +6,9 @@
  * - Keep implementation small/testable; no side effects.
  */
 
-import { Duration } from 'luxon';
+import { DateTime, Duration } from 'luxon';
 import { shake } from 'radash';
-import { type Options as RRuleOptions,RRule } from 'rrule';
+import { RRule, type Options as RRuleOptions, datetime as rruleDatetime } from 'rrule';
 
 import {
   EPOCH_MAX_MS,
@@ -36,17 +36,24 @@ export const toRRuleOptions = (
   const dtstartMs = Math.max(options.starts ?? EPOCH_MIN_MS, EPOCH_MIN_MS);
   const untilMs = Math.min(options.ends ?? EPOCH_MAX_MS, EPOCH_MAX_MS);
 
-  // Create a shallow copy and remove JSON-only fields, keep rrule-native ones.
+  // Exclude JSON-only fields; keep rrule-native ones.
   const rrLikeRaw: Record<string, unknown> = {
     ...(options as Record<string, unknown>),
   };
   delete rrLikeRaw.starts;
   delete rrLikeRaw.ends;
+
+  // Build wall-clock dtstart/until in the rule timezone for robust enumeration with tzid.
+  const s = DateTime.fromMillis(dtstartMs, { zone: timezone });
+  const u = DateTime.fromMillis(untilMs, { zone: timezone });
+  const dtstartWall = rruleDatetime(s.year, s.month, s.day, s.hour, s.minute, s.second);
+  const untilWall = rruleDatetime(u.year, u.month, u.day, u.hour, u.minute, u.second);
+
   const partial: Partial<RRuleOptions> = {
     ...(rrLikeRaw as Partial<RRuleOptions>),
     tzid: timezone,
-    dtstart: new Date(dtstartMs),
-    until: new Date(untilMs),
+    dtstart: dtstartWall,
+    until: untilWall,
   };
 
   return shake(partial) as RRuleOptions;
