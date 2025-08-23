@@ -181,9 +181,12 @@ export interface RRStackJsonV1 {
   - Centralized as horizonMsForDuration in coverage.ts (366 days for years,
     32 days for months, otherwise ceil(duration ms)).
   - Reused in sweep.ts to ensure consistent enumeration windows.
-- TZ boundaries:
-  - All rrule.between() calls now pass tzid explicitly so boundary evaluation
-    occurs in the rule timezone, improving cross-environment robustness.
+- TZ handling for rrule outputs:
+  - rrule.between() returns "floating" JS Dates whose UTC fields correspond to
+    wall-clock components. We convert these to zoned epoch ms via
+    DateTime.fromObject(..., { zone }) before coverage comparisons.
+  - The timezone is carried in compiled options (tzid) and in our conversion
+    step; we do not pass a tz argument to between().
 
 --------------------------------------------------------------------------------
 

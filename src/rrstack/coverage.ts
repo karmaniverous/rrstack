@@ -32,16 +32,35 @@ export const horizonMsForDuration = (dur: Duration): number => {
   return Number.isFinite(ms) ? Math.max(0, Math.ceil(ms)) : 0;
 };
 
+/**
+ * rrule emits "floating" JS Dates (UTC components represent wall-clock fields).
+ * Convert such a Date to an epoch ms in a target IANA timezone.
+ */
+const floatingDateToZonedEpochMs = (d: Date, tz: string): number => {
+  return DateTime.fromObject(
+    {
+      year: d.getUTCFullYear(),
+      month: d.getUTCMonth() + 1,
+      day: d.getUTCDate(),
+      hour: d.getUTCHours(),
+      minute: d.getUTCMinutes(),
+      second: d.getUTCSeconds(),
+      millisecond: d.getUTCMilliseconds(),
+    },
+    { zone: tz },
+  ).toMillis();
+};
+
 export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
   // Enumerate starts within a conservative window and test coverage.
   // This is more robust across environments than relying on rrule.before().
   const horizon = horizonMsForDuration(rule.duration);
   const windowStart = new Date(tMs - horizon);
   const windowEnd = new Date(tMs);
-  const starts = rule.rrule.between(windowStart, windowEnd, true, rule.tz);
+  const starts = rule.rrule.between(windowStart, windowEnd, true);
 
   for (const d of starts) {
-    const startMs = d.getTime();
+    const startMs = floatingDateToZonedEpochMs(d, rule.tz);
     const endMs = computeOccurrenceEndMs(rule, startMs);
     if (startMs <= tMs && tMs < endMs) return true;
   }
@@ -60,6 +79,6 @@ export const enumerateStarts = (
 ): number[] => {
   const windowStart = new Date(fromMs - Math.max(0, horizonMs));
   const windowEnd = new Date(toMs);
-  const starts = rule.rrule.between(windowStart, windowEnd, true, rule.tz);
-  return starts.map((d) => d.getTime());
+  const starts = rule.rrule.between(windowStart, windowEnd, true);
+  return starts.map((d) => floatingDateToZonedEpochMs(d, rule.tz));
 };
