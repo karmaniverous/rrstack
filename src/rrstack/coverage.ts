@@ -96,8 +96,76 @@ const normalizeByweekday = (v: unknown): WeekdayLike[] => {
 };
 
 /**
+ * Local-day structural fallback for DAILY patterns:
+ * When same-day enumeration doesn't yield a covering start, check the day's
+ * BYHOUR/BYMINUTE/BYSECOND combinations locally, honoring dtstart.
+ */
+const localDayMatchesDailyTimes = (
+  rule: CompiledRule,
+  tMs: number,
+): boolean => {
+  if (rule.options.freq !== Frequency.DAILY) return false;
+
+  const tz = rule.tz;
+  const local = DateTime.fromMillis(tMs, { zone: tz });
+
+  // Extract BY* lists (default minute/second to [0] if omitted).
+  const hours = Array.isArray(rule.options.byhour)
+    ? rule.options.byhour
+    : typeof rule.options.byhour === 'number'
+      ? [rule.options.byhour]
+      : [];
+  if (hours.length === 0) return false;
+
+  const minutes = Array.isArray(rule.options.byminute)
+    ? rule.options.byminute
+    : typeof rule.options.byminute === 'number'
+      ? [rule.options.byminute]
+      : [0];
+
+  const seconds = Array.isArray(rule.options.bysecond)
+    ? rule.options.bysecond
+    : typeof rule.options.bysecond === 'number'
+      ? [rule.options.bysecond]
+      : [0];
+
+  // Derive dtstart as zoned epoch (compiled rrule option is "floating").
+  let dtstartEpoch = 0;
+  if (rule.options.dtstart instanceof Date) {
+    dtstartEpoch = floatingDateToZonedEpochMs(rule.options.dtstart, tz);
+  }
+
+  // Check each combination for same-day coverage, gated by dtstart.
+  for (const h of hours) {
+    for (const m of minutes) {
+      for (const s of seconds) {
+        const startLocal = DateTime.fromObject(
+          {
+            year: local.year,
+            month: local.month,
+            day: local.day,
+            hour: h,
+            minute: m,
+            second: s,
+            millisecond: 0,
+          },
+          { zone: tz },
+        ).toMillis();
+
+        if (startLocal < dtstartEpoch) continue;
+
+        const endLocal = computeOccurrenceEndMs(rule, startLocal);
+        if (startLocal <= tMs && tMs < endLocal) return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+/**
  * Local-day structural fallback for common monthly/yearly patterns used in our scenarios.
- * Only invoked if rrule yields no starts on the local day.
+ * Only invoked if coverage was not found via rrule same-day enumeration.
  */
 const localDayMatchesCommonPatterns = (
   rule: CompiledRule,
@@ -196,7 +264,14 @@ export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
   // then test coverage against t.
   {
     const local = DateTime.fromMillis(tMs, { zone: rule.tz });
-    const dayStartWall = rruleDatetime(local.year, local.month, local.day, 0, 0, 0);
+    const dayStartWall = rruleDatetime(
+      local.year,
+      local.month,
+      local.day,
+      0,
+      0,
+      0,
+    );
     const nextDay = local.plus({ days: 1 });
     const dayEndWallExclusive = rruleDatetime(
       nextDay.year,
@@ -206,16 +281,28 @@ export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
       0,
       0,
     );
-    const dayStarts = rule.rrule.between(dayStartWall, dayEndWallExclusive, true);
+    const dayStarts = rule.rrule.between(
+      dayStartWall,
+      dayEndWallExclusive,
+      true,
+    );
     for (const sd of dayStarts) {
-      const candidates = [sd.getTime(), floatingDateToZonedEpochMs(sd, rule.tz)];
+      const candidates = [
+        sd.getTime(),
+        floatingDateToZonedEpochMs(sd, rule.tz),
+      ];
       for (const startMs of candidates) {
         const endMs = computeOccurrenceEndMs(rule, startMs);
         if (startMs <= tMs && tMs < endMs) return true;
       }
     }
 
-    // Fallback: local structural match for common monthly/yearly patterns
+    // DAILY fallback: local structural match for BYHOUR/BYMINUTE/BYSECOND patterns
+    if (localDayMatchesDailyTimes(rule, tMs)) {
+      return true;
+    }
+
+    // MONTHLY/YEARLY fallback: structural tz-local match for nth-weekday / bymonthday
     if (localDayMatchesCommonPatterns(rule, tMs)) {
       return true;
     }
