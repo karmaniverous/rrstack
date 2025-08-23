@@ -3,10 +3,6 @@
  *
  * @packageDocumentation
  */
-
-export { foo, type FooTarget } from './foo';
-
-// RRStack public API
 export { RRStack } from './rrstack';
 export {
   EPOCH_MAX_MS,

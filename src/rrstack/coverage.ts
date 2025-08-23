@@ -27,8 +27,10 @@ export const computeOccurrenceEndMs = (
  */
 export const horizonMsForDuration = (dur: Duration): number => {
   const v = dur.toObject();
-  if ((v.years ?? 0) > 0) return 366 * 24 * 60 * 60 * 1000; // 366 days
-  if ((v.months ?? 0) > 0) return 32 * 24 * 60 * 60 * 1000; // 32 days
+  if (typeof v.years === 'number' && v.years > 0)
+    return 366 * 24 * 60 * 60 * 1000; // 366 days
+  if (typeof v.months === 'number' && v.months > 0)
+    return 32 * 24 * 60 * 60 * 1000; // 32 days
   const ms = dur.as('milliseconds');
   return Number.isFinite(ms) ? Math.max(0, Math.ceil(ms)) : 0;
 };

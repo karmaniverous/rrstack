@@ -1,3 +1,4 @@
+
 # RRStack — Requirements and Development Plan
 
 Last updated: 2025-08-23 (UTC)
@@ -229,6 +230,12 @@ export interface RRStackJsonV1 {
 - Add further DST edge tests as needed with Luxon zone math.
 - Optional: integrate rrule TZ provider if required for stricter TZ handling across all environments.
 - Consider performance guardrails (maxEdges/maxOccurrences) for pathological rules.
+- Remove leftover template artifacts (COMPLETED in this change set):
+  - Delete src/foo.ts and src/foo.test.ts.
+  - Delete src/cli/mycli/** (remove CLI artifacts).
+  - Update package.json: remove "bin" entry for mycli; remove commander (runtime) and @commander-js/extra-typings (dev) dependencies.
+  - Documentation: update README to remove CLI/foo references. [PENDING]
+  - Run knip to verify no dangling dependencies. [DONE]
 
 --------------------------------------------------------------------------------
 
@@ -238,3 +245,11 @@ Progress Update (2025-08-23 UTC)
 - Build: only known @rollup/plugin-typescript incremental warning and Luxon circular-dependency notices from Rollup (harmless).
 - Docs: removed prior TypeDoc warning by simplifying RuleOptionsJson (no helper alias).
 - Baseline stabilization stands; continuing RRStack feature work per plan above.
+
+Additional updates (2025-08-23 UTC):
+- Template cleanup completed: removed residual template foo module and mycli CLI; dropped related dependencies and bin mapping.
+- ESLint: addressed the single lint error in coverage.ts.
+- Tests: Two scenario tests (America/Chicago) are currently failing in this environment; triage next:
+  - Verify rrule TZID handling and our floating→zoned epoch conversion around monthly nth-weekday rules.
+  - If necessary, temporarily skip these scenario tests in CI while isolating root cause; retain DST unit tests which are passing.
+
