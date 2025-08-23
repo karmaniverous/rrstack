@@ -2,22 +2,62 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/index.html</loc>
-		<lastmod>2025-08-22T04:26:49.987Z</lastmod>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/modules.html</loc>
-		<lastmod>2025-08-22T04:26:49.987Z</lastmod>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/hierarchy.html</loc>
-		<lastmod>2025-08-22T04:26:49.987Z</lastmod>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
 	</url>
 	<url>
-		<loc>https://docs.karmanivero.us/rrstack/types/FooTarget.html</loc>
-		<lastmod>2025-08-22T04:26:49.987Z</lastmod>
+		<loc>https://docs.karmanivero.us/rrstack/documents/CHANGELOG.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
 	</url>
 	<url>
-		<loc>https://docs.karmanivero.us/rrstack/functions/foo.html</loc>
-		<lastmod>2025-08-22T04:26:49.987Z</lastmod>
+		<loc>https://docs.karmanivero.us/rrstack/modules/index.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/enums/index.Frequency.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/classes/index.RRStack.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.RRStackJsonV1.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.RRuleOptions.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.RuleJson.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/types/index.instantStatus.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/types/index.rangeStatus.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/types/index.RuleOptionsJson.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/variables/index.EPOCH_MAX_MS.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/variables/index.EPOCH_MIN_MS.html</loc>
+		<lastmod>2025-08-23T17:08:57.322Z</lastmod>
 	</url>
 </urlset>
