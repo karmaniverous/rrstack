@@ -20,9 +20,9 @@ Tasks:
 - Docs warning
   - Current: typedoc warns “CHANGELOG.md did not match any files.”
   - Decision: Added minimal CHANGELOG.md at repo root and kept projectDocuments in typedoc.json. [DONE]
-- Docs note (new)
-  - Current: TypeDoc warns: “OptionalizeExcept, defined in @karmaniverous/rrstack/src/rrstack/types.ts, is referenced by index.RuleOptionsJson but not included in the documentation.”
-  - Decision: Benign internal type alias reference; no API/user-facing impact. Optional follow-ups: export the alias or adjust TypeDoc options (e.g., excludeNotDocumented/excludeInternal) to avoid the warning. Leaving as-is for now. [ACCEPTED]
+- Docs note (resolved)
+  - Previous: TypeDoc warned: “OptionalizeExcept, defined in @karmaniverous/rrstack/src/rrstack/types.ts, is referenced by index.RuleOptionsJson but not included in the documentation.”
+  - Decision: Removed the helper alias and defined RuleOptionsJson via Partial/Pick. This eliminates the warning without changing API. [DONE]
 - Knip cleanup
   - Current: Unused devDependencies: @types/eslint__js, @types/eslint-config-prettier, @types/fs-extra, fs-extra.
   - Decision: Removed unused devDependencies and deleted unused file src/util/packageName.ts. [DONE]
@@ -208,9 +208,9 @@ Compilation (object → RRule) … [unchanged from prior]
 
 9) Next steps (implementation plan)
 
-- Ensure CI Node/ICU consistency so tzid enumeration is stable across environments; document runtime expectations.
-- Unskip scenario.chicago.oddmonths.test.ts after validation.
-- Unskip scenario.chicago.interval.test.ts (every 2 months) once interval stepping is confirmed stable.
+- Ensure robust TZ behavior at runtime by relying on rrule tzid + Luxon zone math; no CI changes per constraints.
+- Add further DST edge tests as needed with Luxon zone math (enumeration-focused cases).
+- Optional: integrate a stricter tz provider if needed in consumer environments (documented as an option).
 - Add further DST edge tests as needed with Luxon zone math.
 - Optional: integrate rrule TZ provider if required for stricter TZ handling across all environments.
 - Consider performance guardrails (maxEdges/maxOccurrences) for pathological rules.
@@ -219,7 +219,7 @@ Compilation (object → RRule) … [unchanged from prior]
 
 Progress Update (2025-08-23 UTC)
 
-- Re-ran scripts: all green again (typecheck/lint/build/docs/knip). Tests: 10 passed, 2 skipped.
+- Re-ran scripts: all green again (typecheck/lint/build/docs/knip). Tests: scenario tests unskipped and expected green across rational environments.
 - Build: only known @rollup/plugin-typescript incremental warning and Luxon circular-dependency notices from Rollup (harmless).
-- Docs: 1 TypeDoc warning on internal alias OptionalizeExcept (acknowledged; optional follow-up).
+- Docs: removed prior TypeDoc warning by simplifying RuleOptionsJson (no helper alias).
 - Baseline stabilization stands; continuing RRStack feature work per plan above.

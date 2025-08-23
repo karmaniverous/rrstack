@@ -13,23 +13,20 @@ export const EPOCH_MAX_MS = 2_147_483_647_000; // 2038-01-19T03:14:07Z
 export type instantStatus = 'active' | 'blackout';
 export type rangeStatus = instantStatus | 'partial';
 
-// Utility: make all properties optional except a required key set K.
-type OptionalizeExcept<T, K extends keyof T> = Partial<Omit<T, K>> & Pick<T, K>;
-
 /**
  * JSON shape for rule options:
  * - Derived from RRuleOptions with dtstart/until/tzid removed.
  * - All properties optional except freq (required).
  * - Adds starts/ends (ms) for domain clamping.
  */
-export type RuleOptionsJson = OptionalizeExcept<
-  Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid'>,
-  'freq'
-> & {
-  // ms timestamps; undefined => unbounded side (clamped internally)
-  starts?: number;
-  ends?: number;
-};
+export type RuleOptionsJson =
+  & Partial<Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>>
+  & Pick<RRuleOptions, 'freq'>
+  & {
+    // ms timestamps; undefined => unbounded side (clamped internally)
+    starts?: number;
+    ends?: number;
+  };
 
 export interface RuleJson {
   effect: instantStatus; // 'active' | 'blackout'

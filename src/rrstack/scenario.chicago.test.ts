@@ -10,7 +10,7 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
   const ms = (isoLocal: string) => DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
 
   // Keep present but skip until rrule TZ provider is wired robustly
-  it.skip('applies July blackout except when the day is the 20th (q2 months)', () => {
+  it('applies July blackout except when the day is the 20th (q2 months)', () => {
     // Base activation: 3rd Tuesday of every other month, 05:00–06:00
     const base: RuleJson = {
       effect: 'active',
