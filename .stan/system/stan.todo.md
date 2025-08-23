@@ -171,7 +171,16 @@ export interface RRStackJsonV1 {
 
 4) Core algorithms
 
-Compilation (object → RRule) … [unchanged from prior]
+- Compilation (object → RRule): unchanged.
+- Coverage detection (instant):
+  - ruleCoversInstant now enumerates candidate starts within a conservative
+    horizon using rrule.between() and tests coverage with Luxon-based end times.
+  - This approach is more robust across environments than relying on
+    rrule.before() alone.
+- Horizon policy:
+  - Centralized as horizonMsForDuration in coverage.ts (366 days for years,
+    32 days for months, otherwise ceil(duration ms)).
+  - Reused in sweep.ts to ensure consistent enumeration windows.
 
 --------------------------------------------------------------------------------
 

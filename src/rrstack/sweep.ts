@@ -6,22 +6,16 @@
  * - Conservative horizon for enumeration (calendar units → 32/366 days).
  */
 
-import type { Duration } from 'luxon';
-
 import type { CompiledRule } from './compile';
-import { computeOccurrenceEndMs, enumerateStarts, ruleCoversInstant } from './coverage';
+import {
+  computeOccurrenceEndMs,
+  enumerateStarts,
+  ruleCoversInstant,
+  horizonMsForDuration,
+} from './coverage';
 import { EPOCH_MAX_MS, EPOCH_MIN_MS, type instantStatus, type rangeStatus } from './types';
 
 type Edge = { t: number; type: 'start' | 'end'; ruleIndex: number };
-
-const horizonMsFor = (dur: Duration): number => {
-  const v = dur.toObject();
-  if ((v.years ?? 0) > 0) return 366 * 24 * 60 * 60 * 1000; // 366 days
-  if ((v.months ?? 0) > 0) return 32 * 24 * 60 * 60 * 1000; // 32 days
-  // For other units, safe millisecond conversion
-  const ms = dur.as('milliseconds');
-  return Number.isFinite(ms) ? Math.max(0, Math.ceil(ms)) : 0;
-};
 
 const cascadedStatus = (covering: boolean[], rules: CompiledRule[]): instantStatus => {
   // baseline blackout; last covering rule wins
@@ -42,7 +36,7 @@ export function* getSegments(
 
   const edges: Edge[] = [];
   rules.forEach((rule, idx) => {
-    const horizon = horizonMsFor(rule.duration);
+    const horizon = horizonMsForDuration(rule.duration);
     const starts = enumerateStarts(rule, from, to, horizon);
     for (const s of starts) {
       const e = computeOccurrenceEndMs(rule, s);
