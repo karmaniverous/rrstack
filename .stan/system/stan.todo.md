@@ -249,7 +249,7 @@ Progress Update (2025-08-23 UTC)
 Additional updates (2025-08-23 UTC):
 - Template cleanup completed: removed residual template foo module and mycli CLI; dropped related dependencies and bin mapping.
 - ESLint: addressed the single lint error in coverage.ts (remove nullish coalescing in interval fallback).
-- Knip: removed lingering devDependency (@commander-js/extra-typings); knip expected clean after this change.
+- Knip: removed lingering devDependency (@commander-js/extra-typings). [DONE]
 - Tests: Two scenario tests (America/Chicago) are currently failing in this environment; triage next:
   - Verify rrule TZID handling and our floating→zoned epoch conversion around monthly nth-weekday rules.
   - If necessary, temporarily skip these scenario tests in CI while isolating root cause; retain DST unit tests which are passing.
