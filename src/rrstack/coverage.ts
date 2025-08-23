@@ -6,7 +6,7 @@
  */
 
 import { DateTime, type Duration } from 'luxon';
-import { datetime as rruleDatetime } from 'rrule';
+import { datetime as rruleDatetime, Frequency } from 'rrule';
 
 import type { CompiledRule } from './compile';
 
@@ -61,22 +61,53 @@ const floatingDateToZonedEpochMs = (d: Date, tz: string): number => {
   ).toMillis();
 };
 
+/**
+ * Frequency/interval-aware search horizon (enumeration window) for rules.
+ * - Monthly: ~32 days × interval
+ * - Yearly: ~366 days × interval
+ * - Otherwise: fallback to duration in ms
+ */
+const enumerationHorizonMs = (rule: CompiledRule): number => {
+  const freq = rule.options.freq;
+  const interval = Math.max(1, rule.options.interval ?? 1);
+  const day = 24 * 60 * 60 * 1000;
+
+  if (freq === Frequency.YEARLY) return (366 * interval + 1) * day;
+  if (freq === Frequency.MONTHLY) return (32 * interval + 1) * day;
+
+  const ms = rule.duration.as('milliseconds');
+  return Number.isFinite(ms) ? Math.max(0, Math.ceil(ms)) : 0;
+};
+
 export const ruleCoversInstant = (rule: CompiledRule, tMs: number): boolean => {
-  // Robust coverage: find the most recent start at/before t in wall-clock time,
-  // then check [start, end) with Luxon. Accept either epoch or "floating" Date shape.
+  // 1) Robust coverage via rrule.before at wall-clock t.
   const wallT = epochToWallDate(tMs, rule.tz);
   const d = rule.rrule.before(wallT, true);
-  if (!d) return false;
+  if (d) {
+    // Candidate 1: treat rrule output as true epoch Date
+    const startMsEpoch = d.getTime();
+    const endMsEpoch = computeOccurrenceEndMs(rule, startMsEpoch);
+    if (startMsEpoch <= tMs && tMs < endMsEpoch) return true;
 
-  // Candidate 1: treat rrule output as true epoch Date
-  const startMsEpoch = d.getTime();
-  const endMsEpoch = computeOccurrenceEndMs(rule, startMsEpoch);
-  if (startMsEpoch <= tMs && tMs < endMsEpoch) return true;
+    // Candidate 2: treat rrule output as "floating" (UTC fields = wall-clock in tz)
+    const startMsFloat = floatingDateToZonedEpochMs(d, rule.tz);
+    const endMsFloat = computeOccurrenceEndMs(rule, startMsFloat);
+    if (startMsFloat <= tMs && tMs < endMsFloat) return true;
+  }
 
-  // Candidate 2: treat rrule output as "floating" (UTC fields = wall-clock in tz)
-  const startMsFloat = floatingDateToZonedEpochMs(d, rule.tz);
-  const endMsFloat = computeOccurrenceEndMs(rule, startMsFloat);
-  if (startMsFloat <= tMs && tMs < endMsFloat) return true;
+  // 2) Fallback enumeration: frequency/interval-aware window [t - horizon, t]
+  const horizon = enumerationHorizonMs(rule);
+  const windowStart = epochToWallDate(Math.max(0, tMs - horizon), rule.tz);
+  const starts = rule.rrule.between(windowStart, wallT, true);
+
+  for (const sd of starts) {
+    // Check both interpretations for cross-environment robustness
+    const candidates = [sd.getTime(), floatingDateToZonedEpochMs(sd, rule.tz)];
+    for (const startMs of candidates) {
+      const endMs = computeOccurrenceEndMs(rule, startMs);
+      if (startMs <= tMs && tMs < endMs) return true;
+    }
+  }
 
   return false;
 };
