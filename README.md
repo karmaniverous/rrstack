@@ -33,7 +33,7 @@ pnpm add @karmaniverous/rrstack
 
 ```ts
 import { RRStack } from '@karmaniverous/rrstack';
-import { Frequency } from 'rrule';
+import { Frequency, RRule } from 'rrule';
 
 // 1) Define rules (JSON serializable)
 const rules = [
@@ -66,6 +66,7 @@ const rules = [
 // 2) Create a stack
 const stack = new RRStack({
   timezone: 'America/Chicago',
+  // Optional: timeUnit: 'ms' | 's' (default 'ms')
   rules,
 });
 
@@ -73,7 +74,7 @@ const stack = new RRStack({
 const t = Date.now();
 const status = stack.isActiveAt(t); // 'active' | 'blackout'
 
-// 4) Enumerate segments over a window
+// 4) Enumerate segments over a window (half-open [from, to))
 const from = Date.UTC(2024, 0, 2, 5, 0, 0);
 const to = Date.UTC(2024, 0, 2, 6, 0, 0);
 for (const seg of stack.getSegments(from, to)) {
@@ -85,7 +86,7 @@ for (const seg of stack.getSegments(from, to)) {
 const range = stack.classifyRange(from, to); // 'active' | 'blackout' | 'partial'
 
 // 6) Persist / restore
-const json = stack.toJson(); // RRStackJsonV1
+const json = stack.toJson(); // RRStackJson
 const stack2 = RRStack.fromJson(json);
 ```
 
@@ -112,29 +113,36 @@ Many scheduling problems require more than a single RRULE. You might have a base
 ```ts
 import { RRStack } from '@karmaniverous/rrstack';
 
-new RRStack(opts: { timezone: string; rules?: RuleJson[] });
+new RRStack(opts: { timezone: string; timeUnit?: 'ms' | 's'; rules?: RuleJson[] });
 
-RRStack.fromJson(json: RRStackJsonV1): RRStack
-stack.toJson(): RRStackJsonV1
+RRStack.fromJson(json: RRStackJson): RRStack
+stack.toJson(): RRStackJson
 
-// Rule editing (recompile on change)
-stack.addRule(rule: RuleJson, position?: number): void
-stack.swapRules(i: number, j: number): void
-stack.ruleUp(i: number, steps = 1): void
-stack.ruleDown(i: number, steps = 1): void
-stack.ruleToTop(i: number): void
-stack.ruleToBottom(i: number): void
+// Options (frozen); property-style setters
+stack.timezone: string                  // getter
+stack.timezone = 'America/Chicago'      // setter (validates and recompiles)
+stack.rules: ReadonlyArray<RuleJson>    // getter
+stack.rules = [/* ... */]               // setter (validates and recompiles)
+stack.timeUnit: 'ms' | 's'              // getter (immutable)
+
+// Batch update
+stack.updateOptions({ timezone?: string, rules?: RuleJson[] }): void
+
+// Helpers
+stack.now(): number                     // current time in configured unit
+RRStack.isValidTimeZone(tz: string): boolean
+RRStack.asTimeZoneId(tz: string): TimeZoneId // throws if invalid
 
 // Queries
 stack.isActiveAt(ms: number): 'active' | 'blackout'
 stack.getSegments(
-  fromMs?: number,
-  toMs?: number,
+  from: number,
+  to: number,
 ): Iterable<{ start: number; end: number; status: 'active' | 'blackout' }>
 
 stack.classifyRange(
-  fromMs: number,
-  toMs: number,
+  from: number,
+  to: number,
 ): 'active' | 'blackout' | 'partial'
 
 stack.getEffectiveBounds(): { start?: number; end?: number; empty: boolean }
@@ -144,7 +152,7 @@ See full API docs: https://karmaniverous.github.io/rrstack
 
 ## JSON Shapes and Types
 
-The public types closely mirror rrule’s Options, with a few adjustments to make JSON persistence straightforward.
+The public types closely mirror rrule’s Options, with a few adjustments to make JSON persistence straightforward and unit-aware operation explicit.
 
 ```ts
 import type { Options as RRuleOptions } from 'rrule';
@@ -152,37 +160,58 @@ import type { Options as RRuleOptions } from 'rrule';
 export type instantStatus = 'active' | 'blackout';
 export type rangeStatus = instantStatus | 'partial';
 
-export const EPOCH_MIN_MS = 0;
-export const EPOCH_MAX_MS = 2_147_483_647_000; // 2038-01-19T03:14:07Z
+export type UnixTimeUnit = 'ms' | 's';
 
-// Derived from rrule Options, with dtstart/until/tzid removed (set internally),
-// plus optional domain clamps: starts/ends (ms).
+// Branded IANA timezone id after runtime validation.
+export type TimeZoneId = string & { __brand: 'TimeZoneId' };
+
+/**
+ * JSON shape for rule options:
+ * - Derived from RRuleOptions with dtstart/until/tzid removed (set internally).
+ * - All properties optional except freq (required).
+ * - Adds starts/ends (in configured unit) for domain clamping.
+ */
 export type RuleOptionsJson = Partial<
   Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>
 > &
   Pick<RRuleOptions, 'freq'> & {
-    starts?: number; // optional clamp (ms since epoch)
-    ends?: number; // optional clamp (ms since epoch)
+    starts?: number; // timestamp in configured unit
+    ends?: number;   // timestamp in configured unit
   };
 
 export interface RuleJson {
   effect: instantStatus; // 'active' | 'blackout'
-  duration: string; // ISO 8601 (e.g., 'PT1H', 'P1D')
+  duration: string;      // ISO-8601 (e.g., 'PT1H', 'P1D')
   options: RuleOptionsJson;
   label?: string;
 }
 
-export interface RRStackJsonV1 {
-  version: 1;
-  timezone: string; // IANA timezone, e.g., 'America/Chicago'
-  rules: RuleJson[];
+// Constructor input (user-provided).
+export interface RRStackOptions {
+  timezone: string;
+  timeUnit?: UnixTimeUnit; // default 'ms'
+  rules?: RuleJson[];      // default []
+}
+
+// Normalized options stored on the instance (frozen).
+export interface RRStackOptionsNormalized
+  extends Omit<RRStackOptions, 'timeUnit' | 'rules' | 'timezone'> {
+  timeUnit: UnixTimeUnit;
+  rules: ReadonlyArray<RuleJson>;
+  timezone: TimeZoneId; // branded and validated
+}
+
+// Flattened JSON shape (no nested options) with version string.
+export interface RRStackJson extends RRStackOptionsNormalized {
+  version: string;
 }
 ```
 
 Notes
 
-- The library compiles JSON into rrule Options with tzid, dtstart, and until set internally. starts/ends are optional domain clamps in epoch milliseconds.
+- The library compiles JSON into rrule Options with tzid, dtstart, and until set internally. starts/ends are optional domain clamps in epoch milliseconds or integer seconds, depending on timeUnit.
 - Durations are ISO 8601 and must be positive. Duration arithmetic uses Luxon in the rule timezone to remain DST-correct.
+- Half-open intervals [start, end): in 's' mode, end is rounded up to the next second to avoid boundary false negatives.
 
 ## Timezones and DST
 
@@ -190,6 +219,11 @@ Notes
 - Occurrence end times are computed by adding the rule’s duration in the rule’s timezone using Luxon. This keeps “spring forward” and “fall back” behavior correct:
   - Example: “2021-03-14 01:30 + 1h” in America/Chicago → 03:30 local (spring forward)
   - Example: “2021-11-07 01:30 + 1h” → 01:30 local (repeated hour on fall back)
+
+## Version handling
+
+- toJson writes the current package version via a build-time injected constant (__RRSTACK_VERSION__) so no package.json import is needed at runtime.
+- fromJson accepts a versioned shape (RRStackJson). Version-based transforms may be added in the future without changing the public shape.
 
 ## Common Patterns
 
@@ -282,7 +316,7 @@ const july20Reactivate = {
 
 - Later rules override earlier ones at covered instants; order matters.
 - When using interval-based monthly rules, anchoring starts to the first real occurrence can be helpful to define cadence.
-- starts/ends (ms) are optional domain clamps; open sides are allowed and detected by getEffectiveBounds.
+- starts/ends (timestamps in the configured unit) are optional domain clamps; open sides are allowed and detected by getEffectiveBounds.
 
 ## Validation and Testing
 

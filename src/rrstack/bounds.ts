@@ -37,6 +37,18 @@ const lastStartBefore = (
   return floatingDateToZonedEpoch(d, rule.tz, rule.unit);
 };
 
+/**
+ * Compute effective active bounds across the entire rule set.
+ *
+ * @param rules - Compiled rules (order matters; later overrides earlier).
+ * @returns Object with potential open sides:
+ * - `start?: number` earliest active boundary (omitted if open),
+ * - `end?: number` latest active boundary (omitted if open),
+ * - `empty: boolean` true if no active coverage exists.
+ * @remarks Uses forward/backward boundary scanning independent of
+ *          {@link getSegments}, with targeted coverage probes to detect
+ *          open-sided coverage.
+ */
 export const getEffectiveBounds = (
   rules: CompiledRule[],
 ): { start?: number; end?: number; empty: boolean } => {

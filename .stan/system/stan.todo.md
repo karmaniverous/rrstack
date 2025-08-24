@@ -8,8 +8,9 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
-- Inject build-time version: add @rollup/plugin-replace to inject __RRSTACK_VERSION__ from package.json in rollup.config.ts; toJson now emits the package version without runtime imports.
-- Tighten coverage reporting: include only src/**/*.ts and exclude dist/.stan/docs/.rollup.cache to avoid duplicate/irrelevant files in “All files”.
+- Documentation pass: update README to reflect current API (flattened JSON with version string, property-style setters and updateOptions, no EPOCH constants, seconds rounding). Add/expand TypeDoc on RRStack class and key helpers (segments/bounds/coverage/compile/types). Verified fence hygiene in README.
+- Inject build-time version: add @rollup/plugin-replace to inject **RRSTACK_VERSION** from package.json in rollup.config.ts; toJson now emits the package version without runtime imports.
+- Tighten coverage reporting: include only src/\*_/_.ts and exclude dist/.stan/docs/.rollup.cache to avoid duplicate/irrelevant files in “All files”.
 - Promote durable requirements to stan.project.md (options/timeUnit/timezone brand; JSON flattening with version; streaming getSegments; independent heap-based getEffectiveBounds; eliminate EPOCH\_\*; property setters; minimal zod; browser support; changelog config; version injection). Update this plan accordingly.
 - Fix ESLint errors: remove any cast in rrstack.test.ts (type via unknown→RRStackJson), and replace while(true) with for(;;) in sweep.ts to satisfy @typescript-eslint/no-unnecessary-condition.
 - Split sweep.ts (~332 LOC) into segments.ts (getSegments/classifyRange) and bounds.ts (getEffectiveBounds); introduced util/heap.ts for boundary helpers; sweep.ts now a thin façade.

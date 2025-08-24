@@ -35,6 +35,7 @@ export interface CompiledRule {
   rrule: RRule;
 }
 
+/** @internal */
 const toWall = (epoch: number, tz: string, unit: UnixTimeUnit): Date => {
   const d =
     unit === 'ms'
@@ -43,6 +44,18 @@ const toWall = (epoch: number, tz: string, unit: UnixTimeUnit): Date => {
   return rruleDatetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
 };
 
+/**
+ * Convert a JSON-friendly rule options object into rrule Options with
+ * timezone and domain bounds applied.
+ *
+ * @param options - JSON rule options (freq required; dtstart/until/tzid omitted).
+ * @param timezone - IANA timezone id.
+ * @param unit - Time unit ('ms' | 's') used to interpret starts/ends.
+ * @returns An rrule Options object suitable for {@link RRule}.
+ * @remarks
+ * - `dtstart` and `until` are synthesized from `starts`/`ends` or domain bounds.
+ * - `tzid` is set to the provided timezone.
+ */
 export const toRRuleOptions = (
   options: RuleOptionsJson,
   timezone: string,
@@ -73,6 +86,15 @@ export const toRRuleOptions = (
   return shake(partial) as RRuleOptions;
 };
 
+/**
+ * Compile a JSON rule into a unit- and timezone-aware {@link CompiledRule}.
+ *
+ * @param rule - The JSON rule (effect, duration, options, optional label).
+ * @param timezone - IANA timezone id for coverage computation.
+ * @param unit - Time unit ('ms' | 's'). Affects duration arithmetic and
+ *               rounding behavior of occurrence ends.
+ * @throws If the ISO-8601 duration is invalid or non-positive.
+ */
 export const compileRule = (
   rule: RuleJson,
   timezone: TimeZoneId,

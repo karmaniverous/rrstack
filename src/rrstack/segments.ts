@@ -34,6 +34,16 @@ const lastStartBefore = (
   return floatingDateToZonedEpoch(d, rule.tz, rule.unit);
 };
 
+/**
+ * Stream contiguous active/blackout segments over `[from, to)`.
+ *
+ * @param rules - Compiled rule set (later rules override earlier ones).
+ * @param from - Start of the window (inclusive), in the configured unit.
+ * @param to - End of the window (exclusive), in the configured unit.
+ * @returns A memory-bounded iterable of `{ start, end, status }` entries.
+ * @remarks Ends are computed in the rule timezone (DST-correct) and honor
+ *          half-open semantics; in 's' mode ends are rounded up.
+ */
 export function* getSegments(
   rules: CompiledRule[],
   from: number,
@@ -107,6 +117,13 @@ export function* getSegments(
   }
 }
 
+/**
+ * Classify the window `[from, to)` as a whole.
+ * @param rules - Compiled rule set.
+ * @param from - Window start (inclusive).
+ * @param to - Window end (exclusive).
+ * @returns `'active' | 'blackout' | 'partial'`
+ */
 export const classifyRange = (
   rules: CompiledRule[],
   from: number,

@@ -23,6 +23,20 @@ import {
 export { enumerateStarts } from './coverage/enumerate';
 export { computeOccurrenceEnd } from './coverage/time';
 
+/**
+ * Test whether a compiled rule covers a timestamp `t`.
+ *
+ * Strategy (robust across environments):
+ * 1) Enumerate starts on the local calendar day of `t`, checking both floating
+ *    and zoned epoch candidates, plus structural matches for daily and common
+ *    monthly/yearly patterns.
+ * 2) Probe `rrule.before()` at wall-clock `t` and test [start, end).
+ * 3) Fallback: enumerate within a frequency/interval-aware backward horizon.
+ *
+ * @param rule - Compiled rule (unit and tz aware).
+ * @param t - Timestamp in the configured unit.
+ * @returns True if `t` lies within a covered occurrence.
+ */
 export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
   // 0) Day-window enumeration: all starts occurring on local calendar day of t.
   {
