@@ -108,7 +108,7 @@ Completed (recent)
   - Add zod schemas (options/json); rule-lite checker for rule mutations.
 - RRStack class
   - options storage (frozen); property setters; updateOptions; now().
-  - toJson uses build-injected **RRSTACK_VERSION**; fromJson validates.
+  - toJson uses build-injected __RRSTACK_VERSION__; fromJson validates.
 - Algorithms
   - Unit-aware compile.
   - coverage split into time/patterns/enumerate/coverage.
@@ -119,4 +119,4 @@ Completed (recent)
   - Add helpers RRStack.isValidTimeZone / RRStack.asTimeZoneId.
 - Build/Changelog
   - Add package.json auto-changelog config (commitLimit=false).
-  - Add Rollup replace plugin to inject **RRSTACK_VERSION**.
+  - Add Rollup replace plugin to inject __RRSTACK_VERSION__.
