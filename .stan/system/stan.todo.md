@@ -8,6 +8,8 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
+- Inject build-time version: add @rollup/plugin-replace to inject __RRSTACK_VERSION__ from package.json in rollup.config.ts; toJson now emits the package version without runtime imports.
+- Tighten coverage reporting: include only src/**/*.ts and exclude dist/.stan/docs/.rollup.cache to avoid duplicate/irrelevant files in “All files”.
 - Promote durable requirements to stan.project.md (options/timeUnit/timezone brand; JSON flattening with version; streaming getSegments; independent heap-based getEffectiveBounds; eliminate EPOCH\_\*; property setters; minimal zod; browser support; changelog config; version injection). Update this plan accordingly.
 - Fix ESLint errors: remove any cast in rrstack.test.ts (type via unknown→RRStackJson), and replace while(true) with for(;;) in sweep.ts to satisfy @typescript-eslint/no-unnecessary-condition.
 - Split sweep.ts (~332 LOC) into segments.ts (getSegments/classifyRange) and bounds.ts (getEffectiveBounds); introduced util/heap.ts for boundary helpers; sweep.ts now a thin façade.
@@ -101,22 +103,10 @@ Completed (recent)
 
 9. Next steps (implementation plan)
 
-- Types
-  - Add TimeZoneId branded type; RRStackOptions/RRStackOptionsNormalized/RRStackJson interfaces (extend where useful).
-  - Remove EPOCH\_\* constants; add internal domainMin/unit & domainMax/unit helpers.
-- Validation
-  - Add zod schemas (options/json); rule-lite checker for rule mutations.
-- RRStack class
-  - options storage (frozen); property setters; updateOptions; now().
-  - toJson uses build-injected __RRSTACK_VERSION__; fromJson validates.
-- Algorithms
-  - Unit-aware compile.
-  - coverage split into time/patterns/enumerate/coverage.
-  - sweep: streaming heap-based boundary merge.
-  - getEffectiveBounds: heap-based earliest/latest; open-side detection.
-- DX/Docs
-  - Update README to document new shapes/semantics and browser notes.
-  - Add helpers RRStack.isValidTimeZone / RRStack.asTimeZoneId.
-- Build/Changelog
-  - Add package.json auto-changelog config (commitLimit=false).
-  - Add Rollup replace plugin to inject __RRSTACK_VERSION__.
+- Tests/coverage:
+  - Add targeted tests to raise coverage in bounds.ts (earliest/latest open-sided detection) and util/heap.ts.
+  - Add a small test matrix for 's' timeUnit to verify end rounding behavior across DST transitions.
+- DX/Docs:
+  - Confirm README mentions build-time version injection (done); keep examples aligned.
+- Build/Changelog:
+  - Ensure auto-changelog continues to include all commits (unchanged).

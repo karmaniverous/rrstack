@@ -1,4 +1,8 @@
-/** See <stanPath>/system/stan.project.md for global requirements. */
+/** See <stanPath>/system/stan.project.md for global requirements.
+ * Requirements addressed:
+ * - Inject __RRSTACK_VERSION__ at build time (browser‑safe) using @rollup/plugin-replace.
+ */
+import { readFileSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,6 +11,7 @@ import aliasPlugin, { type Alias } from '@rollup/plugin-alias';
 import commonjsPlugin from '@rollup/plugin-commonjs';
 import jsonPlugin from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
+import replacePlugin from '@rollup/plugin-replace';
 import terserPlugin from '@rollup/plugin-terser';
 import typescriptPlugin from '@rollup/plugin-typescript';
 import type {
@@ -22,6 +27,14 @@ const outputPath = 'dist';
 // Path alias @ -> <abs>/src (absolute to avoid module duplication warnings in Rollup)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// Resolve package version once for define replacement
+let pkgVersion = '0.0.0';
+try {
+  const pkgJson = readFileSync(path.resolve(__dirname, 'package.json'), 'utf8');
+  pkgVersion = JSON.parse(pkgJson).version ?? pkgVersion;
+} catch {
+  // noop — fallback remains '0.0.0'
+}
 const srcAbs = path.resolve(__dirname, 'src');
 const aliases: Alias[] = [{ find: '@', replacement: srcAbs }];
 const alias = aliasPlugin({ entries: aliases });
@@ -43,6 +56,12 @@ const makePlugins = (minify: boolean, extras: Plugin[] = []): Plugin[] => {
     nodeResolve({ exportConditions: ['node', 'module', 'default'] }),
     commonjsPlugin(),
     jsonPlugin(),
+    replacePlugin({
+      preventAssignment: true,
+      values: {
+        __RRSTACK_VERSION__: JSON.stringify(pkgVersion),
+      },
+    }),
     typescriptPlugin(),
     ...extras,
   ];
@@ -74,9 +93,7 @@ const outCommon = (dest: string): OutputOptions[] => [
 export const buildLibrary = (dest: string): RollupOptions => ({
   input: 'src/index.ts',
   output: outCommon(dest),
-  ...commonInputOptions(
-    true,
-  ),
+  ...commonInputOptions(true),
 });
 
 export const buildTypes = (dest: string): RollupOptions => ({
