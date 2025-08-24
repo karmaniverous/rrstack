@@ -1,29 +1,31 @@
 /**
  * Requirements addressed:
- * - Provide public RRStack types derived from rrule types without redeclaring token unions.
- * - Expose domain constants and JSON shapes for persistence.
+ * - Provide public RRStack types, options, and JSON shapes.
+ * - Eliminate EPOCH_* constants; unit/domain handled internally.
  * - Keep module small and testable (SRP).
  */
 
 import type { Options as RRuleOptions } from 'rrule';
 
-export const EPOCH_MIN_MS = 0;
-export const EPOCH_MAX_MS = 2_147_483_647_000; // 2038-01-19T03:14:07Z
-
 export type instantStatus = 'active' | 'blackout';
 export type rangeStatus = instantStatus | 'partial';
+
+export type UnixTimeUnit = 'ms' | 's';
+
+// Branded IANA timezone id after runtime validation.
+export type TimeZoneId = string & { __brand: 'TimeZoneId' };
 
 /**
  * JSON shape for rule options:
  * - Derived from RRuleOptions with dtstart/until/tzid removed.
  * - All properties optional except freq (required).
- * - Adds starts/ends (ms) for domain clamping.
+ * - Adds starts/ends (in configured unit) for domain clamping.
  */
 export type RuleOptionsJson =
   & Partial<Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>>
   & Pick<RRuleOptions, 'freq'>
   & {
-    // ms timestamps; undefined => unbounded side (clamped internally)
+    // timestamps in the configured unit ('ms' or 's')
     starts?: number;
     ends?: number;
   };
@@ -35,10 +37,23 @@ export interface RuleJson {
   label?: string;
 }
 
-export interface RRStackJsonV1 {
-  version: 1;
-  timezone: string; // IANA time zone
+// Constructor input (user-provided).
+export interface RRStackOptions {
+  timezone: string;
+  timeUnit?: UnixTimeUnit; // default 'ms'
+  rules?: RuleJson[]; // default []
+}
+
+// Normalized options stored on the instance (frozen).
+export interface RRStackOptionsNormalized extends Omit<RRStackOptions, 'timeUnit' | 'rules' | 'timezone'> {
+  timeUnit: UnixTimeUnit;
   rules: RuleJson[];
+  timezone: TimeZoneId;
+}
+
+// Flattened JSON shape (no nested options) with version.
+export interface RRStackJson extends RRStackOptionsNormalized {
+  version: string;
 }
 
 // Re-export useful rrule types so consumers can import from package API.

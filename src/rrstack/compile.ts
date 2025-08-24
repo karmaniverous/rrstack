@@ -1,21 +1,21 @@
 /**
  * Requirements addressed:
- * - Compile RuleJson into rrule Options with tzid, dtstart, until clamped to domain.
+ * - Compile RuleJson into rrule Options with tzid, dtstart, until.
  * - Validate ISO-8601 duration (positive).
  * - Track open-start/open-end flags.
- * - Keep implementation small/testable; no side effects.
+ * - Unit-aware handling (ms/s) with no internal canonicalization.
  */
 
 import { DateTime, Duration } from 'luxon';
 import { shake } from 'radash';
-import { datetime as rruleDatetime,type Options as RRuleOptions, RRule } from 'rrule';
+import { datetime as rruleDatetime, type Options as RRuleOptions, RRule } from 'rrule';
 
 import {
-  EPOCH_MAX_MS,
-  EPOCH_MIN_MS,
   type instantStatus,
   type RuleJson,
   type RuleOptionsJson,
+  type TimeZoneId,
+  type UnixTimeUnit,
 } from './types';
 
 export interface CompiledRule {
@@ -24,59 +24,64 @@ export interface CompiledRule {
   duration: Duration;
   options: RRuleOptions;
   tz: string;
+  unit: UnixTimeUnit;
   isOpenStart: boolean;
   isOpenEnd: boolean;
   rrule: RRule;
 }
 
+const toWall = (epoch: number, tz: string, unit: UnixTimeUnit): Date => {
+  const d =
+    unit === 'ms'
+      ? DateTime.fromMillis(epoch, { zone: tz })
+      : DateTime.fromSeconds(epoch, { zone: tz });
+  return rruleDatetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
+};
+
 export const toRRuleOptions = (
   options: RuleOptionsJson,
   timezone: string,
+  unit: UnixTimeUnit,
 ): RRuleOptions => {
-  const dtstartMs = Math.max(options.starts ?? EPOCH_MIN_MS, EPOCH_MIN_MS);
-  const untilMs = Math.min(options.ends ?? EPOCH_MAX_MS, EPOCH_MAX_MS);
-
-  // Exclude JSON-only fields; keep rrule-native ones.
   const rrLikeRaw: Record<string, unknown> = {
     ...(options as Record<string, unknown>),
   };
   delete rrLikeRaw.starts;
   delete rrLikeRaw.ends;
 
-  // Build wall-clock dtstart/until in the rule timezone for robust enumeration with tzid.
-  const s = DateTime.fromMillis(dtstartMs, { zone: timezone });
-  const u = DateTime.fromMillis(untilMs, { zone: timezone });
-  const dtstartWall = rruleDatetime(s.year, s.month, s.day, s.hour, s.minute, s.second);
-  const untilWall = rruleDatetime(u.year, u.month, u.day, u.hour, u.minute, u.second);
-
   const partial: Partial<RRuleOptions> = {
     ...(rrLikeRaw as Partial<RRuleOptions>),
     tzid: timezone,
-    dtstart: dtstartWall,
-    until: untilWall,
   };
+
+  if (typeof options.starts === 'number') {
+    partial.dtstart = toWall(options.starts, timezone, unit);
+  }
+  if (typeof options.ends === 'number') {
+    partial.until = toWall(options.ends, timezone, unit);
+  }
 
   return shake(partial) as RRuleOptions;
 };
 
 export const compileRule = (
   rule: RuleJson,
-  timezone: string,
+  timezone: TimeZoneId,
+  unit: UnixTimeUnit,
 ): CompiledRule => {
   const duration = Duration.fromISO(rule.duration);
   if (!duration.isValid) {
     throw new Error(`Invalid ISO duration: ${rule.duration}`);
   }
-  const ms = duration.as('milliseconds');
-  if (!Number.isFinite(ms) || ms <= 0) {
+  const q = unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
+  if (!Number.isFinite(q) || q <= 0) {
     throw new Error(`Duration must be positive: ${rule.duration}`);
   }
 
   const isOpenStart = rule.options.starts === undefined;
   const isOpenEnd = rule.options.ends === undefined;
 
-  const options = toRRuleOptions(rule.options, timezone);
-
+  const options = toRRuleOptions(rule.options, timezone, unit);
   const rrule = new RRule(options);
 
   return {
@@ -85,6 +90,7 @@ export const compileRule = (
     duration,
     options,
     tz: timezone,
+    unit,
     isOpenStart,
     isOpenEnd,
     rrule,

@@ -16,7 +16,8 @@ describe('compileRule', () => {
           bysecond: [0],
         },
       },
-      'UTC',
+      'UTC' as any,
+      'ms',
     );
     expect(cr.duration.isValid).toBe(true);
     const starts = cr.rrule.between(new Date(Date.UTC(2024, 0, 1)), new Date(Date.UTC(2024, 0, 3)), true);

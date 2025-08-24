@@ -3,11 +3,10 @@
 .tsbuildinfo
 *.local
 local/
-coverage/
+/coverage/
 dist/
 esm/
 node_modules/
-context/
 .stan/output/
 .stan/diff/
 .stan/dist/

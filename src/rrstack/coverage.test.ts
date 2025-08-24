@@ -2,7 +2,7 @@ import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { compileRule } from './compile';
-import { computeOccurrenceEndMs, ruleCoversInstant } from './coverage';
+import { computeOccurrenceEnd, ruleCoversInstant } from './coverage';
 
 describe('coverage', () => {
   it('detects coverage within a 1-hour window at 05:00 UTC', () => {
@@ -17,7 +17,8 @@ describe('coverage', () => {
           bysecond: [0],
         },
       },
-      'UTC',
+      'UTC' as any,
+      'ms',
     );
     const day = Date.UTC(2024, 0, 2);
     const five = new Date(day + 5 * 3600 * 1000).getTime();
@@ -29,7 +30,7 @@ describe('coverage', () => {
     expect(ruleCoversInstant(cr, six - 1)).toBe(true);
     expect(ruleCoversInstant(cr, six)).toBe(false);
 
-    const end = computeOccurrenceEndMs(cr, five);
+    const end = computeOccurrenceEnd(cr, five);
     expect(end).toBe(six);
   });
 });
