@@ -2,6 +2,7 @@ import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { RRStack } from './';
+import type { RRStackJson } from './types';
 
 describe('RRStack', () => {
   it('constructs from JSON and evaluates isActiveAt', () => {
@@ -24,7 +25,7 @@ describe('RRStack', () => {
       ],
     };
 
-    const stack = RRStack.fromJson(json as any);
+    const stack = RRStack.fromJson(json as unknown as RRStackJson);
     const day = Date.UTC(2024, 0, 2);
     const five = day + 5 * 3600 * 1000;
     const four = day + 4 * 3600 * 1000;

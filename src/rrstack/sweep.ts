@@ -98,7 +98,7 @@ export function* getSegments(
   let prevT = from;
   let prevStatus = cascadedStatus(covering, rules);
 
-  while (true) {
+  for (;;) {
     const t = minBoundary(nextStart, nextEnd);
     if (t === undefined || t >= to) {
       if (prevT < to) {

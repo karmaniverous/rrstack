@@ -8,7 +8,8 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
-- Promote durable requirements to stan.project.md (options/timeUnit/timezone brand; JSON flattening with version; streaming getSegments; independent heap-based getEffectiveBounds; eliminate EPOCH_*; property setters; minimal zod; browser support; changelog config; version injection). Update this plan accordingly.
+- Promote durable requirements to stan.project.md (options/timeUnit/timezone brand; JSON flattening with version; streaming getSegments; independent heap-based getEffectiveBounds; eliminate EPOCH\_\*; property setters; minimal zod; browser support; changelog config; version injection). Update this plan accordingly.
+- Fix ESLint errors: remove any cast in rrstack.test.ts (type via unknown→RRStackJson), and replace while(true) with for(;;) in sweep.ts to satisfy @typescript-eslint/no-unnecessary-condition.
 
 ---
 
@@ -28,7 +29,7 @@ Completed (recent)
 - Units
   - No internal ms canonicalization; operate fully in configured unit.
   - 's' mode uses integer seconds with end rounded up to honor [start, end).
-  - Eliminate EPOCH_*_MS; domainMin/unit = 0; domainMax/unit from JS Date limits.
+  - Eliminate EPOCH\_\*\_MS; domainMin/unit = 0; domainMax/unit from JS Date limits.
 - Algorithms
   - Streaming getSegments via heap-based boundary merge; memory-bounded; no default cap (optional per-call limit).
   - getEffectiveBounds independent of getSegments; heap-based earliest/latest with window probes; open-side detection.
@@ -87,13 +88,18 @@ Completed (recent)
   - Seconds semantics (ceil end) and now().
   - Streaming getSegments over long windows (no memory blow-up).
   - Independent getEffectiveBounds (no reliance on getSegments).
-  - Elimination of EPOCH_* constants.
+  - Elimination of EPOCH\_\* constants.
 
 ---
 
 8. Long-file scan (source files > ~300 LOC)
 
-- Split coverage.ts per plan; keep modules focused and short.
+- src/rrstack/sweep.ts (~332 LOC) — proposed split:
+  - Extract getSegments into src/rrstack/segments.ts (streaming boundary merge).
+  - Extract getEffectiveBounds into src/rrstack/bounds.ts (earliest/latest scanning).
+  - Introduce src/rrstack/util/heap.ts for min/max-heap helpers shared by both.
+  - Leave src/rrstack/sweep.ts as façade re-export and thin orchestrator with tests updated accordingly.
+- Keep modules focused and short.
 
 ---
 
@@ -101,12 +107,12 @@ Completed (recent)
 
 - Types
   - Add TimeZoneId branded type; RRStackOptions/RRStackOptionsNormalized/RRStackJson interfaces (extend where useful).
-  - Remove EPOCH_* constants; add internal domainMin/unit & domainMax/unit helpers.
+  - Remove EPOCH\_\* constants; add internal domainMin/unit & domainMax/unit helpers.
 - Validation
   - Add zod schemas (options/json); rule-lite checker for rule mutations.
 - RRStack class
   - options storage (frozen); property setters; updateOptions; now().
-  - toJson uses build-injected __RRSTACK_VERSION__; fromJson validates.
+  - toJson uses build-injected **RRSTACK_VERSION**; fromJson validates.
 - Algorithms
   - Unit-aware compile.
   - coverage split into time/patterns/enumerate/coverage.
@@ -117,4 +123,4 @@ Completed (recent)
   - Add helpers RRStack.isValidTimeZone / RRStack.asTimeZoneId.
 - Build/Changelog
   - Add package.json auto-changelog config (commitLimit=false).
-  - Add Rollup replace plugin to inject __RRSTACK_VERSION__.
+  - Add Rollup replace plugin to inject **RRSTACK_VERSION**.
