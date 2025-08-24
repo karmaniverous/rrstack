@@ -8,19 +8,28 @@
 
 import type { CompiledRule } from './compile';
 import { ruleCoversInstant } from './coverage';
-import { computeOccurrenceEnd, domainMax, domainMin, epochToWallDate } from './coverage/time';
+import {
+  computeOccurrenceEnd,
+  domainMax,
+  domainMin,
+  epochToWallDate,
+} from './coverage/time';
 import type { instantStatus, rangeStatus, UnixTimeUnit } from './types';
 
-type Boundary = { t: number; kind: 'start' | 'end'; i: number };
-
-const cascadedStatus = (covering: boolean[], rules: CompiledRule[]): instantStatus => {
+const cascadedStatus = (
+  covering: boolean[],
+  rules: CompiledRule[],
+): instantStatus => {
   for (let i = covering.length - 1; i >= 0; i--) {
     if (covering[i]) return rules[i].effect;
   }
   return 'blackout';
 };
 
-const minBoundary = (starts: Array<number | undefined>, ends: Array<number | undefined>): number | undefined => {
+const minBoundary = (
+  starts: Array<number | undefined>,
+  ends: Array<number | undefined>,
+): number | undefined => {
   let t: number | undefined = undefined;
   const consider = (v: number | undefined) => {
     if (typeof v !== 'number') return;
@@ -31,7 +40,10 @@ const minBoundary = (starts: Array<number | undefined>, ends: Array<number | und
   return t;
 };
 
-const maxBoundary = (starts: Array<number | undefined>, ends: Array<number | undefined>): number | undefined => {
+const maxBoundary = (
+  starts: Array<number | undefined>,
+  ends: Array<number | undefined>,
+): number | undefined => {
   let t: number | undefined = undefined;
   const consider = (v: number | undefined) => {
     if (typeof v !== 'number') return;
@@ -43,7 +55,10 @@ const maxBoundary = (starts: Array<number | undefined>, ends: Array<number | und
 };
 
 // Find last start <= cursor; returns its epoch in unit or undefined.
-const lastStartBefore = (rule: CompiledRule, cursor: number): number | undefined => {
+const lastStartBefore = (
+  rule: CompiledRule,
+  cursor: number,
+): number | undefined => {
   const wall = epochToWallDate(cursor, rule.tz, rule.unit);
   const d = rule.rrule.before(wall, true);
   if (!d) return undefined;
@@ -123,12 +138,12 @@ export function* getSegments(
 
 export const classifyRange = (
   rules: CompiledRule[],
-  fromMs: number,
-  toMs: number,
+  from: number,
+  to: number,
 ): rangeStatus => {
   let sawActive = false;
   let sawBlackout = false;
-  for (const seg of getSegments(rules, fromMs, toMs)) {
+  for (const seg of getSegments(rules, from, to)) {
     if (seg.status === 'active') sawActive = true;
     else sawBlackout = true;
     if (sawActive && sawBlackout) return 'partial';
@@ -160,7 +175,6 @@ export const getEffectiveBounds = (
       const d = rules[i].rrule.after(wallMinPerRule[i], true);
       nextStart[i] = d ? d.getTime() : undefined;
     }
-    let prevT = min;
     let prevStatus = cascadedStatus(covering, rules);
     let guard = 0;
 
@@ -188,13 +202,20 @@ export const getEffectiveBounds = (
       if (status !== prevStatus) {
         if (prevStatus === 'blackout' && status === 'active') {
           const start = t;
-          // Open-start detection
           const startUndefined =
             start === min &&
-            rules.some((r) => r.effect === 'active' && r.isOpenStart && ruleCoversInstant(r, (unit === 'ms' ? min + 1 : min + 1)));
-          return { start: startUndefined ? undefined : start, end: undefined, empty: false };
+            rules.some(
+              (r) =>
+                r.effect === 'active' &&
+                r.isOpenStart &&
+                ruleCoversInstant(r, unit === 'ms' ? min + 1 : min + 1),
+            );
+          return {
+            start: startUndefined ? undefined : start,
+            end: undefined,
+            empty: false,
+          };
         }
-        prevT = t;
         prevStatus = status;
       }
     }
@@ -207,7 +228,6 @@ export const getEffectiveBounds = (
     const prevStart = new Array<number | undefined>(n).fill(undefined);
     const prevEnd = new Array<number | undefined>(n).fill(undefined);
 
-    // initial at max
     for (let i = 0; i < n; i++) {
       const last = lastStartBefore(rules[i], max);
       prevStart[i] = last;
@@ -276,8 +296,17 @@ export const getEffectiveBounds = (
         const end = prevCursor;
         const endUndefined =
           end === max &&
-          rules.some((r) => r.effect === 'active' && r.isOpenEnd && ruleCoversInstant(r, (unit === 'ms' ? max - 1 : max - 1)));
-        return { start: undefined, end: endUndefined ? undefined : end, empty: false };
+          rules.some(
+            (r) =>
+              r.effect === 'active' &&
+              r.isOpenEnd &&
+              ruleCoversInstant(r, unit === 'ms' ? max - 1 : max - 1),
+          );
+        return {
+          start: undefined,
+          end: endUndefined ? undefined : end,
+          empty: false,
+        };
       }
       status = newStatus;
     }

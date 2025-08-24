@@ -2,6 +2,7 @@ import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { compileRule } from './compile';
+import type { TimeZoneId } from './types';
 
 describe('compileRule', () => {
   it('compiles a simple daily rule with duration', () => {
@@ -16,7 +17,7 @@ describe('compileRule', () => {
           bysecond: [0],
         },
       },
-      'UTC' as any,
+      'UTC' as unknown as TimeZoneId,
       'ms',
     );
     expect(cr.duration.isValid).toBe(true);

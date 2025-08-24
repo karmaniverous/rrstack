@@ -7,14 +7,15 @@
  * - Flattened JSON (RRStackJson) with version string (build-injected).
  */
 
-import { IANAZone } from 'luxon';
 import { z } from 'zod';
 
-import { type CompiledRule,compileRule } from './compile';
+import { type CompiledRule, compileRule } from './compile';
 import { ruleCoversInstant } from './coverage';
 import { isValidTimeZone } from './coverage/time';
-import { classifyRange as sweepClassify,getEffectiveBounds as sweepBounds, getSegments as sweepSegments } from './sweep';
+import { classifyRange as sweepClassify, getEffectiveBounds as sweepBounds, getSegments as sweepSegments } from './sweep';
 import {
+  type instantStatus,
+  type rangeStatus,
   type RRStackJson,
   type RRStackOptions,
   type RRStackOptionsNormalized,
@@ -31,8 +32,6 @@ const TimeZoneIdSchema = z
   .min(1)
   .refine((tz) => isValidTimeZone(tz), { message: 'Invalid IANA time zone (check ICU data).' })
   .brand<'TimeZoneId'>();
-
-type BrandedTimeZoneId = z.infer<typeof TimeZoneIdSchema>;
 
 const OptionsSchema = z.object({
   timezone: TimeZoneIdSchema,
@@ -81,6 +80,17 @@ export class RRStack {
     this.compiled = rules.map((r) => compileRule(r, timezone, timeUnit));
   }
 
+  // Convenience helpers -------------------------------------------------------
+
+  static isValidTimeZone(tz: string): boolean {
+    return isValidTimeZone(tz);
+  }
+
+  static asTimeZoneId(tz: string): TimeZoneId {
+    if (!isValidTimeZone(tz)) throw new Error(`Invalid IANA time zone: ${tz}`);
+    return tz as unknown as TimeZoneId;
+  }
+
   // Getters / setters (property-style) ---------------------------------------
 
   get timezone(): string {
@@ -90,7 +100,6 @@ export class RRStack {
   set timezone(next: string) {
     const tz = TimeZoneIdSchema.parse(next) as unknown as TimeZoneId;
     const { timeUnit, rules } = this.options;
-    // Mutate via replacement; keep options frozen.
     (this as unknown as { options: RRStackOptionsNormalized }).options = Object.freeze({
       timezone: tz,
       timeUnit,
@@ -99,15 +108,15 @@ export class RRStack {
     this.recompile();
   }
 
-  get rules(): readonly RuleJson[] {
+  get rules(): ReadonlyArray<RuleJson> {
     return this.options.rules;
   }
 
-  set rules(next: RuleJson[]) {
+  set rules(next: ReadonlyArray<RuleJson>) {
     // Minimal rule-lite validation to fail fast; full validation in compile.
     next.forEach((r) => RuleLiteSchema.parse(r));
     const { timezone, timeUnit } = this.options;
-    const frozen = Object.freeze([...(next)]);
+    const frozen = Object.freeze([...(next as RuleJson[])]);
     (this as unknown as { options: RRStackOptionsNormalized }).options = Object.freeze({
       timezone,
       timeUnit,
@@ -121,9 +130,10 @@ export class RRStack {
   }
 
   // Batch update for efficiency
-  updateOptions(partial: Pick<RRStackOptions, 'timezone' | 'rules'>): void {
+  updateOptions(partial: Partial<Pick<RRStackOptions, 'timezone' | 'rules'>>): void {
     const tz = partial.timezone !== undefined ? TimeZoneIdSchema.parse(partial.timezone) : this.options.timezone;
-    const newRules = partial.rules !== undefined ? Object.freeze([...(partial.rules)]) : this.options.rules;
+    const newRules =
+      partial.rules !== undefined ? Object.freeze([...(partial.rules)]) : this.options.rules;
     (this as unknown as { options: RRStackOptionsNormalized }).options = Object.freeze({
       timezone: tz as unknown as TimeZoneId,
       timeUnit: this.options.timeUnit,
@@ -161,10 +171,10 @@ export class RRStack {
 
   // Queries -------------------------------------------------------------------
 
-  isActiveAt(ms: number): instantStatus {
+  isActiveAt(t: number): instantStatus {
     let status: instantStatus = 'blackout';
     for (let i = 0; i < this.compiled.length; i++) {
-      if (ruleCoversInstant(this.compiled[i], ms)) {
+      if (ruleCoversInstant(this.compiled[i], t)) {
         status = this.compiled[i].effect;
       }
     }
@@ -172,14 +182,14 @@ export class RRStack {
   }
 
   getSegments(
-    fromMs: number,
-    toMs: number,
+    from: number,
+    to: number,
   ): Iterable<{ start: number; end: number; status: instantStatus }> {
-    return sweepSegments(this.compiled, fromMs, toMs);
+    return sweepSegments(this.compiled, from, to);
   }
 
-  classifyRange(fromMs: number, toMs: number): rangeStatus {
-    return sweepClassify(this.compiled, fromMs, toMs);
+  classifyRange(from: number, to: number): rangeStatus {
+    return sweepClassify(this.compiled, from, to);
   }
 
   getEffectiveBounds(): { start?: number; end?: number; empty: boolean } {

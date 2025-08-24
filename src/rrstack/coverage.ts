@@ -9,7 +9,7 @@ import { DateTime } from 'luxon';
 import { datetime as rruleDatetime } from 'rrule';
 
 import type { CompiledRule } from './compile';
-import { enumerateStarts, enumerationHorizon } from './coverage/enumerate';
+import { enumerationHorizon } from './coverage/enumerate';
 import {
   localDayMatchesCommonPatterns,
   localDayMatchesDailyTimes,

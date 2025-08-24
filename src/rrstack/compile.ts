@@ -10,6 +10,7 @@ import { DateTime, Duration } from 'luxon';
 import { shake } from 'radash';
 import { datetime as rruleDatetime, type Options as RRuleOptions, RRule } from 'rrule';
 
+import { domainMax, domainMin } from './coverage/time';
 import {
   type instantStatus,
   type RuleJson,
@@ -56,9 +57,13 @@ export const toRRuleOptions = (
 
   if (typeof options.starts === 'number') {
     partial.dtstart = toWall(options.starts, timezone, unit);
+  } else {
+    partial.dtstart = toWall(domainMin(unit), timezone, unit);
   }
   if (typeof options.ends === 'number') {
     partial.until = toWall(options.ends, timezone, unit);
+  } else {
+    partial.until = toWall(domainMax(unit), timezone, unit);
   }
 
   return shake(partial) as RRuleOptions;

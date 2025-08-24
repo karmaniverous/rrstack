@@ -1,17 +1,20 @@
 /**
- * This is the main entry point for the library.
- *
- * @packageDocumentation
+ * Library entry point.
+ * - Re-export RRStack and public types.
+ * - Type-only exports to keep runtime lean.
  */
+
 export { RRStack } from './rrstack';
-export {
-  EPOCH_MAX_MS,
-  EPOCH_MIN_MS,
-  type Frequency,
-  type instantStatus,
-  type rangeStatus,
-  type RRStackJsonV1,
-  type RRuleOptions,
-  type RuleJson,
-  type RuleOptionsJson,
+export type {
+  Frequency,
+  instantStatus,
+  rangeStatus,
+  RRStackJson,
+  RRStackOptions,
+  RRStackOptionsNormalized,
+  RRuleOptions,
+  RuleJson,
+  RuleOptionsJson,
+  TimeZoneId,
+  UnixTimeUnit,
 } from './rrstack/types';

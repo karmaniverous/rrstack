@@ -47,7 +47,7 @@ export interface RRStackOptions {
 // Normalized options stored on the instance (frozen).
 export interface RRStackOptionsNormalized extends Omit<RRStackOptions, 'timeUnit' | 'rules' | 'timezone'> {
   timeUnit: UnixTimeUnit;
-  rules: RuleJson[];
+  rules: ReadonlyArray<RuleJson>;
   timezone: TimeZoneId;
 }
 
