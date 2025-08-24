@@ -13,6 +13,7 @@ import {
   domainMax,
   domainMin,
   epochToWallDate,
+  floatingDateToZonedEpoch,
 } from './coverage/time';
 import type { instantStatus, rangeStatus, UnixTimeUnit } from './types';
 
@@ -62,7 +63,7 @@ const lastStartBefore = (
   const wall = epochToWallDate(cursor, rule.tz, rule.unit);
   const d = rule.rrule.before(wall, true);
   if (!d) return undefined;
-  return d.getTime();
+  return floatingDateToZonedEpoch(d, rule.tz, rule.unit);
 };
 
 export function* getSegments(
@@ -91,7 +92,7 @@ export function* getSegments(
     // next start at/after from
     const wallFrom = epochToWallDate(from, r.tz, r.unit);
     const d = r.rrule.after(wallFrom, true);
-    if (d) nextStart[i] = d.getTime();
+    if (d) nextStart[i] = floatingDateToZonedEpoch(d, r.tz, r.unit);
   }
 
   let prevT = from;
@@ -121,7 +122,9 @@ export function* getSegments(
         // advance nextStart for this rule
         const wallT = epochToWallDate(t, rules[i].tz, rules[i].unit);
         const d2 = rules[i].rrule.after(wallT, false);
-        nextStart[i] = d2 ? d2.getTime() : undefined;
+        nextStart[i] = d2
+          ? floatingDateToZonedEpoch(d2, rules[i].tz, rules[i].unit)
+          : undefined;
       }
     }
 
@@ -159,7 +162,7 @@ export const getEffectiveBounds = (
   if (rules.length === 0) return { empty: true };
 
   const unit: UnixTimeUnit = rules[0].unit;
-  const min = domainMin(unit);
+  const min = domainMin();
   const max = domainMax(unit);
 
   // Earliest: scan forward from domainMin, stop at first active segment.
@@ -173,7 +176,9 @@ export const getEffectiveBounds = (
 
     for (let i = 0; i < n; i++) {
       const d = rules[i].rrule.after(wallMinPerRule[i], true);
-      nextStart[i] = d ? d.getTime() : undefined;
+      nextStart[i] = d
+        ? floatingDateToZonedEpoch(d, rules[i].tz, rules[i].unit)
+        : undefined;
     }
     let prevStatus = cascadedStatus(covering, rules);
     let guard = 0;
@@ -195,7 +200,9 @@ export const getEffectiveBounds = (
           nextEnd[i] = computeOccurrenceEnd(rules[i], t);
           const wallT = epochToWallDate(t, rules[i].tz, rules[i].unit);
           const d2 = rules[i].rrule.after(wallT, false);
-          nextStart[i] = d2 ? d2.getTime() : undefined;
+          nextStart[i] = d2
+            ? floatingDateToZonedEpoch(d2, rules[i].tz, rules[i].unit)
+            : undefined;
         }
       }
       const status = cascadedStatus(covering, rules);
@@ -208,7 +215,7 @@ export const getEffectiveBounds = (
               (r) =>
                 r.effect === 'active' &&
                 r.isOpenStart &&
-                ruleCoversInstant(r, unit === 'ms' ? min + 1 : min + 1),
+                ruleCoversInstant(r, min + 1),
             );
           return {
             start: startUndefined ? undefined : start,
@@ -250,7 +257,7 @@ export const getEffectiveBounds = (
 
     while (guard++ < 100000) {
       const t = maxBoundary(prevStart, prevEnd);
-      if (t === undefined || t < domainMin(unit)) break;
+      if (t === undefined || t < domainMin()) break;
 
       prevCursor = cursor;
       cursor = t;
@@ -263,7 +270,11 @@ export const getEffectiveBounds = (
             const wallS2 = epochToWallDate(s2, rules[i].tz, rules[i].unit);
             const sPrev = rules[i].rrule.before(wallS2, false);
             if (sPrev) {
-              const sPrevEpoch = sPrev.getTime();
+              const sPrevEpoch = floatingDateToZonedEpoch(
+                sPrev,
+                rules[i].tz,
+                rules[i].unit,
+              );
               prevStart[i] = sPrevEpoch;
               prevEnd[i] = computeOccurrenceEnd(rules[i], sPrevEpoch);
             } else {
@@ -281,7 +292,11 @@ export const getEffectiveBounds = (
           const wallS = epochToWallDate(t, rules[i].tz, rules[i].unit);
           const sPrev = rules[i].rrule.before(wallS, false);
           if (sPrev) {
-            const sPrevEpoch = sPrev.getTime();
+            const sPrevEpoch = floatingDateToZonedEpoch(
+              sPrev,
+              rules[i].tz,
+              rules[i].unit,
+            );
             prevStart[i] = sPrevEpoch;
             prevEnd[i] = computeOccurrenceEnd(rules[i], sPrevEpoch);
           } else {
@@ -300,7 +315,7 @@ export const getEffectiveBounds = (
             (r) =>
               r.effect === 'active' &&
               r.isOpenEnd &&
-              ruleCoversInstant(r, unit === 'ms' ? max - 1 : max - 1),
+              ruleCoversInstant(r, max - 1),
           );
         return {
           start: undefined,

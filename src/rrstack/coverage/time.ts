@@ -12,7 +12,7 @@ import type { UnixTimeUnit } from '../types';
 
 export const isValidTimeZone = (tz: string): boolean => IANAZone.isValidZone(tz);
 
-export const domainMin = (_unit: UnixTimeUnit): number => 0;
+export const domainMin = (): number => 0;
 export const domainMax = (unit: UnixTimeUnit): number =>
   unit === 'ms' ? 8_640_000_000_000_000 : 8_640_000_000_000;
 

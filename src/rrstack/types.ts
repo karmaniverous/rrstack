@@ -21,10 +21,10 @@ export type TimeZoneId = string & { __brand: 'TimeZoneId' };
  * - All properties optional except freq (required).
  * - Adds starts/ends (in configured unit) for domain clamping.
  */
-export type RuleOptionsJson =
-  & Partial<Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>>
-  & Pick<RRuleOptions, 'freq'>
-  & {
+export type RuleOptionsJson = Partial<
+  Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>
+> &
+  Pick<RRuleOptions, 'freq'> & {
     // timestamps in the configured unit ('ms' or 's')
     starts?: number;
     ends?: number;
@@ -45,7 +45,8 @@ export interface RRStackOptions {
 }
 
 // Normalized options stored on the instance (frozen).
-export interface RRStackOptionsNormalized extends Omit<RRStackOptions, 'timeUnit' | 'rules' | 'timezone'> {
+export interface RRStackOptionsNormalized
+  extends Omit<RRStackOptions, 'timeUnit' | 'rules' | 'timezone'> {
   timeUnit: UnixTimeUnit;
   rules: ReadonlyArray<RuleJson>;
   timezone: TimeZoneId;

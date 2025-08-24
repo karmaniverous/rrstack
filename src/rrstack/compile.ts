@@ -8,7 +8,11 @@
 
 import { DateTime, Duration } from 'luxon';
 import { shake } from 'radash';
-import { datetime as rruleDatetime, type Options as RRuleOptions, RRule } from 'rrule';
+import {
+  datetime as rruleDatetime,
+  type Options as RRuleOptions,
+  RRule,
+} from 'rrule';
 
 import { domainMax, domainMin } from './coverage/time';
 import {
@@ -58,7 +62,7 @@ export const toRRuleOptions = (
   if (typeof options.starts === 'number') {
     partial.dtstart = toWall(options.starts, timezone, unit);
   } else {
-    partial.dtstart = toWall(domainMin(unit), timezone, unit);
+    partial.dtstart = toWall(domainMin(), timezone, unit);
   }
   if (typeof options.ends === 'number') {
     partial.until = toWall(options.ends, timezone, unit);
@@ -78,7 +82,8 @@ export const compileRule = (
   if (!duration.isValid) {
     throw new Error(`Invalid ISO duration: ${rule.duration}`);
   }
-  const q = unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
+  const q =
+    unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
   if (!Number.isFinite(q) || q <= 0) {
     throw new Error(`Duration must be positive: ${rule.duration}`);
   }

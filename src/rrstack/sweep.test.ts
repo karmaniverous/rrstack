@@ -2,7 +2,8 @@ import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { compileRule } from './compile';
-import { classifyRange,getSegments } from './sweep';
+import { classifyRange, getSegments } from './sweep';
+import type { TimeZoneId } from './types';
 
 describe('sweep', () => {
   it('yields cascaded segments with blackout override', () => {
@@ -13,7 +14,8 @@ describe('sweep', () => {
         duration: 'PT1H',
         options: { freq: Frequency.DAILY, byhour: [5], byminute: [0], bysecond: [0] },
       },
-      'UTC',
+      'UTC' as unknown as TimeZoneId,
+      'ms',
     );
     // Blackout 05:30–05:45 same day via separate rule
     const blk = compileRule(
@@ -22,7 +24,8 @@ describe('sweep', () => {
         duration: 'PT15M',
         options: { freq: Frequency.DAILY, byhour: [5], byminute: [30], bysecond: [0] },
       },
-      'UTC',
+      'UTC' as unknown as TimeZoneId,
+      'ms',
     );
 
     const day = Date.UTC(2024, 0, 2);

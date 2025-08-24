@@ -3,11 +3,12 @@ import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { compileRule } from './compile';
-import { computeOccurrenceEndMs } from './coverage';
-import type { RuleJson } from './types';
+import { computeOccurrenceEnd } from './coverage';
+import type { RuleJson, TimeZoneId } from './types';
 
 describe('DST handling (America/Chicago)', () => {
   const tz = 'America/Chicago';
+  const tzId = tz as unknown as TimeZoneId;
   const ms = (isoLocal: string) => DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
 
   it('spring forward: 2021-03-14 01:30 + 1h => 03:30 local', () => {
@@ -21,10 +22,10 @@ describe('DST handling (America/Chicago)', () => {
         bysecond: [0],
       },
     };
-    const cr = compileRule(rule, tz);
+    const cr = compileRule(rule, tzId, 'ms');
 
     const start = ms('2021-03-14T01:30:00');
-    const end = computeOccurrenceEndMs(cr, start);
+    const end = computeOccurrenceEnd(cr, start);
     const endLocal = DateTime.fromMillis(end, { zone: tz });
 
     expect(endLocal.hour).toBe(3);
@@ -43,10 +44,10 @@ describe('DST handling (America/Chicago)', () => {
         bysecond: [0],
       },
     };
-    const cr = compileRule(rule, tz);
+    const cr = compileRule(rule, tzId, 'ms');
 
     const start = ms('2021-11-07T01:30:00');
-    const end = computeOccurrenceEndMs(cr, start);
+    const end = computeOccurrenceEnd(cr, start);
     const endLocal = DateTime.fromMillis(end, { zone: tz });
 
     expect(endLocal.hour).toBe(1);

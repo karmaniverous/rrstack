@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { compileRule } from './compile';
 import { computeOccurrenceEnd, ruleCoversInstant } from './coverage';
+import type { TimeZoneId } from './types';
 
 describe('coverage', () => {
   it('detects coverage within a 1-hour window at 05:00 UTC', () => {
@@ -17,7 +18,7 @@ describe('coverage', () => {
           bysecond: [0],
         },
       },
-      'UTC' as any,
+      'UTC' as unknown as TimeZoneId,
       'ms',
     );
     const day = Date.UTC(2024, 0, 2);
