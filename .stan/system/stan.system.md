@@ -2,19 +2,19 @@
 
 Quick Reference (Top 10 rules)
 
-1) Integrity-first intake: enumerate archive.tar and verify bytes read match header sizes; stop and report on mismatch.
-2) Dev plan first: keep stan.todo.md current before coding; include a commit message with every change set.
-3) Plain unified diffs only: no base64; include a/ and b/ prefixes; ≥3 lines of context; LF endings.
-4) Patch hygiene: fence contains only unified diff bytes; put commit message outside the fence.
-5) Hunk hygiene: headers/counts consistent; each body line starts with “ ”, “+”, or “-”; no raw lines.
-6) Coverage: every created/updated/deleted file in this reply has Full Listing (skip for deletions) and a matching diff.
-7) System vs Project vs Plan:
+1. Integrity-first intake: enumerate archive.tar and verify bytes read match header sizes; stop and report on mismatch.
+2. Dev plan first: keep stan.todo.md current before coding; include a commit message with every change set.
+3. Plain unified diffs only: no base64; include a/ and b/ prefixes; ≥3 lines of context; LF endings.
+4. Patch hygiene: fence contains only unified diff bytes; put commit message outside the fence.
+5. Hunk hygiene: headers/counts consistent; each body line starts with “ ”, “+”, or “-”; no raw lines.
+6. Coverage: every created/updated/deleted file in this reply has Full Listing (skip for deletions) and a matching diff.
+7. System vs Project vs Plan:
    • System (this file): repo‑agnostic rules,
    • Project (stan.project.md): durable repo‑specific requirements,
    • Plan (stan.todo.md): short‑term steps; keep “Completed (recent)” short and prune routinely.
-8) Services‑first: ports & adapters; thin adapters; pure services; co‑located tests.
-9) Long‑file rule: ~300 LOC threshold; propose splits or justify exceptions; record plan/justification in stan.todo.md.
-10) Fence hygiene: choose fence length dynamically (max inner backticks + 1); re‑scan after composing.
+8. Services‑first: ports & adapters; thin adapters; pure services; co‑located tests.
+9. Long‑file rule: ~300 LOC threshold; propose splits or justify exceptions; record plan/justification in stan.todo.md.
+10. Fence hygiene: choose fence length dynamically (max inner backticks + 1); re‑scan after composing.
 
 Table of Contents
 
@@ -394,6 +394,12 @@ If info is insufficient to proceed without critical assumptions, abort and clari
 
 ## Commit message output (replaces refactor-note files)
 
+- MANDATORY: Commit message MUST be wrapped in a fenced code block.
+  - Use a plain triple-backtick fence (or longer per the fence hygiene rule if needed).
+  - Do not annotate with a language tag; the block must contain only the commit message text.
+  - Emit the commit message once, at the end of the reply.
+  - This rule applies to every change set, regardless of size.
+
 - The assistant MUST NOT create or persist refactor-note files under
   `<stanPath>/refactors/`.
 - At the end of any change set, the assistant MUST output a commit
@@ -404,6 +410,8 @@ If info is insufficient to proceed without critical assumptions, abort and clari
     - “When: <UTC timestamp>”
     - “Why: <short reason>”
     - “What changed:” bulleted file list with terse notes
+- The fenced commit message MUST be placed in a code block fence that
+  satisfies the +1 backtick rule (see Response Format).
 - When patches are impractical, provide Full Listings for changed files,
   followed by the commit message. Do not emit unified diffs in that mode.
 
@@ -432,6 +440,13 @@ Use these headings exactly; wrap each Patch (and optional Full Listing)
 in a fence computed by the algorithm above.
 
 ---
+
+Commit Message (MANDATORY; fenced code block)
+
+- Output the commit message at the end of the reply wrapped in a fenced
+  code block. Do not annotate with a language tag. Apply the +1 backtick
+  rule. The block contains only the commit message (subject + body), no
+  surrounding prose.
 
 ## Input Data Changes
 
