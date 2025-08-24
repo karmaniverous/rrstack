@@ -2,11 +2,19 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
-#### [Unreleased](https://github.com/karmaniverous/rrstack/compare/0.1.0...HEAD)
+#### [0.2.0](https://github.com/karmaniverous/rrstack/compare/0.1.0...0.2.0)
 
 - feat: unit-aware options, JSON shape, and coverage split [`377320f`](https://github.com/karmaniverous/rrstack/commit/377320f73f54375c93258a68a0f5f0ae20dec92d)
+- split sweep.ts; add segments/bounds/util and update plan [`bdcca73`](https://github.com/karmaniverous/rrstack/commit/bdcca737c4f793e8b9e0bc9d9d0a3c5150a9a832)
+- docs: refresh README and add TypeDoc across API [`a08fcb0`](https://github.com/karmaniverous/rrstack/commit/a08fcb0166266e2476527e9467815f218ec0957a)
 - docs: add project requirements and update dev plan [`2aa01ce`](https://github.com/karmaniverous/rrstack/commit/2aa01ceeceaa50312661b27bd5869b1f95a128ee)
 - fix: complete tests, TS typings, and streaming sweep [`3d3a13d`](https://github.com/karmaniverous/rrstack/commit/3d3a13d4af5db71f99eb0ab13389bad735a19796)
+- fix: complete tests, TS typings, and streaming sweep [`26c59a1`](https://github.com/karmaniverous/rrstack/commit/26c59a13d47ea55050a768ed8e33b649930d5119)
+- inject version define and tighten test coverage [`9533af7`](https://github.com/karmaniverous/rrstack/commit/9533af763e23dc740e355feeb5301a75d5fd0045)
+- fix: unbreak vitest config comment and harden version parse [`4d7a973`](https://github.com/karmaniverous/rrstack/commit/4d7a973665d210bc9a2d04cdbe48c11e810c1e71)
+- fix: lint errors and update dev plan [`731b35c`](https://github.com/karmaniverous/rrstack/commit/731b35c2cd77f08795be993b55210812e3d9af3e)
+- docs(tsdoc): fix links and inline braces; fence examples [`31adc0f`](https://github.com/karmaniverous/rrstack/commit/31adc0f07bfe36e5ecacab56638f8c17b7c846f0)
+- doc: fix version constant name in dev plan [`3bb80bd`](https://github.com/karmaniverous/rrstack/commit/3bb80bdc1f82c5717ba7f59cac6dbdc23e35e85e)
 
 #### 0.1.0
 
