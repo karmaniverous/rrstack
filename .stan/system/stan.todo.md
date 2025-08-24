@@ -10,6 +10,7 @@ Completed (recent)
 
 - Promote durable requirements to stan.project.md (options/timeUnit/timezone brand; JSON flattening with version; streaming getSegments; independent heap-based getEffectiveBounds; eliminate EPOCH\_\*; property setters; minimal zod; browser support; changelog config; version injection). Update this plan accordingly.
 - Fix ESLint errors: remove any cast in rrstack.test.ts (type via unknown→RRStackJson), and replace while(true) with for(;;) in sweep.ts to satisfy @typescript-eslint/no-unnecessary-condition.
+- Split sweep.ts (~332 LOC) into segments.ts (getSegments/classifyRange) and bounds.ts (getEffectiveBounds); introduced util/heap.ts for boundary helpers; sweep.ts now a thin façade.
 
 ---
 
@@ -94,12 +95,7 @@ Completed (recent)
 
 8. Long-file scan (source files > ~300 LOC)
 
-- src/rrstack/sweep.ts (~332 LOC) — proposed split:
-  - Extract getSegments into src/rrstack/segments.ts (streaming boundary merge).
-  - Extract getEffectiveBounds into src/rrstack/bounds.ts (earliest/latest scanning).
-  - Introduce src/rrstack/util/heap.ts for min/max-heap helpers shared by both.
-  - Leave src/rrstack/sweep.ts as façade re-export and thin orchestrator with tests updated accordingly.
-- Keep modules focused and short.
+- Completed: split of src/rrstack/sweep.ts into src/rrstack/segments.ts and src/rrstack/bounds.ts; introduced src/rrstack/util/heap.ts; sweep.ts is a façade. Keep modules focused and short.
 
 ---
 
