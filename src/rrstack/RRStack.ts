@@ -276,13 +276,15 @@ export class RRStack {
    *
    * @param from - Start of the window (inclusive), in the configured unit.
    * @param to - End of the window (exclusive), in the configured unit.
-   * @returns An iterable of `{ start, end, status }` entries. Memory-bounded
+   * @returns An iterable of `\{ start, end, status \}` entries. Memory-bounded
    *          and stable for long windows.
    *
    * @example
+   * ```ts
    * for (const seg of stack.getSegments(from, to)) {
    *   // { start: number; end: number; status: 'active' | 'blackout' }
    * }
+   * ```
    */
   getSegments(
     from: number,
@@ -302,7 +304,7 @@ export class RRStack {
 
   /**
    * Compute effective active bounds across all rules.
-   * @returns `{ start?: number; end?: number; empty: boolean }`
+   * @returns `\{ start?: number; end?: number; empty: boolean \}`
    * - `start` and/or `end` are omitted for open-sided coverage.
    * - `empty` indicates no active coverage.
    */

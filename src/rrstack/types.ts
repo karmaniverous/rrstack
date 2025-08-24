@@ -19,7 +19,7 @@ export type UnixTimeUnit = 'ms' | 's';
 
 /**
  * Branded IANA timezone id after runtime validation. Use
- * {@link import('./RRStack').RRStack.asTimeZoneId} to construct one from a string.
+ * {@link RRStack.asTimeZoneId | RRStack.asTimeZoneId} to construct one from a string.
  */
 export type TimeZoneId = string & { __brand: 'TimeZoneId' };
 
@@ -75,8 +75,8 @@ export interface RRStackOptionsNormalized
 
 /**
  * Flattened JSON shape (no nested options) with version string.
- * - Written by {@link import('./RRStack').RRStack.toJson}.
- * - Accepted by {@link import('./RRStack').RRStack.fromJson}.
+ * - Written by {@link RRStack.toJson | RRStack.toJson}.
+ * - Accepted by {@link RRStack.fromJson | RRStack.fromJson}.
  */
 export interface RRStackJson extends RRStackOptionsNormalized {
   version: string;
