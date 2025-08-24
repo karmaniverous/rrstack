@@ -1,4 +1,4 @@
-/** See <stanPath>/system/stan.project.md for global requirements.
+/* See <stanPath>/system/stan.project.md for global requirements.
  * Requirements addressed:
  * - Inject __RRSTACK_VERSION__ at build time (browser‑safe) using @rollup/plugin-replace.
  */
@@ -27,14 +27,27 @@ const outputPath = 'dist';
 // Path alias @ -> <abs>/src (absolute to avoid module duplication warnings in Rollup)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// Resolve package version once for define replacement
+
+// Resolve package version once for define replacement (typed and safe)
 let pkgVersion = '0.0.0';
 try {
-  const pkgJson = readFileSync(path.resolve(__dirname, 'package.json'), 'utf8');
-  pkgVersion = JSON.parse(pkgJson).version ?? pkgVersion;
+  const pkgJsonText = readFileSync(
+    path.resolve(__dirname, 'package.json'),
+    'utf8',
+  );
+  const parsedUnknown: unknown = JSON.parse(pkgJsonText);
+  if (
+    typeof parsedUnknown === 'object' &&
+    parsedUnknown !== null &&
+    'version' in parsedUnknown &&
+    typeof (parsedUnknown as { version?: unknown }).version === 'string'
+  ) {
+    pkgVersion = (parsedUnknown as { version: string }).version;
+  }
 } catch {
   // noop — fallback remains '0.0.0'
 }
+
 const srcAbs = path.resolve(__dirname, 'src');
 const aliases: Alias[] = [{ find: '@', replacement: srcAbs }];
 const alias = aliasPlugin({ entries: aliases });
@@ -102,7 +115,4 @@ export const buildTypes = (dest: string): RollupOptions => ({
   plugins: [dtsPlugin()],
 });
 
-export default [
-  buildLibrary(outputPath),
-  buildTypes(outputPath),
-];
+export default [buildLibrary(outputPath), buildTypes(outputPath)];
