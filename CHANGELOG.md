@@ -2,11 +2,30 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.3.0](https://github.com/karmaniverous/rrstack/compare/0.2.0...0.3.0)
+
+- Reverted leakage from another project [`0bbabf9`](https://github.com/karmaniverous/rrstack/commit/0bbabf93a6c2a1364ce445eb4a16e51b89a4f77d)
+- fix(bounds): use safe far-future probe and avoid domainMax to stabilize latest-end and open-end detection [`48214dd`](https://github.com/karmaniverous/rrstack/commit/48214dd13ddda1b5aa6d05452301e5ac77648b77)
+- chore: split RRStack.ts and add tests for bounds/heap/seconds [`f016859`](https://github.com/karmaniverous/rrstack/commit/f016859af2a9ff1560aee5d8d1ac55f61662c2f4)
+- test: add coverage for duration, re-exports, enumeration, patterns; bump plan date [`600954b`](https://github.com/karmaniverous/rrstack/commit/600954b6f47b8cf7877403d11ec742b81cc442e1)
+- feat(duration): adopt structured DurationParts and update API/docs/tests [`abde6f3`](https://github.com/karmaniverous/rrstack/commit/abde6f37ecd711922cf126f7f507e32c3211af33)
+- docs(readme): add duration helpers and API import [`923b2b2`](https://github.com/karmaniverous/rrstack/commit/923b2b26d928ddb45b9bc33bfc5912325217a8eb)
+- fix(bounds): open-end short-circuit and correct reverse stepping for latest end [`f08de4d`](https://github.com/karmaniverous/rrstack/commit/f08de4dba62b4eb9cf266225ecdf0cf30376888a)
+- chore: complete remaining next steps (bounds tests, DX/Docs) [`8109213`](https://github.com/karmaniverous/rrstack/commit/8109213e34bf3095f25036aece10838a6ed24e00)
+- fix(bounds): compute both earliest start and latest end [`29c45ec`](https://github.com/karmaniverous/rrstack/commit/29c45eca0698c586eb115ffe788bea13e9ec8a40)
+- fix: make duration.ts eslint/tsdoc clean [`383f43e`](https://github.com/karmaniverous/rrstack/commit/383f43ea3852f3cc80a011c60fcec820a5b9312c)
+- docs(tsdoc): escape inline braces and “&gt;” in types [`d53bff1`](https://github.com/karmaniverous/rrstack/commit/d53bff1f289af899f89bc2ae894354c0bd8bc29e)
+- chore: fix lint and tests (guard __RRSTACK_VERSION__, remove unused imports) [`87d39e0`](https://github.com/karmaniverous/rrstack/commit/87d39e04244ee706e68a1a25e28b1526b59426ed)
+- test(lint): remove any cast in duration helpers test [`be6482f`](https://github.com/karmaniverous/rrstack/commit/be6482f65394832b9b7a3b4179b58f7aa41abb3a)
+
 #### [0.2.0](https://github.com/karmaniverous/rrstack/compare/0.1.0...0.2.0)
+
+> 25 August 2025
 
 - feat: unit-aware options, JSON shape, and coverage split [`377320f`](https://github.com/karmaniverous/rrstack/commit/377320f73f54375c93258a68a0f5f0ae20dec92d)
 - split sweep.ts; add segments/bounds/util and update plan [`bdcca73`](https://github.com/karmaniverous/rrstack/commit/bdcca737c4f793e8b9e0bc9d9d0a3c5150a9a832)
 - docs: refresh README and add TypeDoc across API [`a08fcb0`](https://github.com/karmaniverous/rrstack/commit/a08fcb0166266e2476527e9467815f218ec0957a)
+- chore: release v0.2.0 [`c15da99`](https://github.com/karmaniverous/rrstack/commit/c15da995674f8ca371bc75d950b96eed82f3ec9e)
 - docs: add project requirements and update dev plan [`2aa01ce`](https://github.com/karmaniverous/rrstack/commit/2aa01ceeceaa50312661b27bd5869b1f95a128ee)
 - fix: complete tests, TS typings, and streaming sweep [`3d3a13d`](https://github.com/karmaniverous/rrstack/commit/3d3a13d4af5db71f99eb0ab13389bad735a19796)
 - fix: complete tests, TS typings, and streaming sweep [`26c59a1`](https://github.com/karmaniverous/rrstack/commit/26c59a13d47ea55050a768ed8e33b649930d5119)
