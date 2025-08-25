@@ -18,9 +18,7 @@
 import { type CompiledRule, compileRule } from './compile';
 import { isValidTimeZone } from './coverage/time';
 import {
-  JsonSchema,
   normalizeOptions,
-  OptionsSchema,
   RuleLiteSchema,
   TimeZoneIdSchema,
 } from './RRStack.options';
@@ -197,7 +195,10 @@ export class RRStack {
    *          (fallback `'0.0.0'` in dev/test).
    */
   toJson(): RRStackJson {
-    return toJsonSnapshot(this.options, __RRSTACK_VERSION__);
+    const v =
+      (typeof __RRSTACK_VERSION__ === 'string' && __RRSTACK_VERSION__) ||
+      undefined;
+    return toJsonSnapshot(this.options, v);
   }
 
   /**

@@ -11,7 +11,6 @@ import { z } from 'zod';
 
 import { isValidTimeZone } from './coverage/time';
 import type {
-  RRStackJson,
   RRStackOptions,
   RRStackOptionsNormalized,
   RuleJson,
