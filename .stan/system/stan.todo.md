@@ -1,116 +1,140 @@
-# RRStack — Requirements and Development Plan
+# STAN Development Plan (tracked in .stan/system/stan.todo.md)
 
-Last updated: 2025-08-24 (UTC)
+When updated: 2025-08-25 (UTC)
 
-This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
+ALIASES
 
----
+- “development plan” / “dev plan” / “implementation plan” / “todo list”
+  → <stanPath>/system/stan.todo.md
+
+Purpose
+
+- Single source of truth for the current development plan across chat
+  threads.
+- The assistant updates this document as code/design advances (remove
+  completed items).
+
+Plan management policy
+
+- No refactor-note files are to be written or persisted under
+  <stanPath>/refactors.
+- At the end of any change set, the assistant provides a commit message
+  (first line ≤ 50 chars; body wrapped at 72).
+- Completed retention:
+  - Keep only a short “Completed (recent)” list (e.g., last 3–5 items or last
+    2 weeks). Prune older entries during routine updates.
+  - Rely on Git history for the long‑term record of completed work.
+  - When a completed item establishes a durable policy, capture that policy
+    here (project prompt) and remove it from “Completed”.
+
+Near-term exploration
+
+- After patch “open files”: explore returning terminal focus (CLI) cross‑platform (macOS open -g, Windows start/min/VSC integration). Defer until feasibility is clear.
+
+- Low priority: Investigate sporadic patch failures on long Markdown files (e.g., .stan/system/stan.todo.md)
+  - Observation: patch application is reliable overall; when failures occur they are more likely on very long Markdown files.
+  - Status: low priority; no immediate action. Track frequency; later consider chunked updates or higher context margins.
 
 Completed (recent)
 
-- Added deeper bounds tests:
-  - bounds.closed.test.ts covers closed-sided earliest/latest bounds and mixed cascade (blackout override).
-  - Complements bounds.open.test.ts (open start and empty set).
-- DX/Docs verified: internal refactor only; README requires no changes (public API unchanged).
-- Split RRStack.ts into helper modules to reduce size and improve cohesion:
-  - RRStack.options.ts (schemas/normalization), RRStack.persistence.ts (toJson/fromJson helpers), RRStack.queries.ts (query façade). RRStack.ts remains the public class and delegates to these modules.
-- Add tests to raise coverage:
-  - bounds.open.test.ts for open-start and empty detection,
-  - heap.test.ts for min/max boundary helpers,
-  - seconds.unit.test.ts for 's' timeUnit DST and integer-second ends.
-- Fix ESLint/TSDoc in duration helpers: remove numeric template literal interpolation per @typescript-eslint/restrict-template-expressions, type named RegExp groups as possibly undefined to satisfy @typescript-eslint/no-unnecessary-condition, and escape braces in TSDoc. No functional changes; prepares repo for clean lints.
-- Documentation pass: update README to reflect current API (flattened JSON with version string, property-style setters and updateOptions, no EPOCH constants, seconds rounding). Add/expand TypeDoc on RRStack class and key helpers (segments/bounds/coverage/compile/types). Verified fence hygiene in README.
-- Inject build-time version: add @rollup/plugin-replace to inject **RRSTACK_VERSION** from package.json in rollup.config.ts; toJson now emits the package version without runtime imports.
-- Tighten coverage reporting: include only src/_\_/_.ts and exclude dist/.stan/docs/.rollup.cache to avoid duplicate/irrelevant files in “All files”.
-- Promote durable requirements to stan.project.md (options/timeUnit/timezone brand; JSON flattening with version; streaming getSegments; independent heap-based getEffectiveBounds; eliminate EPOCH\_\*; property setters; minimal zod; browser support; changelog config; version injection). Update this plan accordingly.
-- Fix ESLint errors: remove any cast in rrstack.test.ts (type via unknown→RRStackJson), and replace while(true) with for(;;) in sweep.ts to satisfy @typescript-eslint/no-unnecessary-condition.
-- Split sweep.ts (~332 LOC) into segments.ts (getSegments/classifyRange) and bounds.ts (getEffectiveBounds); introduced util/heap.ts for boundary helpers; sweep.ts now a thin façade.
+- TSDoc Phase 2 (initial batch) + targeted tests
+  - Added TSDoc to src/stan/init/prompts.ts (no behavior changes).
+  - New unit tests:
+    • src/stan/patch/jsdiff.apply.test.ts (happy paths, CRLF preservation, --check sandbox, missing target),
+    • src/stan/patch/open.test.ts (test gating, missing token warning, spawn call),
+    • src/stan/init/prompts.test.ts (readPackageJsonScripts + promptForConfig flows).
+  - Expected effect: improved coverage for jsdiff/open/prompts; preserved zero‑warning TSDoc policy.
 
----
+- Infra: add system‑prompt assembly (parts -> monolith)
+  - Introduced gen-system.ts and wired it as prebuild. No content split yet;
+    supports incremental migration by adding `.stan/system/parts/*.md`.
+- Policy: README trim‑and‑link
+  - Documented in project prompt; keep README concise and move deep topics
+    to docs, linked from README.
 
-0. Top Priority — Stabilize template baseline (pre-implementation)
-   [unchanged]
+- Knip config: remove redundant ignoreDependencies entry ("auto-changelog").
 
----
+- Docs: README additions for “API docs and TSDoc” + “Contributing docs style”
+  - Clarifies how to run docs generation and contributor TSDoc expectations.
 
-1. Requirements (confirmed)
+- TSDoc Phase 1 on core APIs (no behavior changes)
+  - Added/expanded TSDoc for: config, fs, archive, diff, run plan/exec/service,
+    help, version, patch/open.
+  - Outcome: TypeDoc/ESLint surface warnings only (formatting), no errors.
 
-- Options
-  - RRStackOptions (input): { timezone, timeUnit? = 'ms', rules? = [] }
-  - RRStackOptionsNormalized (stored): extends Omit<…> with timeUnit required, rules required, timezone: TimeZoneId (branded).
-  - Flattened RRStackJson extends normalized options and adds { version: string }.
-- Timezones
-  - Validate with Luxon IANAZone.isValidZone; store branded TimeZoneId; helpers asTimeZoneId/isValidTimeZone.
-- Units
-  - No internal ms canonicalization; operate fully in configured unit.
-  - 's' mode uses integer seconds with end rounded up to honor [start, end).
-  - Eliminate EPOCH\_\*\_MS; domainMin/unit = 0; domainMax/unit from JS Date limits.
-- Algorithms
-  - Streaming getSegments via heap-based boundary merge; memory-bounded; no default cap (optional per-call limit).
-  - getEffectiveBounds independent of getSegments; heap-based earliest/latest with window probes; open-side detection.
-- Mutability
-  - options frozen; property setters for timezone/rules; batch update via updateOptions; timeUnit immutable.
-- Persistence/version
-  - toJson writes build-injected version; fromJson validates; transforms added later if needed.
-- Module split
-  - coverage/{time.ts, patterns.ts, enumerate.ts, coverage.ts}; unit-aware compile/sweep.
+- TSDoc hygiene fix pass (warnings → zero)
+  - Normalized @param tags with hyphen, avoided dotted names, escaped “>”.
+  - Result: TypeDoc and ESLint TSDoc clean (no warnings).
 
----
+- Patch UX: remove staged-files warning
+  - Disabled the staged-overlap warning (no-op helper). Warning added noise and
+    did not materially improve outcomes.
 
-2. External dependencies (Open-Source First)
+- CLI: new stan run semantics (default scripts+archive) + flags
+  - Added -p/--plan to print run plan and exit 0 (no side effects).
+  - Added -S/--no-scripts (opt out of scripts) with conflicts vs -s/-x.
+  - Added -A/--no-archive (opt out of archives); -a overrides -A when both present.
+  - Explicit conflict: -c with -A (runtime check).
+  - Defaults: no flags → run all scripts, write archives.
+  - Tests: semantics, plan-only path, conflicts; stabilized error codes.
 
-- Luxon (tz/duration), rrule (recurrence), zod (minimal validation).
-- Keep zod usage small to preserve bundle size; consider optional “lite” validators later if needed.
+- Patch UX: status banners + compact summary
+  - Introduced a tiny status helper (TTY vs BORING):
+    • success: ✔ / [OK], failure: ✖ / [FAIL], partial: △ / [PARTIAL].
+  - service.ts prints status lines and a compact summary on failure.
 
----
+- Patch service thin‑out (SRP; orchestrator only)
+  - src/stan/patch/service.ts is a lean orchestrator; helpers handle the details.
 
-3. Public contracts (service-first; ports)
+- Docs: Simplified loop diagram & path update
 
-- No side effects; pure services.
-- Thin adapters (future CLI/UI) will map to these services 1:1.
+- Open target files on patch failure
 
----
+- FEEDBACK clipboard (test guard)
 
-4. Core algorithms
+- Project prompt: document patch editor‑open behavior
 
-- Compile JSON → RRule options with tzid, dtstart/until (unit-aware).
-- Coverage with unit-aware helpers; structural fallbacks for daily and monthly/yearly patterns.
-- Streaming segments (heap merge).
-- Independent bounds (heap + window probes).
+Open (low priority)
 
----
+- Investigate rare patch failures on very long Markdown files (e.g., dev plan)
+  - Track frequency; consider chunked updates or higher context margins later.
 
-5. Module split (services-first; keep files short)
+Next up (high value)
 
-- Implement coverage split as specified; keep files cohesive and well under 300 LOC.
+- System prompt split (incremental) + requirements carry‑forward
+  - Create initial parts for high‑churn sections:
+    • 20-intake.md, 30-response-format.md, 40-patch-policy.md
+  - During this breakup, incorporate an explicit “Self‑contained per turn” rule:
+    • Each turn must leave the repo in a self‑contained state so work can resume in a new thread.
+    • Re‑emphasize mandatory dev‑plan update and fenced commit message on every change set.
+    • Add a short reminder under Operating Model and Response Format.
+  - Assemble via `npm run gen:system` and verify no behavior deltas beyond the new rule.
+  - Roll remaining sections into parts over time; keep a single runtime file.
 
----
+- TSDoc Phase 2: continue incrementally
+  - Add concise TSDoc (or header rationale) to remaining small utilities where missing.
+  - Maintain zero-warning policy for TSDoc lint/TypeDoc.
 
-6. Validation & constraints
+- Always-on prompt checks (assistant loop)
+  - At every turn, the assistant should check:
+    • System prompt delta (only for @karmaniverous/stan).
+    • Project prompt: does a durable repo-specific rule need to be promoted?
+    • Dev plan: update for every material change.
+  - Action: maintain this discipline in replies; expand CLI preflight to patch
+    command if we decide to automate checks in tooling as well.
 
-- Zod schemas:
-  - RRStackOptions (constructor/fromJson).
-  - Rule-lite checks on mutations (effect literal, options.freq numeric, starts/ends finite).
-- Full RRULE validation remains in compile.
+- README and CLI help polish
+  - Confirm CLI examples align with new flags semantics.
+  - Keep the new “API docs and TSDoc” section current as rules evolve.
 
----
+- README trim
+  - Move detail to docs/ pages (CLI semantics, patch guide).
+  - Update README to link out and keep quick‑start focused.
+  - Ensure links are stable in the published docs site.
 
-7. Tests (status)
+Notes: Patch generation learnings (process)
 
-- Added:
-  - bounds.open.test.ts, bounds.closed.test.ts, heap.test.ts, seconds.unit.test.ts.
-- Pending:
-  - None at this time; expand as new features land.
-
----
-
-8. Long-file scan (source files > ~300 LOC)
-
-- src/rrstack/RRStack.ts reduced; further reductions possible if needed after future features.
-- Completed: split of src/rrstack/sweep.ts into src/rrstack/segments.ts and src/rrstack/bounds.ts; introduced src/rrstack/util/heap.ts; sweep.ts is a façade. Keep modules focused and short.
-
----
-
-9. Next steps (implementation plan)
-
-- None currently pending.
+- Prefer small, anchored hunks with a/ and b/ prefixes and ≥3 lines of context.
+- Avoid relying on index headers; target working tree content.
+- One file per diff block; repeat per file when multiple updates are needed.
+- For large Markdown insertions, consider smaller appended blocks or fall back to Full Listing for wholesale rewrites.
