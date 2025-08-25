@@ -5,6 +5,7 @@
  */
 
 export { RRStack } from './rrstack';
+export { fromIsoDuration,toIsoDuration } from './rrstack/duration';
 export type {
   DurationParts,
   Frequency,

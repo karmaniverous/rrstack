@@ -113,7 +113,7 @@ Many scheduling problems require more than a single RRULE. You might have a base
 ## API Overview
 
 ```ts
-import { RRStack } from '@karmaniverous/rrstack';
+import { RRStack, toIsoDuration, fromIsoDuration } from '@karmaniverous/rrstack';
 
 new RRStack(opts: { timezone: string; timeUnit?: 'ms' | 's'; rules?: RuleJson[] });
 
@@ -213,6 +213,31 @@ Notes
 - Calendar vs exact:
   - { days: 1 } means “same local time next day” (can be 23 or 25 hours across DST),
   - { hours: 24 } means “exactly 24 hours.”
+
+## Duration helpers
+
+These utilities can be handy for interop (config files, CLI, or user input).
+
+```ts
+import { toIsoDuration, fromIsoDuration } from '@karmaniverous/rrstack';
+
+// Build an ISO string from structured parts
+toIsoDuration({ hours: 1, minutes: 30 }); // 'PT1H30M'
+toIsoDuration({ days: 1 }); // 'P1D'  (calendar day)
+toIsoDuration({ hours: 24 }); // 'PT24H' (exact day)
+toIsoDuration({ weeks: 2 }); // 'P2W'
+toIsoDuration({ weeks: 1, days: 2 }); // 'P9D'  (weeks normalized to days)
+
+// Parse an ISO string to structured parts (integers only)
+fromIsoDuration('PT1H30M'); // { hours: 1, minutes: 30 }
+fromIsoDuration('P1D'); // { days: 1 }
+fromIsoDuration('PT24H'); // { hours: 24 }
+fromIsoDuration('P2W'); // { weeks: 2 }
+
+// Invalid inputs (throw):
+// - fractional values like 'PT1.5H'
+// - mixed weeks with other fields like 'P1W2D'
+```
 
 ## Timezones and DST
 
