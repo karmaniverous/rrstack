@@ -5,10 +5,8 @@
  */
 
 import type { CompiledRule } from './compile';
-import { ruleCoversInstant } from './coverage';
 import {
   computeOccurrenceEnd,
-  domainMax,
   domainMin,
   epochToWallDate,
   floatingDateToZonedEpoch,
@@ -34,18 +32,6 @@ const lastStartBefore = (
   return floatingDateToZonedEpoch(d, rule.tz, rule.unit);
 };
 
-// Cascaded status at an instant (last covering rule wins).
-const cascadedStatusAtInstant = (
-  rules: CompiledRule[],
-  t: number,
-): 'active' | 'blackout' => {
-  let s: 'active' | 'blackout' = 'blackout';
-  for (let i = 0; i < rules.length; i++) {
-    if (ruleCoversInstant(rules[i], t)) s = rules[i].effect;
-  }
-  return s;
-};
-
 /**
  * Compute effective active bounds across the entire rule set.
  *
@@ -54,9 +40,8 @@ const cascadedStatusAtInstant = (
  * - `start?: number` earliest active boundary (omitted if open),
  * - `end?: number` latest active boundary (omitted if open),
  * - `empty: boolean` true if no active coverage exists.
- * @remarks Uses forward/backward boundary scanning independent of
- *          {@link getSegments}, with targeted coverage probes to detect
- *          open-sided coverage.
+ * @remarks Scans forward for earliest blackout→active transition, and scans
+ *          backward from a safe far-future probe to capture latest end.
  */
 export const getEffectiveBounds = (
   rules: CompiledRule[],
@@ -65,7 +50,11 @@ export const getEffectiveBounds = (
 
   const unit: UnixTimeUnit = rules[0].unit;
   const min = domainMin();
-  const max = domainMax(unit);
+
+  // Safe far-future probe (avoid Date overflow near JS Date max range).
+  const FAR_FUTURE_MS = Date.UTC(2099, 0, 1, 0, 0, 0);
+  const probe =
+    unit === 'ms' ? FAR_FUTURE_MS : Math.trunc(FAR_FUTURE_MS / 1000);
 
   let earliestStart: number | undefined = undefined;
   let latestEnd: number | undefined = undefined;
@@ -90,7 +79,7 @@ export const getEffectiveBounds = (
 
     while (guard++ < 100000) {
       const t = minBoundary(nextStart, nextEnd);
-      if (t === undefined || t > max) break;
+      if (t === undefined || t > probe) break;
 
       // ends before starts
       for (let i = 0; i < n; i++) {
@@ -123,101 +112,83 @@ export const getEffectiveBounds = (
     }
   }
 
-  // Latest: Try a fast near-max probe for open-ended coverage; else scan backward.
+  // Latest: scan backward from a safe far-future probe; capture first blackout→active (reverse).
   {
-    const probe =
-      (unit === 'ms' ? max - 1 : max - 1) >= min
-        ? unit === 'ms'
-          ? max - 1
-          : max - 1
-        : min;
-    if (probe >= min && cascadedStatusAtInstant(rules, probe) === 'active') {
-      // Active at domain max → open end.
-      latestEnd = undefined;
-    } else {
-      const n = rules.length;
-      const covering = new Array<boolean>(n).fill(false);
-      const prevStart = new Array<number | undefined>(n).fill(undefined);
-      const prevEnd = new Array<number | undefined>(n).fill(undefined);
+    const n = rules.length;
+    const covering = new Array<boolean>(n).fill(false);
+    const prevStart = new Array<number | undefined>(n).fill(undefined);
+    const prevEnd = new Array<number | undefined>(n).fill(undefined);
 
-      for (let i = 0; i < n; i++) {
-        const last = lastStartBefore(rules[i], max);
-        prevStart[i] = last;
-        if (typeof last === 'number') {
-          const e = computeOccurrenceEnd(rules[i], last);
-          // Set up to enter this occurrence at its end when scanning backward.
-          prevEnd[i] = e;
-        }
+    for (let i = 0; i < n; i++) {
+      const last = lastStartBefore(rules[i], probe);
+      prevStart[i] = last;
+      if (typeof last === 'number') {
+        const e = computeOccurrenceEnd(rules[i], last);
+        // initialize to enter this occurrence at its end when scanning backward
+        prevEnd[i] = e;
       }
+    }
 
-      let status = cascadedStatus(covering, rules);
-      let guard = 0;
+    let status = cascadedStatus(covering, rules);
+    let guard = 0;
 
-      while (guard++ < 100000) {
-        const t = maxBoundary(prevStart, prevEnd);
-        if (t === undefined || t < domainMin()) break;
+    while (guard++ < 100000) {
+      const t = maxBoundary(prevStart, prevEnd);
+      if (t === undefined || t < domainMin()) break;
 
-        // Crossing an end at t: entering the interval (backward).
-        for (let i = 0; i < n; i++) {
-          if (prevEnd[i] === t) {
-            covering[i] = true;
-            const s2 = prevStart[i]; // current interval start
-            if (typeof s2 === 'number') {
-              // Keep current start so we can exit at it on a later step.
-              prevStart[i] = s2;
-
-              // Preload the previous window's end (if any).
-              const wallS2 = epochToWallDate(s2, rules[i].tz, rules[i].unit);
-              const sPrev = rules[i].rrule.before(wallS2, false);
-              if (sPrev) {
-                const sPrevEpoch = floatingDateToZonedEpoch(
-                  sPrev,
-                  rules[i].tz,
-                  rules[i].unit,
-                );
-                prevEnd[i] = computeOccurrenceEnd(rules[i], sPrevEpoch);
-              } else {
-                prevEnd[i] = undefined;
-              }
-            } else {
-              // No known start to exit; clear pending end and avoid sticky coverage.
-              prevEnd[i] = undefined;
-            }
-          }
-        }
-
-        // Crossing a start at t: exiting the interval (backward).
-        for (let i = 0; i < n; i++) {
-          if (prevStart[i] === t) {
-            covering[i] = false;
-            const wallS = epochToWallDate(t, rules[i].tz, rules[i].unit);
-            const sPrev = rules[i].rrule.before(wallS, false);
+      // Crossing an end at t: entering the interval (backward).
+      for (let i = 0; i < n; i++) {
+        if (prevEnd[i] === t) {
+          covering[i] = true;
+          const s2 = prevStart[i]; // current interval start
+          if (typeof s2 === 'number') {
+            // keep current start to exit later; preload previous window's end.
+            prevStart[i] = s2;
+            const wallS2 = epochToWallDate(s2, rules[i].tz, rules[i].unit);
+            const sPrev = rules[i].rrule.before(wallS2, false);
             if (sPrev) {
               const sPrevEpoch = floatingDateToZonedEpoch(
                 sPrev,
                 rules[i].tz,
                 rules[i].unit,
               );
-              prevStart[i] = sPrevEpoch;
               prevEnd[i] = computeOccurrenceEnd(rules[i], sPrevEpoch);
             } else {
-              prevStart[i] = undefined;
-              // keep prevEnd[i] as preloaded earlier or undefined
+              prevEnd[i] = undefined;
             }
+          } else {
+            prevEnd[i] = undefined;
           }
         }
-
-        const newStatus = cascadedStatus(covering, rules);
-        // Backward: blackout -> active indicates the latest forward end at t.
-        if (status === 'blackout' && newStatus === 'active') {
-          const endUndefined =
-            t === max &&
-            rules.some((r) => r.effect === 'active' && r.isOpenEnd);
-          latestEnd = endUndefined ? undefined : t;
-          break;
-        }
-        status = newStatus;
       }
+
+      // Crossing a start at t: exiting the interval (backward).
+      for (let i = 0; i < n; i++) {
+        if (prevStart[i] === t) {
+          covering[i] = false;
+          const wallS = epochToWallDate(t, rules[i].tz, rules[i].unit);
+          const sPrev = rules[i].rrule.before(wallS, false);
+          if (sPrev) {
+            const sPrevEpoch = floatingDateToZonedEpoch(
+              sPrev,
+              rules[i].tz,
+              rules[i].unit,
+            );
+            prevStart[i] = sPrevEpoch;
+            prevEnd[i] = computeOccurrenceEnd(rules[i], sPrevEpoch);
+          } else {
+            prevStart[i] = undefined;
+          }
+        }
+      }
+
+      const newStatus = cascadedStatus(covering, rules);
+      // Backward: blackout -> active indicates the latest forward end at t.
+      if (status === 'blackout' && newStatus === 'active') {
+        latestEnd = t;
+        break;
+      }
+      status = newStatus;
     }
   }
 
