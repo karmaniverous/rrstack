@@ -6,6 +6,7 @@
 
 export { RRStack } from './rrstack';
 export type {
+  DurationParts,
   Frequency,
   instantStatus,
   rangeStatus,
@@ -17,5 +18,4 @@ export type {
   RuleOptionsJson,
   TimeZoneId,
   UnixTimeUnit,
-  DurationParts,
 } from './rrstack/types';

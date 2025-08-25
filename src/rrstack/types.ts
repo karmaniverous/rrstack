@@ -26,10 +26,10 @@ export type TimeZoneId = string & { __brand: 'TimeZoneId' };
 /**
  * Structured duration parts for UI-friendly, lossless round-tripping.
  * - All fields are non-negative integers.
- * - At least one field must be > 0 (duration must be strictly positive).
+ * - At least one field must be \> 0 (duration must be strictly positive).
  * - Calendar vs exact:
- *   • { days: 1 } → calendar day (can be 23/25 hours across DST),
- *   • { hours: 24 } → exact 24 hours.
+ *   • \{ days: 1 \} → calendar day (can be 23/25 hours across DST),
+ *   • \{ hours: 24 \} → exact 24 hours.
  */
 export interface DurationParts {
   years?: number; // non-negative integer
@@ -60,7 +60,7 @@ export type RuleOptionsJson = Partial<
 export interface RuleJson {
   /** `'active' | 'blackout'` — effect applied at covered instants. */
   effect: instantStatus;
-  /** Structured duration (non-negative integer parts; at least one > 0). */
+  /** Structured duration (non-negative integer parts; at least one \> 0). */
   duration: DurationParts;
   /** Subset of rrule options (see {@link RuleOptionsJson}). */
   options: RuleOptionsJson;
