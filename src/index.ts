@@ -17,4 +17,5 @@ export type {
   RuleOptionsJson,
   TimeZoneId,
   UnixTimeUnit,
+  DurationParts,
 } from './rrstack/types';

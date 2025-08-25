@@ -1,7 +1,7 @@
 /**
  * Requirements addressed:
  * - Compile RuleJson into rrule Options with tzid, dtstart, until.
- * - Validate ISO-8601 duration (positive).
+ * - Validate structured DurationParts (positive total).
  * - Track open-start/open-end flags.
  * - Unit-aware handling (ms/s) with no internal canonicalization.
  */
@@ -89,25 +89,21 @@ export const toRRuleOptions = (
 /**
  * Compile a JSON rule into a unit- and timezone-aware {@link CompiledRule}.
  *
- * @param rule - The JSON rule (effect, duration, options, optional label).
+ * @param rule - The JSON rule (effect, duration parts, options, optional label).
  * @param timezone - IANA timezone id for coverage computation.
  * @param unit - Time unit ('ms' | 's'). Affects duration arithmetic and
  *               rounding behavior of occurrence ends.
- * @throws If the ISO-8601 duration is invalid or non-positive.
+ * @throws If the duration total is non-positive.
  */
 export const compileRule = (
   rule: RuleJson,
   timezone: TimeZoneId,
   unit: UnixTimeUnit,
 ): CompiledRule => {
-  const duration = Duration.fromISO(rule.duration);
-  if (!duration.isValid) {
-    throw new Error(`Invalid ISO duration: ${rule.duration}`);
-  }
-  const q =
-    unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
+  const duration = Duration.fromObject(rule.duration);
+  const q = unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
   if (!Number.isFinite(q) || q <= 0) {
-    throw new Error(`Duration must be positive: ${rule.duration}`);
+    throw new Error('Duration must be strictly positive');
   }
 
   const isOpenStart = rule.options.starts === undefined;

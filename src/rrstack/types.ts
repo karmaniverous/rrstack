@@ -24,10 +24,28 @@ export type UnixTimeUnit = 'ms' | 's';
 export type TimeZoneId = string & { __brand: 'TimeZoneId' };
 
 /**
+ * Structured duration parts for UI-friendly, lossless round-tripping.
+ * - All fields are non-negative integers.
+ * - At least one field must be > 0 (duration must be strictly positive).
+ * - Calendar vs exact:
+ *   • { days: 1 } → calendar day (can be 23/25 hours across DST),
+ *   • { hours: 24 } → exact 24 hours.
+ */
+export interface DurationParts {
+  years?: number; // non-negative integer
+  months?: number; // non-negative integer
+  weeks?: number; // non-negative integer (treated as 7 days)
+  days?: number; // non-negative integer
+  hours?: number; // non-negative integer
+  minutes?: number; // non-negative integer
+  seconds?: number; // non-negative integer
+}
+
+/**
  * JSON shape for rule options:
- * - Derived from RRuleOptions with dtstart/until/tzid removed.
- * - All properties optional except freq (required).
- * - Adds starts/ends (in configured unit) for domain clamping.
+ * - Derived from rrule Options with `dtstart`/`until`/`tzid` removed.
+ * - All properties optional except `freq` (required).
+ * - Adds `starts`/`ends` in the configured {@link UnixTimeUnit} for domain clamping.
  */
 export type RuleOptionsJson = Partial<
   Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>
@@ -42,8 +60,8 @@ export type RuleOptionsJson = Partial<
 export interface RuleJson {
   /** `'active' | 'blackout'` — effect applied at covered instants. */
   effect: instantStatus;
-  /** ISO-8601 duration (e.g., 'PT1H', 'P1D'). Must be positive. */
-  duration: string;
+  /** Structured duration (non-negative integer parts; at least one > 0). */
+  duration: DurationParts;
   /** Subset of rrule options (see {@link RuleOptionsJson}). */
   options: RuleOptionsJson;
   /** Optional label for diagnostics/UI. */

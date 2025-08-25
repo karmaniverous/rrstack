@@ -40,7 +40,7 @@ const rules = [
   // Daily 05:00–06:00 active
   {
     effect: 'active' as const,
-    duration: 'PT1H',
+    duration: { hours: 1 },
     options: {
       freq: Frequency.DAILY,
       byhour: [5],
@@ -52,7 +52,7 @@ const rules = [
   // Blackout 05:30–05:45 (overrides active during that slice)
   {
     effect: 'blackout' as const,
-    duration: 'PT15M',
+    duration: { minutes: 15 },
     options: {
       freq: Frequency.DAILY,
       byhour: [5],
@@ -100,7 +100,9 @@ Many scheduling problems require more than a single RRULE. You might have a base
 
 ## Core Concepts
 
-- RuleJson: a single rule that specifies an effect ('active' or 'blackout'), an ISO 8601 duration, and a subset of rrule Options (plus optional starts/ends to clamp the domain).
+- DurationParts: a structured object describing how long each occurrence lasts (non-negative integer fields; at least one > 0).
+  - Example: { minutes: 15 }, { hours: 1 }, { days: 1 } (calendar), { hours: 24 } (exact day)
+- RuleJson: a single rule that specifies an effect ('active' or 'blackout'), a DurationParts duration, and a subset of rrule Options (plus optional starts/ends to clamp the domain).
 - RRStack: an ordered list of RuleJson applied in a cascade; later rules override earlier coverage.
 - Query surface:
   - isActiveAt(ms): point query
@@ -165,53 +167,52 @@ export type UnixTimeUnit = 'ms' | 's';
 // Branded IANA timezone id after runtime validation.
 export type TimeZoneId = string & { __brand: 'TimeZoneId' };
 
+// Structured duration (all fields non-negative integers; at least one > 0).
+export interface DurationParts {
+  years?: number;
+  months?: number;
+  weeks?: number;
+  days?: number;
+  hours?: number;
+  minutes?: number;
+  seconds?: number;
+}
+
 /**
  * JSON shape for rule options:
- * - Derived from RRuleOptions with dtstart/until/tzid removed (set internally).
- * - All properties optional except freq (required).
+ * - Derived from RRuleOptions with dtstart/until/tzid removed (set internally),
  * - Adds starts/ends (in configured unit) for domain clamping.
  */
 export type RuleOptionsJson = Partial<
   Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>
 > &
   Pick<RRuleOptions, 'freq'> & {
-    starts?: number; // timestamp in configured unit
-    ends?: number;   // timestamp in configured unit
+    starts?: number; // optional clamp (timestamp in configured unit)
+    ends?: number; // optional clamp (timestamp in configured unit)
   };
 
 export interface RuleJson {
   effect: instantStatus; // 'active' | 'blackout'
-  duration: string;      // ISO-8601 (e.g., 'PT1H', 'P1D')
+  duration: DurationParts; // structured, positive total
   options: RuleOptionsJson;
   label?: string;
 }
 
-// Constructor input (user-provided).
-export interface RRStackOptions {
-  timezone: string;
-  timeUnit?: UnixTimeUnit; // default 'ms'
-  rules?: RuleJson[];      // default []
-}
-
-// Normalized options stored on the instance (frozen).
-export interface RRStackOptionsNormalized
-  extends Omit<RRStackOptions, 'timeUnit' | 'rules' | 'timezone'> {
-  timeUnit: UnixTimeUnit;
-  rules: ReadonlyArray<RuleJson>;
-  timezone: TimeZoneId; // branded and validated
-}
-
-// Flattened JSON shape (no nested options) with version string.
-export interface RRStackJson extends RRStackOptionsNormalized {
+export interface RRStackJson {
   version: string;
+  timezone: TimeZoneId;
+  timeUnit: 'ms' | 's';
+  rules: RuleJson[];
 }
 ```
 
 Notes
 
-- The library compiles JSON into rrule Options with tzid, dtstart, and until set internally. starts/ends are optional domain clamps in epoch milliseconds or integer seconds, depending on timeUnit.
-- Durations are ISO 8601 and must be positive. Duration arithmetic uses Luxon in the rule timezone to remain DST-correct.
+- The library compiles DurationParts into a Luxon Duration and computes ends in the rule timezone to remain DST-correct.
 - Half-open intervals [start, end): in 's' mode, end is rounded up to the next second to avoid boundary false negatives.
+- Calendar vs exact:
+  - { days: 1 } means “same local time next day” (can be 23 or 25 hours across DST),
+  - { hours: 24 } means “exactly 24 hours.”
 
 ## Timezones and DST
 
@@ -222,7 +223,7 @@ Notes
 
 ## Version handling
 
-- toJson writes the current package version via a build-time injected constant (__RRSTACK_VERSION__) so no package.json import is needed at runtime.
+- toJson writes the current package version via a build-time injected constant (**RRSTACK_VERSION**) so no package.json import is needed at runtime.
 - fromJson accepts a versioned shape (RRStackJson). Version-based transforms may be added in the future without changing the public shape.
 
 ## Common Patterns
@@ -234,7 +235,7 @@ import { RRule, Frequency } from 'rrule';
 
 const thirdTuesday = {
   effect: 'active' as const,
-  duration: 'PT1H',
+  duration: { hours: 1 },
   options: {
     freq: Frequency.MONTHLY,
     byweekday: [RRule.TU.nth(3)],
@@ -254,7 +255,7 @@ Daily at 09:00 starting on a date boundary
 // starts at midnight local; BYHOUR/BYMINUTE produce the 09:00 occurrence
 const daily9 = {
   effect: 'active' as const,
-  duration: 'PT1H',
+  duration: { hours: 1 },
   options: {
     freq: Frequency.DAILY,
     byhour: [9],
@@ -262,7 +263,7 @@ const daily9 = {
     bysecond: [0],
     // Set to midnight on the start date in the target timezone.
     // The first occurrence begins at 09:00 on/after this date.
-    // starts: ms('2021-05-01T00:00:00'), // local-to-epoch helper
+    // starts: ms('2021-05-01T00:00:00'),
   },
 };
 ```
@@ -272,7 +273,7 @@ Odd months only, with an exception and a reactivation
 ```ts
 const baseOddMonths = {
   effect: 'active' as const,
-  duration: 'PT1H',
+  duration: { hours: 1 },
   options: {
     freq: Frequency.MONTHLY,
     bymonth: [1, 3, 5, 7, 9, 11],
@@ -287,7 +288,7 @@ const baseOddMonths = {
 
 const julyBlackout = {
   effect: 'blackout' as const,
-  duration: 'PT1H',
+  duration: { hours: 1 },
   options: {
     freq: Frequency.YEARLY,
     bymonth: [7],
@@ -300,7 +301,7 @@ const julyBlackout = {
 
 const july20Reactivate = {
   effect: 'active' as const,
-  duration: 'PT1H',
+  duration: { hours: 1 },
   options: {
     freq: Frequency.YEARLY,
     bymonth: [7],

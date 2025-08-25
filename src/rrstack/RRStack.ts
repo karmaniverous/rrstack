@@ -56,9 +56,34 @@ const JsonSchema = OptionsSchema.extend({
   version: z.string().min(1),
 });
 
+// DurationParts validation: non-negative integers, and total > 0.
+const NonNegInt = z.number().int().min(0);
+const DurationPartsSchema = z
+  .object({
+    years: NonNegInt.optional(),
+    months: NonNegInt.optional(),
+    weeks: NonNegInt.optional(),
+    days: NonNegInt.optional(),
+    hours: NonNegInt.optional(),
+    minutes: NonNegInt.optional(),
+    seconds: NonNegInt.optional(),
+  })
+  .refine(
+    (d) =>
+      (d.years ?? 0) +
+        (d.months ?? 0) +
+        (d.weeks ?? 0) +
+        (d.days ?? 0) +
+        (d.hours ?? 0) +
+        (d.minutes ?? 0) +
+        (d.seconds ?? 0) >
+      0,
+    { message: 'Duration must be strictly positive' },
+  );
+
 const RuleLiteSchema = z.object({
   effect: z.enum(['active', 'blackout']),
-  duration: z.string().min(1),
+  duration: DurationPartsSchema,
   options: z
     .object({
       freq: z.number(),

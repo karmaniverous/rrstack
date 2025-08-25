@@ -14,7 +14,7 @@ describe('DST handling (America/Chicago)', () => {
   it('spring forward: 2021-03-14 01:30 + 1h => 03:30 local', () => {
     const rule: RuleJson = {
       effect: 'active',
-      duration: 'PT1H',
+      duration: { hours: 1 },
       options: {
         freq: Frequency.DAILY,
         byhour: [1],
@@ -36,7 +36,7 @@ describe('DST handling (America/Chicago)', () => {
   it('fall back: 2021-11-07 01:30 + 1h => 01:30 local (repeated hour)', () => {
     const rule: RuleJson = {
       effect: 'active',
-      duration: 'PT1H',
+      duration: { hours: 1 },
       options: {
         freq: Frequency.DAILY,
         byhour: [1],

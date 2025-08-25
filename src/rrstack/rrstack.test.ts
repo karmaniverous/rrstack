@@ -13,7 +13,7 @@ describe('RRStack', () => {
       rules: [
         {
           effect: 'active' as const,
-          duration: 'PT1H',
+          duration: { hours: 1 },
           options: {
             freq: Frequency.DAILY,
             byhour: [5],
@@ -43,13 +43,13 @@ describe('RRStack', () => {
     stack.rules = [
       {
         effect: 'active',
-        duration: 'PT30M',
+        duration: { minutes: 30 },
         options: { freq: Frequency.DAILY, byhour: [12], byminute: [0], bysecond: [0] },
         label: 'A',
       },
       {
         effect: 'blackout',
-        duration: 'PT10M',
+        duration: { minutes: 10 },
         options: { freq: Frequency.DAILY, byhour: [12], byminute: [5], bysecond: [0] },
         label: 'B',
       },

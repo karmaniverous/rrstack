@@ -10,7 +10,7 @@ describe('coverage', () => {
     const cr = compileRule(
       {
         effect: 'active',
-        duration: 'PT1H',
+        duration: { hours: 1 },
         options: {
           freq: Frequency.DAILY,
           byhour: [5],

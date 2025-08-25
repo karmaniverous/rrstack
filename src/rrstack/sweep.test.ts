@@ -11,7 +11,7 @@ describe('sweep', () => {
     const act = compileRule(
       {
         effect: 'active',
-        duration: 'PT1H',
+        duration: { hours: 1 },
         options: { freq: Frequency.DAILY, byhour: [5], byminute: [0], bysecond: [0] },
       },
       'UTC' as unknown as TimeZoneId,
@@ -21,7 +21,7 @@ describe('sweep', () => {
     const blk = compileRule(
       {
         effect: 'blackout',
-        duration: 'PT15M',
+        duration: { minutes: 15 },
         options: { freq: Frequency.DAILY, byhour: [5], byminute: [30], bysecond: [0] },
       },
       'UTC' as unknown as TimeZoneId,

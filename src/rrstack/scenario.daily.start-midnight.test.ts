@@ -12,7 +12,7 @@ describe('Daily 09:00 starting at midnight (America/Chicago)', () => {
   it('activates at 09:00 on/after the start date even if dtstart is 00:00', () => {
     const rule: RuleJson = {
       effect: 'active',
-      duration: 'PT1H',
+      duration: { hours: 1 },
       options: {
         freq: Frequency.DAILY,
         byhour: [9],

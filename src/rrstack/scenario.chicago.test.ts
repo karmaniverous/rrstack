@@ -14,7 +14,7 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
     // Base activation: 3rd Tuesday of every other month, 05:00–06:00
     const base: RuleJson = {
       effect: 'active',
-      duration: 'PT1H',
+      duration: { hours: 1 },
       options: {
         freq: Frequency.MONTHLY,
         interval: 2,
@@ -33,7 +33,7 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
     // Blackout July occurrences (same structural criteria, month = 7)
     const julyBlackout: RuleJson = {
       effect: 'blackout',
-      duration: 'PT1H',
+      duration: { hours: 1 },
       options: {
         freq: Frequency.YEARLY,
         bymonth: [7],
@@ -50,7 +50,7 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
     // Re-activate when the day is the 20th (only in July)
     const july20Reactivate: RuleJson = {
       effect: 'active',
-      duration: 'PT1H',
+      duration: { hours: 1 },
       options: {
         freq: Frequency.YEARLY,
         bymonth: [7],
