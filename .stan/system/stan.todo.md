@@ -8,6 +8,10 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
+- Added deeper bounds tests:
+  - bounds.closed.test.ts covers closed-sided earliest/latest bounds and mixed cascade (blackout override).
+  - Complements bounds.open.test.ts (open start and empty set).
+- DX/Docs verified: internal refactor only; README requires no changes (public API unchanged).
 - Split RRStack.ts into helper modules to reduce size and improve cohesion:
   - RRStack.options.ts (schemas/normalization), RRStack.persistence.ts (toJson/fromJson helpers), RRStack.queries.ts (query façade). RRStack.ts remains the public class and delegates to these modules.
 - Add tests to raise coverage:
@@ -94,9 +98,9 @@ Completed (recent)
 7. Tests (status)
 
 - Added:
-  - bounds.open.test.ts, heap.test.ts, seconds.unit.test.ts.
+  - bounds.open.test.ts, bounds.closed.test.ts, heap.test.ts, seconds.unit.test.ts.
 - Pending:
-  - Expand bounds tests for closed-sided ranges and mixed cascades.
+  - None at this time; expand as new features land.
 
 ---
 
@@ -109,7 +113,4 @@ Completed (recent)
 
 9. Next steps (implementation plan)
 
-- Tests/coverage:
-  - Add targeted tests to raise coverage in bounds.ts beyond open-start and empty (e.g., cascades).
-- DX/Docs:
-  - Ensure README cross-references new helper modules only as internal refactoring (no API change).
+- None currently pending.
