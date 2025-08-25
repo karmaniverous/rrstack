@@ -5,7 +5,6 @@
  */
 
 import type { CompiledRule } from './compile';
-import { ruleCoversInstant } from './coverage';
 import {
   computeOccurrenceEnd,
   domainMax,
@@ -58,7 +57,10 @@ export const getEffectiveBounds = (
   const min = domainMin();
   const max = domainMax(unit);
 
-  // Earliest: scan forward from domainMin, stop at first active segment.
+  let earliestStart: number | undefined = undefined;
+  let latestEnd: number | undefined = undefined;
+
+  // Earliest: scan forward from domainMin, stop at first blackout→active.
   {
     const n = rules.length;
     const covering = new Array<boolean>(n).fill(false);
@@ -99,29 +101,23 @@ export const getEffectiveBounds = (
         }
       }
       const status = cascadedStatus(covering, rules);
-      if (status !== prevStatus) {
-        if (prevStatus === 'blackout' && status === 'active') {
-          const start = t;
-          const startUndefined =
-            start === min &&
-            rules.some(
-              (r) =>
-                r.effect === 'active' &&
-                r.isOpenStart &&
-                ruleCoversInstant(r, min + 1),
-            );
-          return {
-            start: startUndefined ? undefined : start,
-            end: undefined,
-            empty: false,
-          };
-        }
-        prevStatus = status;
+      if (prevStatus === 'blackout' && status === 'active') {
+        const start = t;
+        const startUndefined =
+          start === min &&
+          rules.some(
+            (r) =>
+              r.effect === 'active' &&
+              r.isOpenStart,
+          );
+        earliestStart = startUndefined ? undefined : start;
+        break;
       }
+      prevStatus = status;
     }
   }
 
-  // Latest: scan backward from domainMax, stop when active → blackout boundary passes.
+  // Latest: scan backward from domainMax, capture first blackout→active (reverse).
   {
     const n = rules.length;
     const covering = new Array<boolean>(n).fill(false);
@@ -133,18 +129,11 @@ export const getEffectiveBounds = (
       prevStart[i] = last;
       if (typeof last === 'number') {
         const e = computeOccurrenceEnd(rules[i], last);
-        if (e > max) {
-          covering[i] = true;
-          prevEnd[i] = e;
-        } else {
-          covering[i] = false;
-          prevEnd[i] = e;
-        }
+        covering[i] = false;
+        prevEnd[i] = e;
       }
     }
 
-    let cursor = max;
-    let prevCursor = cursor;
     let status = cascadedStatus(covering, rules);
     let guard = 0;
 
@@ -152,11 +141,9 @@ export const getEffectiveBounds = (
       const t = maxBoundary(prevStart, prevEnd);
       if (t === undefined || t < domainMin()) break;
 
-      prevCursor = cursor;
-      cursor = t;
-
       for (let i = 0; i < n; i++) {
         if (prevEnd[i] === t) {
+          // Enter this rule's coverage when moving backward.
           covering[i] = true;
           const s2 = prevStart[i];
           if (typeof s2 === 'number') {
@@ -200,26 +187,18 @@ export const getEffectiveBounds = (
       }
 
       const newStatus = cascadedStatus(covering, rules);
-      if (status === 'active' && newStatus === 'blackout') {
-        const end = prevCursor;
+      // Backward: blackout -> active indicates the latest forward end at t.
+      if (status === 'blackout' && newStatus === 'active') {
         const endUndefined =
-          end === max &&
-          rules.some(
-            (r) =>
-              r.effect === 'active' &&
-              r.isOpenEnd &&
-              ruleCoversInstant(r, max - 1),
-          );
-        return {
-          start: undefined,
-          end: endUndefined ? undefined : end,
-          empty: false,
-        };
+          t === max &&
+          rules.some((r) => r.effect === 'active' && r.isOpenEnd);
+        latestEnd = endUndefined ? undefined : t;
+        break;
       }
       status = newStatus;
     }
   }
 
-  // No active coverage
-  return { empty: true };
+  const empty = earliestStart === undefined && latestEnd === undefined;
+  return { start: earliestStart, end: latestEnd, empty };
 };
