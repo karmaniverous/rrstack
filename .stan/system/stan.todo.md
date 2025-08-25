@@ -8,9 +8,10 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
+- Fix ESLint/TSDoc in duration helpers: remove numeric template literal interpolation per @typescript-eslint/restrict-template-expressions, type named RegExp groups as possibly undefined to satisfy @typescript-eslint/no-unnecessary-condition, and escape braces in TSDoc. No functional changes; prepares repo for clean lints.
 - Documentation pass: update README to reflect current API (flattened JSON with version string, property-style setters and updateOptions, no EPOCH constants, seconds rounding). Add/expand TypeDoc on RRStack class and key helpers (segments/bounds/coverage/compile/types). Verified fence hygiene in README.
 - Inject build-time version: add @rollup/plugin-replace to inject **RRSTACK_VERSION** from package.json in rollup.config.ts; toJson now emits the package version without runtime imports.
-- Tighten coverage reporting: include only src/\*_/_.ts and exclude dist/.stan/docs/.rollup.cache to avoid duplicate/irrelevant files in “All files”.
+- Tighten coverage reporting: include only src/_\_/_.ts and exclude dist/.stan/docs/.rollup.cache to avoid duplicate/irrelevant files in “All files”.
 - Promote durable requirements to stan.project.md (options/timeUnit/timezone brand; JSON flattening with version; streaming getSegments; independent heap-based getEffectiveBounds; eliminate EPOCH\_\*; property setters; minimal zod; browser support; changelog config; version injection). Update this plan accordingly.
 - Fix ESLint errors: remove any cast in rrstack.test.ts (type via unknown→RRStackJson), and replace while(true) with for(;;) in sweep.ts to satisfy @typescript-eslint/no-unnecessary-condition.
 - Split sweep.ts (~332 LOC) into segments.ts (getSegments/classifyRange) and bounds.ts (getEffectiveBounds); introduced util/heap.ts for boundary helpers; sweep.ts now a thin façade.
@@ -98,16 +99,21 @@ Completed (recent)
 
 8. Long-file scan (source files > ~300 LOC)
 
+- src/rrstack/RRStack.ts ≈ 340+ LOC (flagged): propose a follow-up split:
+  - rrstack/RRStack.options.ts — constructor, zod schemas, setters, updateOptions.
+  - rrstack/RRStack.persistence.ts — toJson/fromJson + version constant plumbing.
+  - rrstack/RRStack.queries.ts — isActiveAt/getSegments/classifyRange/getEffectiveBounds façades.
+  - Keep RRStack.ts as a thin barrel that re-exports and composes these concerns.
 - Completed: split of src/rrstack/sweep.ts into src/rrstack/segments.ts and src/rrstack/bounds.ts; introduced src/rrstack/util/heap.ts; sweep.ts is a façade. Keep modules focused and short.
 
 ---
 
 9. Next steps (implementation plan)
 
+- Lint/DX:
+  - Re-run eslint after duration.ts fix; address any remaining items repo-wide.
 - Tests/coverage:
   - Add targeted tests to raise coverage in bounds.ts (earliest/latest open-sided detection) and util/heap.ts.
   - Add a small test matrix for 's' timeUnit to verify end rounding behavior across DST transitions.
-- DX/Docs:
-  - Confirm README mentions build-time version injection (done); keep examples aligned.
-- Build/Changelog:
-  - Ensure auto-changelog continues to include all commits (unchanged).
+- Refactor (pending approval):
+  - Proceed with the RRStack.ts split described above to reduce file length and improve cohesion.

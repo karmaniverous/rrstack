@@ -5,7 +5,7 @@
  * - All units are non-negative integers (no fractional values).
  * - Total duration must be \> 0.
  * - ISO "weeks" form (PnW) cannot be mixed with other date/time fields.
- *   • toIsoDuration will normalize mixed { weeks, ... } by converting weeks → days.
+ *   • toIsoDuration will normalize mixed \{ weeks, ... \} by converting weeks → days.
  *   • fromIsoDuration accepts either PnW (weeks-only) or the standard Y/M/D + T H/M/S form.
  */
 
@@ -36,42 +36,40 @@ export const toIsoDuration = (parts: DurationParts): string => {
   if (!all.every(isNonNegInt)) {
     throw new Error('DurationParts must be non-negative integers.');
   }
-  const total =
-    y + mo + w + d + h + mi + s;
+  const total = y + mo + w + d + h + mi + s;
   if (total <= 0) {
     throw new Error('Duration must be strictly positive.');
   }
 
   // Decide whether weeks-only form is valid
   const hasWeeks = w > 0;
-  const hasOther =
-    y > 0 || mo > 0 || d > 0 || h > 0 || mi > 0 || s > 0;
+  const hasOther = y > 0 || mo > 0 || d > 0 || h > 0 || mi > 0 || s > 0;
 
   if (hasWeeks && !hasOther) {
-    return `P${w}W`;
+    return 'P' + String(w) + 'W';
   }
 
   // Normalize weeks into days if anything else is present
   const days = d + w * 7;
 
-  const dateParts = [
-    y ? `${y}Y` : '',
-    mo ? `${mo}M` : '',
-    days ? `${days}D` : '',
-  ].join('');
+  const datePartsTokens: string[] = [];
+  if (y) datePartsTokens.push(String(y) + 'Y');
+  if (mo) datePartsTokens.push(String(mo) + 'M');
+  if (days) datePartsTokens.push(String(days) + 'D');
+  const dateParts = datePartsTokens.join('');
 
-  const timeParts = [
-    h ? `${h}H` : '',
-    mi ? `${mi}M` : '',
-    s ? `${s}S` : '',
-  ].join('');
+  const timePartsTokens: string[] = [];
+  if (h) timePartsTokens.push(String(h) + 'H');
+  if (mi) timePartsTokens.push(String(mi) + 'M');
+  if (s) timePartsTokens.push(String(s) + 'S');
+  const timeParts = timePartsTokens.join('');
 
   if (!dateParts && !timeParts) {
     // Shouldn't happen due to total > 0, but guard anyway
     throw new Error('Duration must include at least one component.');
   }
 
-  return `P${dateParts}${timeParts ? `T${timeParts}` : ''}`;
+  return 'P' + dateParts + (timeParts ? 'T' + timeParts : '');
 };
 
 /**
@@ -110,12 +108,15 @@ export const fromIsoDuration = (isoRaw: string): DurationParts => {
     );
   }
 
-  const years = Number(m.groups.years ?? 0);
-  const months = Number(m.groups.months ?? 0);
-  const days = Number(m.groups.days ?? 0);
-  const hours = Number(m.groups.hours ?? 0);
-  const minutes = Number(m.groups.minutes ?? 0);
-  const seconds = Number(m.groups.seconds ?? 0);
+  // Treat named groups as possibly undefined to satisfy strict linting.
+  const g = m.groups as Record<string, string | undefined>;
+
+  const years = Number(g.years ?? '0');
+  const months = Number(g.months ?? '0');
+  const days = Number(g.days ?? '0');
+  const hours = Number(g.hours ?? '0');
+  const minutes = Number(g.minutes ?? '0');
+  const seconds = Number(g.seconds ?? '0');
 
   const all = [years, months, days, hours, minutes, seconds];
   if (!all.every(isNonNegInt)) {
