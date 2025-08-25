@@ -8,6 +8,12 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
+- Split RRStack.ts into helper modules to reduce size and improve cohesion:
+  - RRStack.options.ts (schemas/normalization), RRStack.persistence.ts (toJson/fromJson helpers), RRStack.queries.ts (query façade). RRStack.ts remains the public class and delegates to these modules.
+- Add tests to raise coverage:
+  - bounds.open.test.ts for open-start and empty detection,
+  - heap.test.ts for min/max boundary helpers,
+  - seconds.unit.test.ts for 's' timeUnit DST and integer-second ends.
 - Fix ESLint/TSDoc in duration helpers: remove numeric template literal interpolation per @typescript-eslint/restrict-template-expressions, type named RegExp groups as possibly undefined to satisfy @typescript-eslint/no-unnecessary-condition, and escape braces in TSDoc. No functional changes; prepares repo for clean lints.
 - Documentation pass: update README to reflect current API (flattened JSON with version string, property-style setters and updateOptions, no EPOCH constants, seconds rounding). Add/expand TypeDoc on RRStack class and key helpers (segments/bounds/coverage/compile/types). Verified fence hygiene in README.
 - Inject build-time version: add @rollup/plugin-replace to inject **RRSTACK_VERSION** from package.json in rollup.config.ts; toJson now emits the package version without runtime imports.
@@ -87,33 +93,23 @@ Completed (recent)
 
 7. Tests (status)
 
-- Update tests for:
-  - Flattened JSON shape, version string in toJson.
-  - Timezone setter validation; branded TimeZoneId behavior.
-  - Seconds semantics (ceil end) and now().
-  - Streaming getSegments over long windows (no memory blow-up).
-  - Independent getEffectiveBounds (no reliance on getSegments).
-  - Elimination of EPOCH\_\* constants.
+- Added:
+  - bounds.open.test.ts, heap.test.ts, seconds.unit.test.ts.
+- Pending:
+  - Expand bounds tests for closed-sided ranges and mixed cascades.
 
 ---
 
 8. Long-file scan (source files > ~300 LOC)
 
-- src/rrstack/RRStack.ts ≈ 340+ LOC (flagged): propose a follow-up split:
-  - rrstack/RRStack.options.ts — constructor, zod schemas, setters, updateOptions.
-  - rrstack/RRStack.persistence.ts — toJson/fromJson + version constant plumbing.
-  - rrstack/RRStack.queries.ts — isActiveAt/getSegments/classifyRange/getEffectiveBounds façades.
-  - Keep RRStack.ts as a thin barrel that re-exports and composes these concerns.
+- src/rrstack/RRStack.ts reduced; further reductions possible if needed after future features.
 - Completed: split of src/rrstack/sweep.ts into src/rrstack/segments.ts and src/rrstack/bounds.ts; introduced src/rrstack/util/heap.ts; sweep.ts is a façade. Keep modules focused and short.
 
 ---
 
 9. Next steps (implementation plan)
 
-- Lint/DX:
-  - Re-run eslint after duration.ts fix; address any remaining items repo-wide.
 - Tests/coverage:
-  - Add targeted tests to raise coverage in bounds.ts (earliest/latest open-sided detection) and util/heap.ts.
-  - Add a small test matrix for 's' timeUnit to verify end rounding behavior across DST transitions.
-- Refactor (pending approval):
-  - Proceed with the RRStack.ts split described above to reduce file length and improve cohesion.
+  - Add targeted tests to raise coverage in bounds.ts beyond open-start and empty (e.g., cascades).
+- DX/Docs:
+  - Ensure README cross-references new helper modules only as internal refactoring (no API change).

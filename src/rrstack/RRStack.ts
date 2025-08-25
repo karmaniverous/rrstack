@@ -14,16 +14,23 @@
  *
  * @public
  */
-import { z } from 'zod';
 
 import { type CompiledRule, compileRule } from './compile';
-import { ruleCoversInstant } from './coverage';
 import { isValidTimeZone } from './coverage/time';
 import {
-  classifyRange as sweepClassify,
-  getEffectiveBounds as sweepBounds,
-  getSegments as sweepSegments,
-} from './sweep';
+  JsonSchema,
+  normalizeOptions,
+  OptionsSchema,
+  RuleLiteSchema,
+  TimeZoneIdSchema,
+} from './RRStack.options';
+import { parseJsonPayload, toJsonSnapshot } from './RRStack.persistence';
+import {
+  classifyRangeOverWindow,
+  getEffectiveBoundsFromCompiled,
+  getSegmentsOverWindow,
+  isActiveAtCompiled,
+} from './RRStack.queries';
 import {
   type instantStatus,
   type rangeStatus,
@@ -37,62 +44,6 @@ import {
 
 // Build-time injected in production bundles; fallback for dev/test.
 declare const __RRSTACK_VERSION__: string | undefined;
-
-const TimeZoneIdSchema = z
-  .string()
-  .min(1)
-  .refine((tz) => isValidTimeZone(tz), {
-    message: 'Invalid IANA time zone (check ICU data).',
-  })
-  .brand<'TimeZoneId'>();
-
-const OptionsSchema = z.object({
-  timezone: TimeZoneIdSchema,
-  timeUnit: z.enum(['ms', 's']).default('ms'),
-  rules: z.array(z.any()).default([]),
-});
-
-const JsonSchema = OptionsSchema.extend({
-  version: z.string().min(1),
-});
-
-// DurationParts validation: non-negative integers, and total > 0.
-const NonNegInt = z.number().int().min(0);
-const DurationPartsSchema = z
-  .object({
-    years: NonNegInt.optional(),
-    months: NonNegInt.optional(),
-    weeks: NonNegInt.optional(),
-    days: NonNegInt.optional(),
-    hours: NonNegInt.optional(),
-    minutes: NonNegInt.optional(),
-    seconds: NonNegInt.optional(),
-  })
-  .refine(
-    (d) =>
-      (d.years ?? 0) +
-        (d.months ?? 0) +
-        (d.weeks ?? 0) +
-        (d.days ?? 0) +
-        (d.hours ?? 0) +
-        (d.minutes ?? 0) +
-        (d.seconds ?? 0) >
-      0,
-    { message: 'Duration must be strictly positive' },
-  );
-
-const RuleLiteSchema = z.object({
-  effect: z.enum(['active', 'blackout']),
-  duration: DurationPartsSchema,
-  options: z
-    .object({
-      freq: z.number(),
-      starts: z.number().finite().optional(),
-      ends: z.number().finite().optional(),
-    })
-    .passthrough(),
-  label: z.string().optional(),
-});
 
 export class RRStack {
   /**
@@ -111,16 +62,7 @@ export class RRStack {
    *          compiles its rules immediately.
    */
   constructor(opts: RRStackOptions) {
-    const parsed = OptionsSchema.parse({
-      timezone: opts.timezone,
-      timeUnit: opts.timeUnit ?? 'ms',
-      rules: opts.rules ?? [],
-    });
-    const normalized: RRStackOptionsNormalized = Object.freeze({
-      timezone: parsed.timezone as unknown as TimeZoneId,
-      timeUnit: parsed.timeUnit,
-      rules: Object.freeze([...(parsed.rules as RuleJson[])]),
-    });
+    const normalized = normalizeOptions(opts);
     this.options = normalized;
     this.recompile();
   }
@@ -255,15 +197,7 @@ export class RRStack {
    *          (fallback `'0.0.0'` in dev/test).
    */
   toJson(): RRStackJson {
-    const version =
-      (typeof __RRSTACK_VERSION__ === 'string' && __RRSTACK_VERSION__) ||
-      '0.0.0';
-    return {
-      version,
-      timezone: this.options.timezone,
-      timeUnit: this.options.timeUnit,
-      rules: [...this.options.rules],
-    };
+    return toJsonSnapshot(this.options, __RRSTACK_VERSION__);
   }
 
   /**
@@ -271,12 +205,8 @@ export class RRStack {
    * @param json - A {@link RRStackJson} produced by {@link toJson}.
    */
   static fromJson(json: RRStackJson): RRStack {
-    const parsed = JsonSchema.parse(json);
-    return new RRStack({
-      timezone: parsed.timezone as unknown as string,
-      timeUnit: parsed.timeUnit,
-      rules: parsed.rules as RuleJson[],
-    });
+    const opts = parseJsonPayload(json);
+    return new RRStack(opts);
   }
 
   // Queries -------------------------------------------------------------------
@@ -287,13 +217,7 @@ export class RRStack {
    * @returns `'active' | 'blackout'`
    */
   isActiveAt(t: number): instantStatus {
-    let status: instantStatus = 'blackout';
-    for (let i = 0; i < this.compiled.length; i++) {
-      if (ruleCoversInstant(this.compiled[i], t)) {
-        status = this.compiled[i].effect;
-      }
-    }
-    return status;
+    return isActiveAtCompiled(this.compiled, t);
   }
 
   /**
@@ -315,7 +239,7 @@ export class RRStack {
     from: number,
     to: number,
   ): Iterable<{ start: number; end: number; status: instantStatus }> {
-    return sweepSegments(this.compiled, from, to);
+    return getSegmentsOverWindow(this.compiled, from, to);
   }
 
   /**
@@ -324,7 +248,7 @@ export class RRStack {
    * @param to - End of the window (exclusive), in the configured unit.
    */
   classifyRange(from: number, to: number): rangeStatus {
-    return sweepClassify(this.compiled, from, to);
+    return classifyRangeOverWindow(this.compiled, from, to);
   }
 
   /**
@@ -334,6 +258,6 @@ export class RRStack {
    * - `empty` indicates no active coverage.
    */
   getEffectiveBounds(): { start?: number; end?: number; empty: boolean } {
-    return sweepBounds(this.compiled);
+    return getEffectiveBoundsFromCompiled(this.compiled);
   }
 }
