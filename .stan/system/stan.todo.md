@@ -1,6 +1,6 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-08-24 (UTC)
+Last updated: 2025-08-25 (UTC)
 
 This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
