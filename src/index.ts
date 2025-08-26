@@ -6,12 +6,12 @@
 
 export { RRStack } from './rrstack';
 export { fromIsoDuration,toIsoDuration } from './rrstack/duration';
+export { RRSTACK_JSON_SCHEMA } from './rrstack/RRStack.schema';
 export type {
   DurationParts,
   Frequency,
   instantStatus,
-  rangeStatus,
-  RRStackJson,
+  rangeStatus,  RRStackJson,
   RRStackOptions,
   RRStackOptionsNormalized,
   RRuleOptions,

@@ -1,6 +1,6 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-08-25 (UTC)
+Last updated: 2025-08-26 (UTC)
 
 This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
@@ -8,23 +8,16 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
-- Added deeper bounds tests:
-  - bounds.closed.test.ts covers closed-sided earliest/latest bounds and mixed cascade (blackout override).
-  - Complements bounds.open.test.ts (open start and empty set).
-- DX/Docs verified: internal refactor only; README requires no changes (public API unchanged).
-- Split RRStack.ts into helper modules to reduce size and improve cohesion:
-  - RRStack.options.ts (schemas/normalization), RRStack.persistence.ts (toJson/fromJson helpers), RRStack.queries.ts (query façade). RRStack.ts remains the public class and delegates to these modules.
-- Add tests to raise coverage:
-  - bounds.open.test.ts for open-start and empty detection,
-  - heap.test.ts for min/max boundary helpers,
-  - seconds.unit.test.ts for 's' timeUnit DST and integer-second ends.
-- Fix ESLint/TSDoc in duration helpers: remove numeric template literal interpolation per @typescript-eslint/restrict-template-expressions, type named RegExp groups as possibly undefined to satisfy @typescript-eslint/no-unnecessary-condition, and escape braces in TSDoc. No functional changes; prepares repo for clean lints.
-- Documentation pass: update README to reflect current API (flattened JSON with version string, property-style setters and updateOptions, no EPOCH constants, seconds rounding). Add/expand TypeDoc on RRStack class and key helpers (segments/bounds/coverage/compile/types). Verified fence hygiene in README.
-- Inject build-time version: add @rollup/plugin-replace to inject **RRSTACK_VERSION** from package.json in rollup.config.ts; toJson now emits the package version without runtime imports.
-- Tighten coverage reporting: include only src/_\_/_.ts and exclude dist/.stan/docs/.rollup.cache to avoid duplicate/irrelevant files in “All files”.
-- Promote durable requirements to stan.project.md (options/timeUnit/timezone brand; JSON flattening with version; streaming getSegments; independent heap-based getEffectiveBounds; eliminate EPOCH\_\*; property setters; minimal zod; browser support; changelog config; version injection). Update this plan accordingly.
-- Fix ESLint errors: remove any cast in rrstack.test.ts (type via unknown→RRStackJson), and replace while(true) with for(;;) in sweep.ts to satisfy @typescript-eslint/no-unnecessary-condition.
-- Split sweep.ts (~332 LOC) into segments.ts (getSegments/classifyRange) and bounds.ts (getEffectiveBounds); introduced util/heap.ts for boundary helpers; sweep.ts now a thin façade.
+- Export JSON Schema as a package-level constant:
+  - Added zod-to-json-schema generator (scripts/gen-schema.ts).
+  - New artifact assets/rrstackjson.schema.json generated at docs/build time.
+  - New export RRSTACK_JSON_SCHEMA (src/rrstack/RRStack.schema.ts) and re-exported from src/index.ts.
+  - Tightened options.freq to z.nativeEnum(Frequency) for enum emission.
+  - Post-processed DurationParts with anyOf requiring at least one non-zero component.
+  - Added schema test (src/rrstack/schema.test.ts).
+  - Updated docs script to run the generator before typedoc.
+- Added minimal documentation hook (schema present; link can be added to README later).
+- No changes to runtime parsing behavior (existing JsonSchema remains as-is).
 
 ---
 
@@ -90,8 +83,7 @@ Completed (recent)
 
 - Zod schemas:
   - RRStackOptions (constructor/fromJson).
-  - Rule-lite checks on mutations (effect literal, options.freq numeric, starts/ends finite).
-- Full RRULE validation remains in compile.
+  - Rule-lite checks on mutations (effect literal, options.freq numeric, starts/ends finite if present); full RRULE Options validation remains in compile.
 
 ---
 
@@ -113,4 +105,4 @@ Completed (recent)
 
 9. Next steps (implementation plan)
 
-- None currently pending.
+- README: add “JSON Schema” section linking to the generated artifact and exported constant.

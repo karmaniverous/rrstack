@@ -7,11 +7,11 @@
  * from the RRStack class implementation.
  */
 
+import { Frequency } from 'rrule';
 import { z } from 'zod';
 
 import { isValidTimeZone } from './coverage/time';
-import type {
-  RRStackOptions,
+import type {  RRStackOptions,
   RRStackOptionsNormalized,
   RuleJson,
   TimeZoneId,
@@ -67,7 +67,8 @@ export const RuleLiteSchema = z.object({
   duration: DurationPartsSchema,
   options: z
     .object({
-      freq: z.number(),
+      // Use rrule Frequency enum to emit an enum in JSON Schema.
+      freq: z.nativeEnum(Frequency),
       starts: z.number().finite().optional(),
       ends: z.number().finite().optional(),
     })
@@ -76,12 +77,20 @@ export const RuleLiteSchema = z.object({
 });
 
 /**
+ * Zod schema for the persisted RRStackJson shape (used to generate JSON Schema).
+ * - Keeps runtime parse schema (JsonSchema) unchanged to avoid tightening behavior.
+ * - Here we strengthen `rules` to RuleLiteSchema for accurate JSON Schema generation.
+ */
+export const RRStackJsonZod = JsonSchema.extend({
+  rules: z.array(RuleLiteSchema),
+});
+
+/**
  * Normalize constructor options using the OptionsSchema.
  */
 export const normalizeOptions = (
   opts: RRStackOptions,
-): RRStackOptionsNormalized => {
-  const parsed = OptionsSchema.parse({
+): RRStackOptionsNormalized => {  const parsed = OptionsSchema.parse({
     timezone: opts.timezone,
     timeUnit: opts.timeUnit ?? ('ms' as UnixTimeUnit),
     rules: opts.rules ?? ([] as RuleJson[]),

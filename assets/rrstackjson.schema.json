@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RRStackJson",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "string", "minLength": 1 },
+    "timezone": { "type": "string", "minLength": 1, "description": "IANA time zone id (validated at runtime)" },
+    "timeUnit": { "type": "string", "enum": ["ms", "s"] },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Rule"
+      }
+    }
+  },
+  "required": ["version", "timezone", "timeUnit", "rules"],
+  "definitions": {
+    "Rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "effect": { "type": "string", "enum": ["active", "blackout"] },
+        "duration": { "$ref": "#/definitions/DurationParts" },
+        "options": {
+          "type": "object",
+          "properties": {
+            "freq": { "type": "integer", "enum": [0, 1, 2, 3, 4, 5, 6] },
+            "starts": { "type": "number" },
+            "ends": { "type": "number" }
+          },
+          "additionalProperties": true,
+          "required": ["freq"]
+        },
+        "label": { "type": "string" }
+      },
+      "required": ["effect", "duration", "options"]
+    },
+    "DurationParts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "years": { "type": "integer", "minimum": 0 },
+        "months": { "type": "integer", "minimum": 0 },
+        "weeks": { "type": "integer", "minimum": 0 },
+        "days": { "type": "integer", "minimum": 0 },
+        "hours": { "type": "integer", "minimum": 0 },
+        "minutes": { "type": "integer", "minimum": 0 },
+        "seconds": { "type": "integer", "minimum": 0 }
+      },
+      "anyOf": [
+        { "required": ["years"], "properties": { "years": { "type": "integer", "minimum": 1 } } },
+        { "required": ["months"], "properties": { "months": { "type": "integer", "minimum": 1 } } },
+        { "required": ["weeks"], "properties": { "weeks": { "type": "integer", "minimum": 1 } } },
+        { "required": ["days"], "properties": { "days": { "type": "integer", "minimum": 1 } } },
+        { "required": ["hours"], "properties": { "hours": { "type": "integer", "minimum": 1 } } },
+        { "required": ["minutes"], "properties": { "minutes": { "type": "integer", "minimum": 1 } } },
+        { "required": ["seconds"], "properties": { "seconds": { "type": "integer", "minimum": 1 } } }
+      ]
+    }
+  }
+}
