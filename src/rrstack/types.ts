@@ -24,6 +24,19 @@ export type UnixTimeUnit = 'ms' | 's';
 export type TimeZoneId = string & { __brand: 'TimeZoneId' };
 
 /**
+ * Human-readable RRULE frequency (lower-case).
+ * Mapped internally to rrule's numeric Frequency enum during compilation.
+ */
+export type FrequencyStr =
+  | 'yearly'
+  | 'monthly'
+  | 'weekly'
+  | 'daily'
+  | 'hourly'
+  | 'minutely'
+  | 'secondly';
+
+/**
  * Structured duration parts for UI-friendly, lossless round-tripping.
  * - All fields are non-negative integers.
  * - At least one field must be \> 0 (duration must be strictly positive).
@@ -46,15 +59,16 @@ export interface DurationParts {
  * - Derived from rrule Options with `dtstart`/`until`/`tzid` removed.
  * - All properties optional except `freq` (required).
  * - Adds `starts`/`ends` in the configured {@link UnixTimeUnit} for domain clamping.
+ * - `freq` is a lower-case string (e.g., 'daily'); RRStack maps it to rrule's numeric enum internally.
  */
 export type RuleOptionsJson = Partial<
   Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>
-> &
-  Pick<RRuleOptions, 'freq'> & {
-    // timestamps in the configured unit ('ms' or 's')
-    starts?: number;
-    ends?: number;
-  };
+> & {
+  freq: FrequencyStr;
+  // timestamps in the configured unit ('ms' or 's')
+  starts?: number;
+  ends?: number;
+};
 
 /** A single rule in the cascade. */
 export interface RuleJson {
@@ -101,4 +115,4 @@ export interface RRStackJson extends RRStackOptionsNormalized {
 }
 
 // Re-export useful rrule types so consumers can import from package API.
-export type { Frequency, Options as RRuleOptions } from 'rrule';
+export type { Options as RRuleOptions } from 'rrule';

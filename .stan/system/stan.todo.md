@@ -31,11 +31,11 @@ Completed (recent)
 - Added minimal documentation hook (schema present; link can be added to README later).
 - No changes to runtime parsing behavior (existing JsonSchema remains as-is).
 - Add README “JSON Schema” section linking to assets/rrstackjson.schema.json and the exported RRSTACK_JSON_SCHEMA constant.
+- Replace numeric RRULE Frequency enum in RuleOptionsJson.freq with a lower-case string union; map to rrule’s numeric enum internally during compilation; update README and tests accordingly.
 
 ---
 0. Top Priority — Stabilize template baseline (pre-implementation)
    [unchanged]
-
 ---
 
 1. Requirements (confirmed)

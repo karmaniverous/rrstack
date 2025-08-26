@@ -1,4 +1,3 @@
-import { Frequency } from 'rrule';
 import { describe, expect,it } from 'vitest';
 
 import { fromIsoDuration,RRStack, toIsoDuration } from './index';
@@ -17,11 +16,10 @@ describe('package re-exports (src/index.ts)', () => {
         {
           effect: 'active' as const,
           duration: { minutes: 30 },
-          options: { freq: Frequency.DAILY, byhour: [12], byminute: [0], bysecond: [0] },
+          options: { freq: 'daily', byhour: [12], byminute: [0], bysecond: [0] },
         },
       ],
     });
-
     const day = Date.UTC(2024, 0, 2);
     const tActive = day + 12 * 3600 * 1000 + 15 * 60 * 1000;
     const tBlackout = day + 11 * 3600 * 1000 + 59 * 60 * 1000;

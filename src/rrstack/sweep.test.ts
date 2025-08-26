@@ -1,4 +1,3 @@
-import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { compileRule } from './compile';
@@ -12,7 +11,7 @@ describe('sweep', () => {
       {
         effect: 'active',
         duration: { hours: 1 },
-        options: { freq: Frequency.DAILY, byhour: [5], byminute: [0], bysecond: [0] },
+        options: { freq: 'daily', byhour: [5], byminute: [0], bysecond: [0] },
       },
       'UTC' as unknown as TimeZoneId,
       'ms',
@@ -22,12 +21,11 @@ describe('sweep', () => {
       {
         effect: 'blackout',
         duration: { minutes: 15 },
-        options: { freq: Frequency.DAILY, byhour: [5], byminute: [30], bysecond: [0] },
+        options: { freq: 'daily', byhour: [5], byminute: [30], bysecond: [0] },
       },
       'UTC' as unknown as TimeZoneId,
       'ms',
     );
-
     const day = Date.UTC(2024, 0, 2);
     const from = day + 5 * 3600 * 1000;
     const to = day + 6 * 3600 * 1000;

@@ -12,6 +12,7 @@ import {
   datetime as rruleDatetime,
   type Options as RRuleOptions,
   RRule,
+  Frequency,
 } from 'rrule';
 
 import { domainMax, domainMin } from './coverage/time';
@@ -21,6 +22,7 @@ import {
   type RuleOptionsJson,
   type TimeZoneId,
   type UnixTimeUnit,
+  type FrequencyStr,
 } from './types';
 
 export interface CompiledRule {
@@ -34,6 +36,17 @@ export interface CompiledRule {
   isOpenEnd: boolean;
   rrule: RRule;
 }
+
+// Internal mapping from human-readable freq to rrule enum
+const FREQ_MAP: Record<FrequencyStr, Frequency> = {
+  yearly: Frequency.YEARLY,
+  monthly: Frequency.MONTHLY,
+  weekly: Frequency.WEEKLY,
+  daily: Frequency.DAILY,
+  hourly: Frequency.HOURLY,
+  minutely: Frequency.MINUTELY,
+  secondly: Frequency.SECONDLY,
+};
 
 /** @internal */
 const toWall = (epoch: number, tz: string, unit: UnixTimeUnit): Date => {
@@ -66,6 +79,8 @@ export const toRRuleOptions = (
   };
   delete rrLikeRaw.starts;
   delete rrLikeRaw.ends;
+  // Map human-readable freq → rrule numeric enum
+  rrLikeRaw.freq = FREQ_MAP[options.freq];
 
   const partial: Partial<RRuleOptions> = {
     ...(rrLikeRaw as Partial<RRuleOptions>),
@@ -101,7 +116,8 @@ export const compileRule = (
   unit: UnixTimeUnit,
 ): CompiledRule => {
   const duration = Duration.fromObject(rule.duration);
-  const q = unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
+  const q =
+    unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
   if (!Number.isFinite(q) || q <= 0) {
     throw new Error('Duration must be strictly positive');
   }

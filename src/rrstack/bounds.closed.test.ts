@@ -1,4 +1,3 @@
-import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { getEffectiveBounds } from './bounds';
@@ -16,7 +15,7 @@ describe('bounds: closed-sided coverage and cascades', () => {
         effect: 'active',
         duration: { hours: 1 },
         options: {
-          freq: Frequency.DAILY,
+          freq: 'daily',
           byhour: [5],
           byminute: [0],
           bysecond: [0],
@@ -27,7 +26,6 @@ describe('bounds: closed-sided coverage and cascades', () => {
       'UTC' as unknown as TimeZoneId,
       'ms',
     );
-
     const b = getEffectiveBounds([active]);
     expect(b.empty).toBe(false);
     // First activation at 2024-01-10 05:00
@@ -45,7 +43,7 @@ describe('bounds: closed-sided coverage and cascades', () => {
         effect: 'active',
         duration: { hours: 1 },
         options: {
-          freq: Frequency.DAILY,
+          freq: 'daily',
           byhour: [5],
           byminute: [0],
           bysecond: [0],
@@ -63,13 +61,12 @@ describe('bounds: closed-sided coverage and cascades', () => {
         effect: 'blackout',
         duration: { hours: 1 },
         options: {
-          freq: Frequency.MONTHLY,
+          freq: 'monthly',
           bymonthday: [11],
           byhour: [5],
           byminute: [0],
           bysecond: [0],
-          starts,
-          ends,
+          starts,          ends,
         },
       },
       'UTC' as unknown as TimeZoneId,

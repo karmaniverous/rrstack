@@ -1,10 +1,9 @@
 import { DateTime } from 'luxon';
-import { Frequency, RRule } from 'rrule';
+import { RRule } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { RRStack } from './';
 import type { RuleJson } from './types';
-
 describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
   const tz = 'America/Chicago';
   const ms = (isoLocal: string) => DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
@@ -16,14 +15,13 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
       effect: 'active',
       duration: { hours: 1 },
       options: {
-        freq: Frequency.MONTHLY,
+        freq: 'monthly',
         interval: 2,
         bysetpos: 3,
         byweekday: [RRule.TU],
         byhour: [5],
         byminute: [0],
-        bysecond: [0],
-        // First actual occurrence in cadence (3rd Tuesday Jan 2021 at 05:00)
+        bysecond: [0],        // First actual occurrence in cadence (3rd Tuesday Jan 2021 at 05:00)
         // Anchoring to an occurrence ensures interval stepping is aligned.
         starts: ms('2021-01-19T05:00:00'),
       },
@@ -35,7 +33,7 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
       effect: 'blackout',
       duration: { hours: 1 },
       options: {
-        freq: Frequency.YEARLY,
+        freq: 'yearly',
         bymonth: [7],
         bysetpos: 3,
         byweekday: [RRule.TU],
@@ -46,19 +44,17 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
       },
       label: 'blk-july-3rd-tue-05',
     };
-
     // Re-activate when the day is the 20th (only in July)
     const july20Reactivate: RuleJson = {
       effect: 'active',
       duration: { hours: 1 },
       options: {
-        freq: Frequency.YEARLY,
+        freq: 'yearly',
         bymonth: [7],
         bymonthday: [20],
         byhour: [5],
         byminute: [0],
-        bysecond: [0],
-        starts: ms('2021-01-01T00:00:00'),
+        bysecond: [0],        starts: ms('2021-01-01T00:00:00'),
       },
       label: 'react-july-20-05',
     };

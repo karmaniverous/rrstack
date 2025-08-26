@@ -1,4 +1,3 @@
-import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { getEffectiveBounds } from './bounds';
@@ -12,7 +11,7 @@ describe('bounds: open-sided detection and empty set', () => {
         effect: 'active',
         duration: { seconds: 120 },
         options: {
-          freq: Frequency.DAILY,
+          freq: 'daily',
           byhour: [0],
           byminute: [0],
           bysecond: [0],
@@ -26,7 +25,6 @@ describe('bounds: open-sided detection and empty set', () => {
     expect(b.empty).toBe(false);
     expect(b.start).toBeUndefined(); // open start detected
   });
-
   it('returns empty=true when no rules present', () => {
     const b = getEffectiveBounds([]);
     expect(b.empty).toBe(true);

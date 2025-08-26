@@ -1,4 +1,3 @@
-import { Frequency } from 'rrule';
 import { describe, expect,it } from 'vitest';
 
 import { compileRule } from './compile';
@@ -11,13 +10,12 @@ describe('segments edge cases', () => {
       {
         effect: 'active',
         duration: { minutes: 30 },
-        options: { freq: Frequency.DAILY, byhour: [12], byminute: [0], bysecond: [0] },
+        options: { freq: 'daily', byhour: [12], byminute: [0], bysecond: [0] },
       },
       'UTC' as unknown as TimeZoneId,
       'ms',
     );
-    const t = Date.UTC(2024, 0, 2, 12, 0, 0);
-    const segs = [...getSegments([rule], t, t)];
+    const t = Date.UTC(2024, 0, 2, 12, 0, 0);    const segs = [...getSegments([rule], t, t)];
     expect(segs.length).toBe(0);
   });
 });

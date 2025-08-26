@@ -1,11 +1,9 @@
 import { DateTime } from 'luxon';
-import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { compileRule } from './compile';
 import { computeOccurrenceEnd } from './coverage';
 import type { RuleJson, TimeZoneId } from './types';
-
 const sec = (isoLocal: string, tz: string) =>
   Math.trunc(DateTime.fromISO(isoLocal, { zone: tz }).toSeconds());
 
@@ -18,12 +16,11 @@ describe("'s' timeUnit: DST handling and rounded ends", () => {
       effect: 'active',
       duration: { hours: 1 },
       options: {
-        freq: Frequency.DAILY,
+        freq: 'daily',
         byhour: [1],
         byminute: [30],
         bysecond: [0],
-      },
-    };
+      },    };
     const cr = compileRule(rule, tzId, 's');
 
     const start = sec('2021-03-14T01:30:00', tz);
@@ -40,12 +37,11 @@ describe("'s' timeUnit: DST handling and rounded ends", () => {
       effect: 'active',
       duration: { hours: 1 },
       options: {
-        freq: Frequency.DAILY,
+        freq: 'daily',
         byhour: [1],
         byminute: [30],
         bysecond: [0],
-      },
-    };
+      },    };
     const cr = compileRule(rule, tzId, 's');
 
     const start = sec('2021-11-07T01:30:00', tz);

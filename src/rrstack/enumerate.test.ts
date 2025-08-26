@@ -1,4 +1,3 @@
-import { Frequency } from 'rrule';
 import { describe, expect,it } from 'vitest';
 
 import { compileRule } from './compile';
@@ -13,7 +12,7 @@ describe('coverage/enumerate', () => {
       {
         effect: 'active',
         duration: { hours: 1 },
-        options: { freq: Frequency.YEARLY, interval: 2, bymonth: [5], bymonthday: [1], byhour: [0], byminute: [0], bysecond: [0] },
+        options: { freq: 'yearly', interval: 2, bymonth: [5], bymonthday: [1], byhour: [0], byminute: [0], bysecond: [0] },
       },
       tz,
       'ms',
@@ -22,7 +21,7 @@ describe('coverage/enumerate', () => {
       {
         effect: 'active',
         duration: { hours: 1 },
-        options: { freq: Frequency.MONTHLY, interval: 3, bymonthday: [1], byhour: [0], byminute: [0], bysecond: [0] },
+        options: { freq: 'monthly', interval: 3, bymonthday: [1], byhour: [0], byminute: [0], bysecond: [0] },
       },
       tz,
       'ms',
@@ -31,11 +30,10 @@ describe('coverage/enumerate', () => {
       {
         effect: 'active',
         duration: { hours: 3 },
-        options: { freq: Frequency.DAILY, byhour: [0], byminute: [0], bysecond: [0] },
+        options: { freq: 'daily', byhour: [0], byminute: [0], bysecond: [0] },
       },
       tz,
-      'ms',
-    );
+      'ms',    );
 
     const dayMs = 24 * 60 * 60 * 1000;
     expect(enumerationHorizon(yearly)).toBe((366 * 2 + 1) * dayMs);
@@ -48,12 +46,11 @@ describe('coverage/enumerate', () => {
       {
         effect: 'active',
         duration: { hours: 1 },
-        options: { freq: Frequency.DAILY, byhour: [5], byminute: [0], bysecond: [0] },
+        options: { freq: 'daily', byhour: [5], byminute: [0], bysecond: [0] },
       },
       tz,
       'ms',
     );
-
     const jan2 = Date.UTC(2024, 0, 2);
     const from = jan2 + 6 * 60 * 60 * 1000; // 06:00 UTC on Jan 2
     const to = jan2 + 24 * 60 * 60 * 1000 + 6 * 60 * 60 * 1000; // 06:00 UTC on Jan 3

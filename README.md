@@ -33,7 +33,6 @@ pnpm add @karmaniverous/rrstack
 
 ```ts
 import { RRStack } from '@karmaniverous/rrstack';
-import { Frequency, RRule } from 'rrule';
 
 // 1) Define rules (JSON serializable)
 const rules = [
@@ -42,7 +41,7 @@ const rules = [
     effect: 'active' as const,
     duration: { hours: 1 },
     options: {
-      freq: Frequency.DAILY,
+      freq: 'daily',
       byhour: [5],
       byminute: [0],
       bysecond: [0],
@@ -54,7 +53,7 @@ const rules = [
     effect: 'blackout' as const,
     duration: { minutes: 15 },
     options: {
-      freq: Frequency.DAILY,
+      freq: 'daily',
       byhour: [5],
       byminute: [30],
       bysecond: [0],
@@ -181,15 +180,23 @@ export interface DurationParts {
 /**
  * JSON shape for rule options:
  * - Derived from RRuleOptions with dtstart/until/tzid removed (set internally),
- * - Adds starts/ends (in configured unit) for domain clamping.
+ * - Adds starts/ends (in configured unit) for domain clamping,
+ * - freq is a lower-case string ('yearly'|'monthly'|'weekly'|'daily'|'hourly'|'minutely'|'secondly').
  */
 export type RuleOptionsJson = Partial<
   Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>
-> &
-  Pick<RRuleOptions, 'freq'> & {
-    starts?: number; // optional clamp (timestamp in configured unit)
-    ends?: number; // optional clamp (timestamp in configured unit)
-  };
+> & {
+  freq:
+    | 'yearly'
+    | 'monthly'
+    | 'weekly'
+    | 'daily'
+    | 'hourly'
+    | 'minutely'
+    | 'secondly';
+  starts?: number; // optional clamp (timestamp in configured unit)
+  ends?: number; // optional clamp (timestamp in configured unit)
+};
 
 export interface RuleJson {
   effect: instantStatus; // 'active' | 'blackout'
@@ -243,6 +250,7 @@ console.log(RRSTACK_JSON_SCHEMA.$schema, 'RRStackJson schema loaded');
 ## Duration helpers
 
 These utilities can be handy for interop (config files, CLI, or user input).
+
 ```ts
 import { toIsoDuration, fromIsoDuration } from '@karmaniverous/rrstack';
 
@@ -281,13 +289,13 @@ fromIsoDuration('P2W'); // { weeks: 2 }
 Third Tuesday monthly at 05:00–06:00
 
 ```ts
-import { RRule, Frequency } from 'rrule';
+import { RRule } from 'rrule';
 
 const thirdTuesday = {
   effect: 'active' as const,
   duration: { hours: 1 },
   options: {
-    freq: Frequency.MONTHLY,
+    freq: 'monthly',
     byweekday: [RRule.TU.nth(3)],
     byhour: [5],
     byminute: [0],
@@ -307,7 +315,7 @@ const daily9 = {
   effect: 'active' as const,
   duration: { hours: 1 },
   options: {
-    freq: Frequency.DAILY,
+    freq: 'daily',
     byhour: [9],
     byminute: [0],
     bysecond: [0],
@@ -321,11 +329,13 @@ const daily9 = {
 Odd months only, with an exception and a reactivation
 
 ```ts
+import { RRule } from 'rrule';
+
 const baseOddMonths = {
   effect: 'active' as const,
   duration: { hours: 1 },
   options: {
-    freq: Frequency.MONTHLY,
+    freq: 'monthly',
     bymonth: [1, 3, 5, 7, 9, 11],
     byweekday: [RRule.TU.nth(3)],
     byhour: [5],
@@ -340,7 +350,7 @@ const julyBlackout = {
   effect: 'blackout' as const,
   duration: { hours: 1 },
   options: {
-    freq: Frequency.YEARLY,
+    freq: 'yearly',
     bymonth: [7],
     byweekday: [RRule.TU.nth(3)],
     byhour: [5],
@@ -353,7 +363,7 @@ const july20Reactivate = {
   effect: 'active' as const,
   duration: { hours: 1 },
   options: {
-    freq: Frequency.YEARLY,
+    freq: 'yearly',
     bymonth: [7],
     bymonthday: [20],
     byhour: [5],

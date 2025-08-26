@@ -1,10 +1,9 @@
 import { DateTime } from 'luxon';
-import { Frequency, RRule } from 'rrule';
+import { RRule } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { RRStack } from './';
 import type { RuleJson } from './types';
-
 describe('Scenario (America/Chicago): 3-rule cascade (odd months)', () => {
   const tz = 'America/Chicago';
 
@@ -19,7 +18,7 @@ describe('Scenario (America/Chicago): 3-rule cascade (odd months)', () => {
       effect: 'active',
       duration: { hours: 1 },
       options: {
-        freq: Frequency.MONTHLY,
+        freq: 'monthly',
         bymonth: [1, 3, 5, 7, 9, 11],
         byweekday: [RRule.TU.nth(3)],
         byhour: [5],
@@ -30,19 +29,17 @@ describe('Scenario (America/Chicago): 3-rule cascade (odd months)', () => {
       },
       label: 'base-3rd-tue-oddmonths-05',
     };
-
     // Blackout July occurrences (same structural criteria, month = 7)
     const julyBlackout: RuleJson = {
       effect: 'blackout',
       duration: { hours: 1 },
       options: {
-        freq: Frequency.YEARLY,
+        freq: 'yearly',
         bymonth: [7],
         byweekday: [RRule.TU.nth(3)],
         byhour: [5],
         byminute: [0],
-        bysecond: [0],
-        starts: ms('2021-01-01T00:00:00'),
+        bysecond: [0],        starts: ms('2021-01-01T00:00:00'),
       },
       label: 'blk-july-3rd-tue-05',
     };
@@ -52,13 +49,12 @@ describe('Scenario (America/Chicago): 3-rule cascade (odd months)', () => {
       effect: 'active',
       duration: { hours: 1 },
       options: {
-        freq: Frequency.YEARLY,
+        freq: 'yearly',
         bymonth: [7],
         bymonthday: [20],
         byhour: [5],
         byminute: [0],
-        bysecond: [0],
-        starts: ms('2021-01-01T00:00:00'),
+        bysecond: [0],        starts: ms('2021-01-01T00:00:00'),
       },
       label: 'react-july-20-05',
     };

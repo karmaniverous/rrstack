@@ -1,4 +1,3 @@
-import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { RRStack } from './';
@@ -15,7 +14,7 @@ describe('RRStack', () => {
           effect: 'active' as const,
           duration: { hours: 1 },
           options: {
-            freq: Frequency.DAILY,
+            freq: 'daily',
             byhour: [5],
             byminute: [0],
             bysecond: [0],
@@ -31,7 +30,6 @@ describe('RRStack', () => {
     const four = day + 4 * 3600 * 1000;
     expect(stack.isActiveAt(five)).toBe('active');
     expect(stack.isActiveAt(four)).toBe('blackout');
-
     const roundTrip = stack.toJson();
     expect(roundTrip.timezone).toEqual('UTC');
     expect(roundTrip.rules.length).toBe(1);
@@ -44,17 +42,16 @@ describe('RRStack', () => {
       {
         effect: 'active',
         duration: { minutes: 30 },
-        options: { freq: Frequency.DAILY, byhour: [12], byminute: [0], bysecond: [0] },
+        options: { freq: 'daily', byhour: [12], byminute: [0], bysecond: [0] },
         label: 'A',
       },
       {
         effect: 'blackout',
         duration: { minutes: 10 },
-        options: { freq: Frequency.DAILY, byhour: [12], byminute: [5], bysecond: [0] },
+        options: { freq: 'daily', byhour: [12], byminute: [5], bysecond: [0] },
         label: 'B',
       },
     ];
     // No throws; simple smoke
-    expect(Array.isArray(stack.rules)).toBe(true);
-  });
+    expect(Array.isArray(stack.rules)).toBe(true);  });
 });

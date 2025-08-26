@@ -62,16 +62,15 @@ export const JsonSchema = OptionsSchema.extend({
   version: z.string().min(1),
 });
 
-// Numeric literal-union for rrule Frequency (enum values 0..6),
-// avoids importing 'rrule' at schema-gen/runtime for the generator.
-const FreqSchema = z.union([
-  z.literal(0),
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(5),
-  z.literal(6),
+// String literal-union for RRULE frequency (lower-case human-readable).
+const FreqSchema = z.enum([
+  'yearly',
+  'monthly',
+  'weekly',
+  'daily',
+  'hourly',
+  'minutely',
+  'secondly',
 ] as const);
 
 export const RuleLiteSchema = z.object({
@@ -86,7 +85,6 @@ export const RuleLiteSchema = z.object({
     .passthrough(),
   label: z.string().optional(),
 });
-
 /**
  * Zod schema for the persisted RRStackJson shape (used to generate JSON Schema).
  * - Keeps runtime parse schema (JsonSchema) unchanged to avoid tightening behavior.

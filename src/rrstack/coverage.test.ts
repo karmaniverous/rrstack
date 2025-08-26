@@ -1,4 +1,3 @@
-import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { compileRule } from './compile';
@@ -12,7 +11,7 @@ describe('coverage', () => {
         effect: 'active',
         duration: { hours: 1 },
         options: {
-          freq: Frequency.DAILY,
+          freq: 'daily',
           byhour: [5],
           byminute: [0],
           bysecond: [0],
@@ -23,8 +22,7 @@ describe('coverage', () => {
     );
     const day = Date.UTC(2024, 0, 2);
     const five = new Date(day + 5 * 3600 * 1000).getTime();
-    const fiveThirty = five + 30 * 60 * 1000;
-    const six = five + 60 * 60 * 1000;
+    const fiveThirty = five + 30 * 60 * 1000;    const six = five + 60 * 60 * 1000;
 
     expect(ruleCoversInstant(cr, five)).toBe(true);
     expect(ruleCoversInstant(cr, fiveThirty)).toBe(true);

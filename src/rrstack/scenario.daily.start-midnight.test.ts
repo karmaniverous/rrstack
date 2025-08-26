@@ -1,10 +1,8 @@
 import { DateTime } from 'luxon';
-import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { RRStack } from './';
 import type { RuleJson } from './types';
-
 describe('Daily 09:00 starting at midnight (America/Chicago)', () => {
   const tz = 'America/Chicago';
   const ms = (isoLocal: string) => DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
@@ -14,12 +12,11 @@ describe('Daily 09:00 starting at midnight (America/Chicago)', () => {
       effect: 'active',
       duration: { hours: 1 },
       options: {
-        freq: Frequency.DAILY,
+        freq: 'daily',
         byhour: [9],
         byminute: [0],
         bysecond: [0],
-        // User convenience: starts at midnight; occurrences begin at 09:00 local.
-        starts: ms('2021-05-01T00:00:00'),
+        // User convenience: starts at midnight; occurrences begin at 09:00 local.        starts: ms('2021-05-01T00:00:00'),
       },
       label: 'daily-09-start-midnight',
     };

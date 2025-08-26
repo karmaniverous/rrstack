@@ -1,4 +1,3 @@
-import { Frequency } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { compileRule } from './compile';
@@ -11,7 +10,7 @@ describe('compileRule', () => {
         effect: 'active',
         duration: { hours: 1 },
         options: {
-          freq: Frequency.DAILY,
+          freq: 'daily',
           byhour: [5],
           byminute: [0],
           bysecond: [0],
