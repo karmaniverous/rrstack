@@ -3,6 +3,8 @@
  * - Uses zod-to-json-schema at build/docs time (dev-only dependency).
  * - Post-processes DurationParts to require at least one non-zero component
  *   via an `anyOf` of required+minimum(1) constraints.
+ * - Post-processes Rule.options.freq to ensure a string enum of lower-case
+ *   human-readable values ('yearly'..'secondly').
  */
 
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -25,6 +27,16 @@ const durationKeys = [
   'hours',
   'minutes',
   'seconds',
+] as const;
+
+const FREQ_VALUES = [
+  'yearly',
+  'monthly',
+  'weekly',
+  'daily',
+  'hourly',
+  'minutely',
+  'secondly',
 ] as const;
 
 const isObjectRecord = (v: unknown): v is Record<string, unknown> =>
@@ -88,6 +100,53 @@ const locateRRRoot = (root: JSONSchema7): JSONSchema7 => {
   }
   // Fallback to root; subsequent lookups may fail and cause the generator to skip inline path.
   return root;
+};
+
+const ensureFreqStringEnum = (root: JSONSchema7): void => {
+  const rrRoot = locateRRRoot(root);
+  const rulesSchema = asSchema(rrRoot.properties?.rules);
+  if (!rulesSchema) return;
+
+  // Resolve rules.items → Rule schema
+  let itemSchema: JSONSchema7 | undefined;
+  const itemsDef = rulesSchema.items;
+  itemSchema = Array.isArray(itemsDef)
+    ? asSchema(itemsDef[0])
+    : asSchema(itemsDef);
+  if (itemSchema && itemSchema.$ref && typeof itemSchema.$ref === 'string') {
+    const resolved = followRef(root, itemSchema.$ref);
+    if (resolved) itemSchema = resolved;
+  }
+  if (!itemSchema) return;
+
+  // Resolve Rule.options (may be inline or a ref)
+  const ruleProps = itemSchema.properties as
+    | Record<string, JSONSchema7Definition>
+    | undefined;
+  if (!ruleProps) return;
+
+  let optionsSchema = asSchema(ruleProps.options);
+  if (
+    optionsSchema &&
+    optionsSchema.$ref &&
+    typeof optionsSchema.$ref === 'string'
+  ) {
+    const resolved = followRef(root, optionsSchema.$ref);
+    if (resolved) optionsSchema = resolved;
+  }
+  if (!optionsSchema) return;
+
+  // Enforce freq string enum
+  const optProps = optionsSchema.properties as
+    | Record<string, JSONSchema7Definition>
+    | undefined;
+  if (!optProps) return;
+
+  const freq = asSchema(optProps.freq);
+  if (!freq) return;
+
+  freq.type = 'string';
+  (freq as unknown as { enum?: readonly string[] }).enum = [...FREQ_VALUES];
 };
 
 async function main(): Promise<void> {
@@ -157,7 +216,10 @@ async function main(): Promise<void> {
     addAnyOfMinOne(durationTarget);
   }
 
-  // 3) Write artifact.
+  // 3) Enforce freq string enum on Rule.options.freq.
+  ensureFreqStringEnum(schema);
+
+  // 4) Write artifact.
   const outDir = path.resolve(__dirname, '../assets');
   await mkdir(outDir, { recursive: true });
   const outFile = path.join(outDir, 'rrstackjson.schema.json');

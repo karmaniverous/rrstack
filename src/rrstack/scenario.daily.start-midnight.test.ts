@@ -16,11 +16,11 @@ describe('Daily 09:00 starting at midnight (America/Chicago)', () => {
         byhour: [9],
         byminute: [0],
         bysecond: [0],
-        // User convenience: starts at midnight; occurrences begin at 09:00 local.        starts: ms('2021-05-01T00:00:00'),
+        // User convenience: starts at midnight; occurrences begin at 09:00 local.
+        starts: ms('2021-05-01T00:00:00'),
       },
       label: 'daily-09-start-midnight',
     };
-
     const stack = new RRStack({ timezone: tz, rules: [rule] });
 
     // Before the start date: no activation.

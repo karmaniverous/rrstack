@@ -2,8 +2,7 @@
 
 Last updated: 2025-08-26 (UTC)
 
-This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
----
+## This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
 Completed (recent)
 
@@ -32,10 +31,13 @@ Completed (recent)
 - No changes to runtime parsing behavior (existing JsonSchema remains as-is).
 - Add README “JSON Schema” section linking to assets/rrstackjson.schema.json and the exported RRSTACK_JSON_SCHEMA constant.
 - Replace numeric RRULE Frequency enum in RuleOptionsJson.freq with a lower-case string union; map to rrule’s numeric enum internally during compilation; update README and tests accordingly.
+- Update schema generator to enforce Rule.options.freq as a lower-case string enum; keep it in sync with public types. Fixed a test typo that commented out `starts`.
 
 ---
+
 0. Top Priority — Stabilize template baseline (pre-implementation)
    [unchanged]
+
 ---
 
 1. Requirements (confirmed)

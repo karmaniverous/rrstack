@@ -10,19 +10,19 @@ import { DateTime, Duration } from 'luxon';
 import { shake } from 'radash';
 import {
   datetime as rruleDatetime,
+  Frequency,
   type Options as RRuleOptions,
   RRule,
-  Frequency,
 } from 'rrule';
 
 import { domainMax, domainMin } from './coverage/time';
 import {
+  type FrequencyStr,
   type instantStatus,
   type RuleJson,
   type RuleOptionsJson,
   type TimeZoneId,
   type UnixTimeUnit,
-  type FrequencyStr,
 } from './types';
 
 export interface CompiledRule {
