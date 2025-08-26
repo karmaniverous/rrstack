@@ -8,6 +8,7 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
+- Fix schema generator: handle RRStackJson under definitions/$defs when locating `rules.items`; scan both definitions and $defs to find DurationParts and add positivity anyOf.
 - Fix schema test: handle RRStackJson root under definitions/$defs when locating `rules`; resolve $ref for Rule (rules.items) and DurationParts; assert positivity anyOf on the resolved node.
 - Follow-ups for JSON Schema export:
   - Fix typecheck: replace invalid `as const` on imported JSON with a

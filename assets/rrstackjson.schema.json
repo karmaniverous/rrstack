@@ -54,7 +54,86 @@
                     "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
                   }
                 },
-                "additionalProperties": false
+                "additionalProperties": false,
+                "anyOf": [
+                  {
+                    "required": [
+                      "years"
+                    ],
+                    "properties": {
+                      "years": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "months"
+                    ],
+                    "properties": {
+                      "months": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "weeks"
+                    ],
+                    "properties": {
+                      "weeks": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "days"
+                    ],
+                    "properties": {
+                      "days": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "hours"
+                    ],
+                    "properties": {
+                      "hours": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "minutes"
+                    ],
+                    "properties": {
+                      "minutes": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "seconds"
+                    ],
+                    "properties": {
+                      "seconds": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                ]
               },
               "options": {
                 "type": "object",

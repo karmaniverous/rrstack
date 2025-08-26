@@ -63,6 +63,33 @@ const addAnyOfMinOne = (target: JSONSchema7): void => {
   target.anyOf = [...existing, ...positivity];
 };
 
+const getDefs = (
+  root: JSONSchema7,
+): Record<string, JSONSchema7Definition> | undefined =>
+  (root.definitions as Record<string, JSONSchema7Definition> | undefined) ??
+  (root as unknown as { $defs?: Record<string, JSONSchema7Definition> })
+    .$defs ??
+  undefined;
+
+const locateRRRoot = (root: JSONSchema7): JSONSchema7 => {
+  // If rules is present at the top-level, use it.
+  if (asSchema(root.properties?.rules)) return root;
+
+  // Otherwise, try named definition 'RRStackJson', or scan for a schema with 'rules'.
+  const defs = getDefs(root);
+  if (defs) {
+    const named = asSchema(defs.RRStackJson);
+    if (named && asSchema(named.properties?.rules)) return named;
+
+    for (const def of Object.values(defs)) {
+      const s = asSchema(def);
+      if (s && asSchema(s.properties?.rules)) return s;
+    }
+  }
+  // Fallback to root; subsequent lookups may fail and cause the generator to skip inline path.
+  return root;
+};
+
 async function main(): Promise<void> {
   // 1) Generate base schema (draft-07).
   const schema = zodToJsonSchema(RRStackJsonZod, {
@@ -73,8 +100,9 @@ async function main(): Promise<void> {
   // 2) Locate DurationParts and enforce positivity via anyOf.
   let durationTarget: JSONSchema7 | undefined;
 
-  // Preferred path: properties.rules.items.properties.duration
-  const rulesSchema = asSchema(schema.properties?.rules);
+  // Preferred path: rrRoot.properties.rules.items.properties.duration
+  const rrRoot = locateRRRoot(schema);
+  const rulesSchema = asSchema(rrRoot.properties?.rules);
 
   let itemSchema: JSONSchema7 | undefined;
   const itemsDef = rulesSchema?.items;
@@ -85,6 +113,12 @@ async function main(): Promise<void> {
   }
 
   if (itemSchema) {
+    // Resolve items (Rule) which may be a ref
+    if (itemSchema.$ref && typeof itemSchema.$ref === 'string') {
+      const resolved = followRef(schema, itemSchema.$ref);
+      if (resolved) itemSchema = resolved;
+    }
+
     const itemProps = itemSchema.properties as
       | Record<string, JSONSchema7Definition>
       | undefined;
@@ -92,37 +126,29 @@ async function main(): Promise<void> {
     const durationDef = itemProps?.duration;
     const maybeDuration = asSchema(durationDef);
 
-    if (maybeDuration?.$ref) {
+    if (maybeDuration?.$ref && typeof maybeDuration.$ref === 'string') {
       durationTarget = followRef(schema, maybeDuration.$ref);
     } else if (maybeDuration) {
       durationTarget = maybeDuration;
-    } else if (itemSchema.$ref) {
-      const resolvedItem = followRef(schema, itemSchema.$ref);
-      const resolvedProps = resolvedItem?.properties as
-        | Record<string, JSONSchema7Definition>
-        | undefined;
-      const resolvedDuration = asSchema(resolvedProps?.duration);
-      if (resolvedDuration?.$ref) {
-        durationTarget = followRef(schema, resolvedDuration.$ref);
-      } else {
-        durationTarget = resolvedDuration;
-      }
     }
   }
 
-  // Fallback: scan definitions for a schema that looks like DurationParts.
-  if (!durationTarget && schema.definitions) {
-    for (const def of Object.values(schema.definitions)) {
-      const s = asSchema(def);
-      if (!s) continue;
-      const props = s.properties as
-        | Record<string, JSONSchema7Definition>
-        | undefined;
-      if (!props) continue;
-      const hasAll = durationKeys.every((k) => k in props);
-      if (hasAll) {
-        durationTarget = s;
-        break;
+  // Fallback: scan both definitions and $defs for a schema that looks like DurationParts.
+  if (!durationTarget) {
+    const defs = getDefs(schema);
+    if (defs) {
+      for (const def of Object.values(defs)) {
+        const s = asSchema(def);
+        if (!s) continue;
+        const props = s.properties as
+          | Record<string, JSONSchema7Definition>
+          | undefined;
+        if (!props) continue;
+        const hasAll = durationKeys.every((k) => k in props);
+        if (hasAll) {
+          durationTarget = s;
+          break;
+        }
       }
     }
   }
