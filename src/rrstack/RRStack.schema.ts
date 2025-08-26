@@ -6,4 +6,4 @@ import type { JSONSchema7 } from 'json-schema';
 
 import schemaJson from '../../assets/rrstackjson.schema.json';
 
-export const RRSTACK_JSON_SCHEMA = schemaJson as JSONSchema7;
+export const RRSTACK_JSON_SCHEMA = schemaJson as unknown as JSONSchema7;

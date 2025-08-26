@@ -1,62 +1,112 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "RRStackJson",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "version": { "type": "string", "minLength": 1 },
-    "timezone": { "type": "string", "minLength": 1, "description": "IANA time zone id (validated at runtime)" },
-    "timeUnit": { "type": "string", "enum": ["ms", "s"] },
-    "rules": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/Rule"
-      }
+  "$ref": "#/definitions/RRStackJson",
+  "definitions": {
+    "RRStackJson": {
+      "type": "object",
+      "properties": {
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timeUnit": {
+          "type": "string",
+          "enum": [
+            "ms",
+            "s"
+          ],
+          "default": "ms"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "effect": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "blackout"
+                ]
+              },
+              "duration": {
+                "type": "object",
+                "properties": {
+                  "years": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "months": {
+                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                  },
+                  "weeks": {
+                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                  },
+                  "days": {
+                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                  },
+                  "hours": {
+                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                  },
+                  "minutes": {
+                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                  },
+                  "seconds": {
+                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "options": {
+                "type": "object",
+                "properties": {
+                  "freq": {
+                    "type": "number",
+                    "enum": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      5,
+                      6
+                    ]
+                  },
+                  "starts": {
+                    "type": "number"
+                  },
+                  "ends": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "freq"
+                ],
+                "additionalProperties": true
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "effect",
+              "duration",
+              "options"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "timezone",
+        "rules",
+        "version"
+      ],
+      "additionalProperties": false
     }
   },
-  "required": ["version", "timezone", "timeUnit", "rules"],
-  "definitions": {
-    "Rule": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "effect": { "type": "string", "enum": ["active", "blackout"] },
-        "duration": { "$ref": "#/definitions/DurationParts" },
-        "options": {
-          "type": "object",
-          "properties": {
-            "freq": { "type": "integer", "enum": [0, 1, 2, 3, 4, 5, 6] },
-            "starts": { "type": "number" },
-            "ends": { "type": "number" }
-          },
-          "additionalProperties": true,
-          "required": ["freq"]
-        },
-        "label": { "type": "string" }
-      },
-      "required": ["effect", "duration", "options"]
-    },
-    "DurationParts": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "years": { "type": "integer", "minimum": 0 },
-        "months": { "type": "integer", "minimum": 0 },
-        "weeks": { "type": "integer", "minimum": 0 },
-        "days": { "type": "integer", "minimum": 0 },
-        "hours": { "type": "integer", "minimum": 0 },
-        "minutes": { "type": "integer", "minimum": 0 },
-        "seconds": { "type": "integer", "minimum": 0 }
-      },
-      "anyOf": [
-        { "required": ["years"], "properties": { "years": { "type": "integer", "minimum": 1 } } },
-        { "required": ["months"], "properties": { "months": { "type": "integer", "minimum": 1 } } },
-        { "required": ["weeks"], "properties": { "weeks": { "type": "integer", "minimum": 1 } } },
-        { "required": ["days"], "properties": { "days": { "type": "integer", "minimum": 1 } } },
-        { "required": ["hours"], "properties": { "hours": { "type": "integer", "minimum": 1 } } },
-        { "required": ["minutes"], "properties": { "minutes": { "type": "integer", "minimum": 1 } } },
-        { "required": ["seconds"], "properties": { "seconds": { "type": "integer", "minimum": 1 } } }
-      ]
-    }
-  }
+  "$schema": "http://json-schema.org/draft-07/schema#"
 }

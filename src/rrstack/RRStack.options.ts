@@ -8,7 +8,6 @@
  */
 
 import { IANAZone } from 'luxon';
-import { Frequency } from 'rrule';
 import { z } from 'zod';
 
 import type {
@@ -18,6 +17,7 @@ import type {
   TimeZoneId,
   UnixTimeUnit,
 } from './types';
+
 // DurationParts validation: non-negative integers, and total > 0.
 export const NonNegInt = z.number().int().min(0);
 
@@ -51,6 +51,7 @@ export const TimeZoneIdSchema = z
     message: 'Invalid IANA time zone (check ICU data).',
   })
   .brand<'TimeZoneId'>();
+
 export const OptionsSchema = z.object({
   timezone: TimeZoneIdSchema,
   timeUnit: z.enum(['ms', 's']).default('ms'),
@@ -61,13 +62,24 @@ export const JsonSchema = OptionsSchema.extend({
   version: z.string().min(1),
 });
 
+// Numeric literal-union for rrule Frequency (enum values 0..6),
+// avoids importing 'rrule' at schema-gen/runtime for the generator.
+const FreqSchema = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+] as const);
+
 export const RuleLiteSchema = z.object({
   effect: z.enum(['active', 'blackout']),
   duration: DurationPartsSchema,
   options: z
     .object({
-      // Use rrule Frequency enum to emit an enum in JSON Schema.
-      freq: z.nativeEnum(Frequency),
+      freq: FreqSchema,
       starts: z.number().finite().optional(),
       ends: z.number().finite().optional(),
     })
@@ -89,7 +101,8 @@ export const RRStackJsonZod = JsonSchema.extend({
  */
 export const normalizeOptions = (
   opts: RRStackOptions,
-): RRStackOptionsNormalized => {  const parsed = OptionsSchema.parse({
+): RRStackOptionsNormalized => {
+  const parsed = OptionsSchema.parse({
     timezone: opts.timezone,
     timeUnit: opts.timeUnit ?? ('ms' as UnixTimeUnit),
     rules: opts.rules ?? ([] as RuleJson[]),
