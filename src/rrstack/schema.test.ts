@@ -66,16 +66,27 @@ describe('RRSTACK_JSON_SCHEMA export', () => {
       }
     }
 
-    // Fallback to inline under rules.items.properties.duration (resolve $ref if present)
+    // Fallback to inline under rules.items.properties.duration:
+    // resolve items $ref (Rule) first, then duration $ref (DurationParts).
     if (!duration) {
       const rules = asSchema(root.properties?.rules);
       const itemsDef = rules?.items;
-      const item = Array.isArray(itemsDef)
+
+      // Resolve items (Rule) which may be a ref
+      let itemSchema = Array.isArray(itemsDef)
         ? asSchema(itemsDef[0])
         : asSchema(itemsDef);
+      if (isRef(itemSchema)) {
+        const resolvedItem = followRef(root, itemSchema.$ref);
+        if (resolvedItem) itemSchema = resolvedItem;
+      }
+
       const durationDef = (
-        item?.properties as Record<string, JSONSchema7Definition> | undefined
+        itemSchema?.properties as
+          | Record<string, JSONSchema7Definition>
+          | undefined
       )?.duration;
+
       let maybeDuration = asSchema(durationDef);
       if (isRef(maybeDuration)) {
         maybeDuration = followRef(root, maybeDuration.$ref);

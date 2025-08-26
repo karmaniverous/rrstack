@@ -8,10 +8,11 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
-- Fix schema test: resolve $ref for DurationParts when duration is a reference so positivity anyOf is asserted on the resolved node.
+- Fix schema test: resolve $ref for Rule (rules.items) and DurationParts; assert positivity anyOf on the resolved node.
 - Follow-ups for JSON Schema export:
   - Fix typecheck: replace invalid `as const` on imported JSON with a
-    JSONSchema7 assertion via `unknown` in RRStack.schema.ts.  - Decouple Zod option refine from coverage/time.ts to avoid pulling
+    JSONSchema7 assertion via `unknown` in RRStack.schema.ts.
+  - Decouple Zod option refine from coverage/time.ts to avoid pulling
     rrule into the schema generator; use Luxon IANAZone directly.
   - Replace rrule Frequency import with a numeric literal-union Zod
     schema for `options.freq` (emits enum [0..6]) so the generator can
