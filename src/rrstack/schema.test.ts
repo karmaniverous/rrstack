@@ -40,17 +40,40 @@ const followRef = (root: JSONSchema7, ref: string): JSONSchema7 | undefined => {
   return cur as JSONSchema7;
 };
 
+const getDefs = (
+  root: JSONSchema7,
+): Record<string, JSONSchema7Definition> | undefined =>
+  (root.definitions as Record<string, JSONSchema7Definition> | undefined) ??
+  (root as unknown as { $defs?: Record<string, JSONSchema7Definition> })
+    .$defs ??
+  undefined;
+
+const locateRRRoot = (root: JSONSchema7): JSONSchema7 => {
+  // If rules is present at the top-level, use it.
+  if (asSchema(root.properties?.rules)) return root;
+
+  // Otherwise, try named definition 'RRStackJson', or scan for a schema with 'rules'.
+  const defs = getDefs(root);
+  if (defs) {
+    const named = asSchema(defs.RRStackJson);
+    if (named && asSchema(named.properties?.rules)) return named;
+
+    for (const def of Object.values(defs)) {
+      const s = asSchema(def);
+      if (s && asSchema(s.properties?.rules)) return s;
+    }
+  }
+  // Fallback to root; subsequent lookups may fail and cause the test to report.
+  return root;
+};
+
 describe('RRSTACK_JSON_SCHEMA export', () => {
   it('exists and includes DurationParts positivity (anyOf)', () => {
     const root = RRSTACK_JSON_SCHEMA;
     expect(root).toBeTruthy();
 
     // Prefer definitions.DurationParts (or $defs.DurationParts)
-    const defs =
-      (root.definitions as Record<string, JSONSchema7Definition> | undefined) ??
-      (root as unknown as { $defs?: Record<string, JSONSchema7Definition> })
-        .$defs ??
-      undefined;
+    const defs = getDefs(root);
 
     let duration: JSONSchema7 | undefined =
       defs && defs.DurationParts ? asSchema(defs.DurationParts) : undefined;
@@ -69,7 +92,8 @@ describe('RRSTACK_JSON_SCHEMA export', () => {
     // Fallback to inline under rules.items.properties.duration:
     // resolve items $ref (Rule) first, then duration $ref (DurationParts).
     if (!duration) {
-      const rules = asSchema(root.properties?.rules);
+      const rrRoot = locateRRRoot(root);
+      const rules = asSchema(rrRoot.properties?.rules);
       const itemsDef = rules?.items;
 
       // Resolve items (Rule) which may be a ref

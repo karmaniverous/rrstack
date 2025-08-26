@@ -8,7 +8,7 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
-- Fix schema test: resolve $ref for Rule (rules.items) and DurationParts; assert positivity anyOf on the resolved node.
+- Fix schema test: handle RRStackJson root under definitions/$defs when locating `rules`; resolve $ref for Rule (rules.items) and DurationParts; assert positivity anyOf on the resolved node.
 - Follow-ups for JSON Schema export:
   - Fix typecheck: replace invalid `as const` on imported JSON with a
     JSONSchema7 assertion via `unknown` in RRStack.schema.ts.
