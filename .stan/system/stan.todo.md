@@ -32,6 +32,7 @@ Completed (recent)
 - Add README “JSON Schema” section linking to assets/rrstackjson.schema.json and the exported RRSTACK_JSON_SCHEMA constant.
 - Replace numeric RRULE Frequency enum in RuleOptionsJson.freq with a lower-case string union; map to rrule’s numeric enum internally during compilation; update README and tests accordingly.
 - Update schema generator to enforce Rule.options.freq as a lower-case string enum; keep it in sync with public types. Fixed a test typo that commented out `starts`.
+- Change schema root to reflect RRStackOptions (constructor input) instead of RRStackJson; the generated schema no longer includes `version` at the top level.
 
 ---
 

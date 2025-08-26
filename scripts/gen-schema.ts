@@ -12,13 +12,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
+import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
-import { RRStackJsonZod } from '../src/rrstack/RRStack.options';
+import {
+  OptionsSchema,
+  RuleLiteSchema,
+} from '../src/rrstack/RRStack.options';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const durationKeys = [
   'years',
   'months',
@@ -150,15 +153,19 @@ const ensureFreqStringEnum = (root: JSONSchema7): void => {
 };
 
 async function main(): Promise<void> {
-  // 1) Generate base schema (draft-07).
-  const schema = zodToJsonSchema(RRStackJsonZod, {
-    name: 'RRStackJson',
+  // Build a strengthened Options schema for JSON Schema generation.
+  const RRStackOptionsZod = OptionsSchema.extend({
+    rules: z.array(RuleLiteSchema),
+  });
+
+  // 1) Generate base schema (draft-07) for RRStackOptions (no version).
+  const schema = zodToJsonSchema(RRStackOptionsZod, {
+    name: 'RRStackOptions',
     target: 'jsonSchema7',
   }) as JSONSchema7;
 
   // 2) Locate DurationParts and enforce positivity via anyOf.
   let durationTarget: JSONSchema7 | undefined;
-
   // Preferred path: rrRoot.properties.rules.items.properties.duration
   const rrRoot = locateRRRoot(schema);
   const rulesSchema = asSchema(rrRoot.properties?.rules);

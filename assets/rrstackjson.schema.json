@@ -1,7 +1,7 @@
 {
-  "$ref": "#/definitions/RRStackJson",
+  "$ref": "#/definitions/RRStackOptions",
   "definitions": {
-    "RRStackJson": {
+    "RRStackOptions": {
       "type": "object",
       "properties": {
         "timezone": {
@@ -36,22 +36,22 @@
                     "minimum": 0
                   },
                   "months": {
-                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                    "$ref": "#/definitions/RRStackOptions/properties/rules/items/properties/duration/properties/years"
                   },
                   "weeks": {
-                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                    "$ref": "#/definitions/RRStackOptions/properties/rules/items/properties/duration/properties/years"
                   },
                   "days": {
-                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                    "$ref": "#/definitions/RRStackOptions/properties/rules/items/properties/duration/properties/years"
                   },
                   "hours": {
-                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                    "$ref": "#/definitions/RRStackOptions/properties/rules/items/properties/duration/properties/years"
                   },
                   "minutes": {
-                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                    "$ref": "#/definitions/RRStackOptions/properties/rules/items/properties/duration/properties/years"
                   },
                   "seconds": {
-                    "$ref": "#/definitions/RRStackJson/properties/rules/items/properties/duration/properties/years"
+                    "$ref": "#/definitions/RRStackOptions/properties/rules/items/properties/duration/properties/years"
                   }
                 },
                 "additionalProperties": false,
@@ -173,16 +173,11 @@
             ],
             "additionalProperties": false
           }
-        },
-        "version": {
-          "type": "string",
-          "minLength": 1
         }
       },
       "required": [
         "timezone",
-        "rules",
-        "version"
+        "rules"
       ],
       "additionalProperties": false
     }
