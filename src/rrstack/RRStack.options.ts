@@ -7,17 +7,17 @@
  * from the RRStack class implementation.
  */
 
+import { IANAZone } from 'luxon';
 import { Frequency } from 'rrule';
 import { z } from 'zod';
 
-import { isValidTimeZone } from './coverage/time';
-import type {  RRStackOptions,
+import type {
+  RRStackOptions,
   RRStackOptionsNormalized,
   RuleJson,
   TimeZoneId,
   UnixTimeUnit,
 } from './types';
-
 // DurationParts validation: non-negative integers, and total > 0.
 export const NonNegInt = z.number().int().min(0);
 
@@ -47,11 +47,10 @@ export const DurationPartsSchema = z
 export const TimeZoneIdSchema = z
   .string()
   .min(1)
-  .refine((tz) => isValidTimeZone(tz), {
+  .refine((tz) => IANAZone.isValidZone(tz), {
     message: 'Invalid IANA time zone (check ICU data).',
   })
   .brand<'TimeZoneId'>();
-
 export const OptionsSchema = z.object({
   timezone: TimeZoneIdSchema,
   timeUnit: z.enum(['ms', 's']).default('ms'),
@@ -95,7 +94,6 @@ export const normalizeOptions = (
     timeUnit: opts.timeUnit ?? ('ms' as UnixTimeUnit),
     rules: opts.rules ?? ([] as RuleJson[]),
   });
-
   const normalized: RRStackOptionsNormalized = Object.freeze({
     timezone: parsed.timezone as unknown as TimeZoneId,
     timeUnit: parsed.timeUnit,

@@ -8,12 +8,19 @@ This document captures requirements, architecture, contracts, and the implementa
 
 Completed (recent)
 
+- Follow-ups for JSON Schema export:
+  - Fix typecheck: replace invalid `as const` on imported JSON with a
+    JSONSchema7 type assertion in RRStack.schema.ts.
+  - Decouple Zod option refine from coverage/time.ts to avoid pulling
+    rrule into the schema generator; use Luxon IANAZone directly.
+  - Make scripts/gen-schema.ts fully typed (no any/unsafe) and follow
+    $ref safely; mutate DurationParts anyOf in place.
+  - Make schema.test.ts fully typed (no any/unsafe).
 - Export JSON Schema as a package-level constant:
   - Added zod-to-json-schema generator (scripts/gen-schema.ts).
   - New artifact assets/rrstackjson.schema.json generated at docs/build time.
   - New export RRSTACK_JSON_SCHEMA (src/rrstack/RRStack.schema.ts) and re-exported from src/index.ts.
-  - Tightened options.freq to z.nativeEnum(Frequency) for enum emission.
-  - Post-processed DurationParts with anyOf requiring at least one non-zero component.
+  - Tightened options.freq to z.nativeEnum(Frequency) for enum emission.  - Post-processed DurationParts with anyOf requiring at least one non-zero component.
   - Added schema test (src/rrstack/schema.test.ts).
   - Updated docs script to run the generator before typedoc.
 - Added minimal documentation hook (schema present; link can be added to README later).
