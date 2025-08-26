@@ -2,11 +2,32 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.4.0](https://github.com/karmaniverous/rrstack/compare/0.3.0...0.4.0)
+
+- update stan [`414f81b`](https://github.com/karmaniverous/rrstack/commit/414f81b11a784324c4a4f481168dba8789cc14a4)
+- feat(schema): export RRSTACK_JSON_SCHEMA and generate from Zod [`d4e55d2`](https://github.com/karmaniverous/rrstack/commit/d4e55d277d46bf2088daee88e48e441bd4930393)
+- feat: human-readable freq strings; map to rrule enum [`d6dd75a`](https://github.com/karmaniverous/rrstack/commit/d6dd75ab53c0100a426b4a585ea8cb2387e68cb7)
+- fix(schema): pass typecheck/lint; decouple TZ refine [`e27aaf4`](https://github.com/karmaniverous/rrstack/commit/e27aaf425ee65e57cb4b73577f37f7d54f5171e5)
+- chore(schema): rename artifact to rrstackconfig.schema.json [`8b6f9f2`](https://github.com/karmaniverous/rrstack/commit/8b6f9f26ab9e92de2b3844038d83bb3c9c3fb7d6)
+- fix(schema): make freq enum generator-safe; relax typing [`a960e17`](https://github.com/karmaniverous/rrstack/commit/a960e1717dde28f997a3510d81a39f71e78d0a65)
+- updated docs [`11600cf`](https://github.com/karmaniverous/rrstack/commit/11600cf227007094d63c22b29f6ffdc05f632b41)
+- fix(schema-gen): locate RR root under defs/$defs; add positivity anyOf [`e0925ef`](https://github.com/karmaniverous/rrstack/commit/e0925efa0ca3759e83b3363aeeb558d9d85f3936)
+- updated docs [`5eaa83d`](https://github.com/karmaniverous/rrstack/commit/5eaa83d46854b13ba8dc61390429019026281b84)
+- feat(schema): enforce freq string enum; fix starts typo [`51748fc`](https://github.com/karmaniverous/rrstack/commit/51748fc88e68f08d2f505885833ba9d2554e0b7b)
+- test(schema): resolve $ref to DurationParts in schema test [`701f1e0`](https://github.com/karmaniverous/rrstack/commit/701f1e0ebf84dab9fa854dff9672dd0ac31d6eb8)
+- chore(schema): emit RRStackOptions (no version) as JSON Schema [`b808b50`](https://github.com/karmaniverous/rrstack/commit/b808b50d2543a4a6011d65ec905d206ea2c92446)
+- # RRStack — Requirements and Development Plan [`b3cc2f3`](https://github.com/karmaniverous/rrstack/commit/b3cc2f32ecbd0d8c62d138e451acebf235dd9bc0)
+- docs: add JSON Schema section and update plan [`32cfc06`](https://github.com/karmaniverous/rrstack/commit/32cfc0627588b5c3afe001096f50a71421fb44b2)
+- test(schema): resolve Rule $ref before DurationParts $ref [`9aed707`](https://github.com/karmaniverous/rrstack/commit/9aed707b89211fdf33f8b03202e8945b0cd972f4)
+
 #### [0.3.0](https://github.com/karmaniverous/rrstack/compare/0.2.0...0.3.0)
+
+> 25 August 2025
 
 - Reverted leakage from another project [`0bbabf9`](https://github.com/karmaniverous/rrstack/commit/0bbabf93a6c2a1364ce445eb4a16e51b89a4f77d)
 - fix(bounds): use safe far-future probe and avoid domainMax to stabilize latest-end and open-end detection [`48214dd`](https://github.com/karmaniverous/rrstack/commit/48214dd13ddda1b5aa6d05452301e5ac77648b77)
 - chore: split RRStack.ts and add tests for bounds/heap/seconds [`f016859`](https://github.com/karmaniverous/rrstack/commit/f016859af2a9ff1560aee5d8d1ac55f61662c2f4)
+- chore: release v0.3.0 [`118cf86`](https://github.com/karmaniverous/rrstack/commit/118cf86d68a682c7f7582511a4a4775fb1495926)
 - test: add coverage for duration, re-exports, enumeration, patterns; bump plan date [`600954b`](https://github.com/karmaniverous/rrstack/commit/600954b6f47b8cf7877403d11ec742b81cc442e1)
 - feat(duration): adopt structured DurationParts and update API/docs/tests [`abde6f3`](https://github.com/karmaniverous/rrstack/commit/abde6f37ecd711922cf126f7f507e32c3211af33)
 - docs(readme): add duration helpers and API import [`923b2b2`](https://github.com/karmaniverous/rrstack/commit/923b2b26d928ddb45b9bc33bfc5912325217a8eb)
