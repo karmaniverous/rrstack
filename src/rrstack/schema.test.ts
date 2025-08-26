@@ -1,7 +1,7 @@
 import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 import { describe, expect, it } from 'vitest';
 
-import { RRSTACK_JSON_SCHEMA } from '../index';
+import { RRSTACK_CONFIG_SCHEMA } from '../index';
 
 const asSchema = (def?: JSONSchema7Definition): JSONSchema7 | undefined => {
   if (!def || typeof def === 'boolean') return undefined;
@@ -67,9 +67,9 @@ const locateRRRoot = (root: JSONSchema7): JSONSchema7 => {
   return root;
 };
 
-describe('RRSTACK_JSON_SCHEMA export', () => {
+describe('RRSTACK_CONFIG_SCHEMA export', () => {
   it('exists and includes DurationParts positivity (anyOf)', () => {
-    const root = RRSTACK_JSON_SCHEMA;
+    const root = RRSTACK_CONFIG_SCHEMA;
     expect(root).toBeTruthy();
 
     // Prefer definitions.DurationParts (or $defs.DurationParts)

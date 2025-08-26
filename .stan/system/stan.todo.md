@@ -21,15 +21,15 @@ Completed (recent)
   - Make schema.test.ts fully typed (no any/unsafe).
 - Export JSON Schema as a package-level constant:
   - Added zod-to-json-schema generator (scripts/gen-schema.ts).
-  - New artifact assets/rrstackjson.schema.json generated at docs/build time.
-  - New export RRSTACK_JSON_SCHEMA (src/rrstack/RRStack.schema.ts) and re-exported from src/index.ts.
+  - New artifact assets/rrstackconfig.schema.json generated at docs/build time (renamed from rrstackjson.schema.json).
+  - New export RRSTACK_CONFIG_SCHEMA (src/rrstack/RRStack.schema.ts) and re-exported from src/index.ts.
   - Tightened options.freq to an enum; post-processed DurationParts with
     anyOf requiring at least one non-zero component.
   - Added schema test (src/rrstack/schema.test.ts).
   - Updated docs script to run the generator before typedoc.
 - Added minimal documentation hook (schema present; link can be added to README later).
 - No changes to runtime parsing behavior (existing JsonSchema remains as-is).
-- Add README “JSON Schema” section linking to assets/rrstackjson.schema.json and the exported RRSTACK_JSON_SCHEMA constant.
+- Add README “JSON Schema” section linking to assets/rrstackconfig.schema.json and the exported RRSTACK_CONFIG_SCHEMA constant.
 - Replace numeric RRULE Frequency enum in RuleOptionsJson.freq with a lower-case string union; map to rrule’s numeric enum internally during compilation; update README and tests accordingly.
 - Update schema generator to enforce Rule.options.freq as a lower-case string enum; keep it in sync with public types. Fixed a test typo that commented out `starts`.
 - Change schema root to reflect RRStackOptions (constructor input) instead of RRStackJson; the generated schema no longer includes `version` at the top level.

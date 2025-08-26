@@ -223,13 +223,12 @@ Notes
 
 ## JSON Schema
 
-A JSON Schema for the serialized RRStackJson shape is generated from the Zod
-source of truth and published with the package.
+A JSON Schema for the serialized RRStack options (constructor input) is generated from the Zod source of truth and published with the package.
 
 - Browse the schema file in this repo:
-  - assets/rrstackjson.schema.json
+  - assets/rrstackconfig.schema.json
 - Import it at runtime:
-  - export constant: RRSTACK_JSON_SCHEMA (from '@karmaniverous/rrstack')
+  - export constant: RRSTACK_CONFIG_SCHEMA (from '@karmaniverous/rrstack')
 
 Generation details:
 
@@ -241,10 +240,10 @@ Generation details:
 Example (programmatic access):
 
 ```ts
-import { RRSTACK_JSON_SCHEMA } from '@karmaniverous/rrstack';
+import { RRSTACK_CONFIG_SCHEMA } from '@karmaniverous/rrstack';
 
 // pass to your JSON Schema validator of choice (e.g., Ajv)
-console.log(RRSTACK_JSON_SCHEMA.$schema, 'RRStackJson schema loaded');
+console.log(RRSTACK_CONFIG_SCHEMA.$schema, 'RRStackJson schema loaded');
 ```
 
 ## Duration helpers

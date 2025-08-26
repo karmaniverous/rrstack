@@ -229,7 +229,7 @@ async function main(): Promise<void> {
   // 4) Write artifact.
   const outDir = path.resolve(__dirname, '../assets');
   await mkdir(outDir, { recursive: true });
-  const outFile = path.join(outDir, 'rrstackjson.schema.json');
+  const outFile = path.join(outDir, 'rrstackconfig.schema.json');
   const text = JSON.stringify(schema, null, 2) + '\n';
   await writeFile(outFile, text, 'utf8');
 }

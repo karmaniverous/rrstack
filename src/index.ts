@@ -6,7 +6,7 @@
 
 export { RRStack } from './rrstack';
 export { fromIsoDuration, toIsoDuration } from './rrstack/duration';
-export { RRSTACK_JSON_SCHEMA } from './rrstack/RRStack.schema';
+export { RRSTACK_CONFIG_SCHEMA } from './rrstack/RRStack.schema';
 export type {
   DurationParts,
   FrequencyStr,
