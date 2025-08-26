@@ -3,7 +3,6 @@
 Last updated: 2025-08-26 (UTC)
 
 This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
-
 ---
 
 Completed (recent)
@@ -31,9 +30,9 @@ Completed (recent)
   - Updated docs script to run the generator before typedoc.
 - Added minimal documentation hook (schema present; link can be added to README later).
 - No changes to runtime parsing behavior (existing JsonSchema remains as-is).
+- Add README “JSON Schema” section linking to assets/rrstackjson.schema.json and the exported RRSTACK_JSON_SCHEMA constant.
 
 ---
-
 0. Top Priority — Stabilize template baseline (pre-implementation)
    [unchanged]
 
@@ -118,4 +117,4 @@ Completed (recent)
 
 9. Next steps (implementation plan)
 
-- README: add “JSON Schema” section linking to the generated artifact and exported constant.
+- None at this time.

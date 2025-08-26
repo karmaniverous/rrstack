@@ -214,10 +214,35 @@ Notes
   - { days: 1 } means “same local time next day” (can be 23 or 25 hours across DST),
   - { hours: 24 } means “exactly 24 hours.”
 
+## JSON Schema
+
+A JSON Schema for the serialized RRStackJson shape is generated from the Zod
+source of truth and published with the package.
+
+- Browse the schema file in this repo:
+  - assets/rrstackjson.schema.json
+- Import it at runtime:
+  - export constant: RRSTACK_JSON_SCHEMA (from '@karmaniverous/rrstack')
+
+Generation details:
+
+- The schema is produced by scripts/gen-schema.ts using zod-to-json-schema.
+- DurationParts positivity is enforced by adding an anyOf that requires at
+  least one of the fields (years|months|weeks|days|hours|minutes|seconds) to
+  be an integer with minimum 1.
+
+Example (programmatic access):
+
+```ts
+import { RRSTACK_JSON_SCHEMA } from '@karmaniverous/rrstack';
+
+// pass to your JSON Schema validator of choice (e.g., Ajv)
+console.log(RRSTACK_JSON_SCHEMA.$schema, 'RRStackJson schema loaded');
+```
+
 ## Duration helpers
 
 These utilities can be handy for interop (config files, CLI, or user input).
-
 ```ts
 import { toIsoDuration, fromIsoDuration } from '@karmaniverous/rrstack';
 
