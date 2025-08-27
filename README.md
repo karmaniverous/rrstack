@@ -1,10 +1,10 @@
-<!-- TYPEDOC_EXCLUDE -->
-
-> [API Documentation](https://karmaniverous.github.io/rrstack) • [CHANGELOG](https://github.com/karmaniverous/rrstack/tree/main/CHANGELOG.md)
-
-<!-- /TYPEDOC_EXCLUDE -->
-
 # RRStack
+
+[![npm version](https://img.shields.io/npm/v/@karmaniverous/rrstack.svg)](https://www.npmjs.com/package/@karmaniverous/rrstack)
+![Node Current](https://img.shields.io/node/v/@karmaniverous/rrstack) <!-- TYPEDOC_EXCLUDE -->
+[![docs](https://img.shields.io/badge/docs-website-blue)](https://docs.karmanivero.us/rrstack)
+[![changelog](https://img.shields.io/badge/changelog-latest-blue.svg)](https://github.com/karmaniverous/rrstack/tree/main/CHANGELOG.md)<!-- /TYPEDOC_EXCLUDE -->
+[![license](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](https://github.com/karmaniverous/rrstack/tree/main/LICENSE.md)
 
 Timezone-aware RRULE stacking engine for Node/TypeScript.
 
