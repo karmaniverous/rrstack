@@ -6,12 +6,12 @@ Last updated: 2025-08-27 (UTC)
 
 Completed (recent)
 
+- TypeDoc: add a direct link to the raw JSON schema on the RRSTACK_CONFIG_SCHEMA page via TSDoc comment (links to GitHub raw and repo view).
 - Clarify README: document RRStackOptions.timezone as an IANA time zone id, note environment-dependent validation (Luxon/ICU), and show how to enumerate zones (Intl.supportedValuesOf, curated lists like @vvo/tzdb), with examples and references.
 - Fix schema generator: handle RRStackJson under definitions/$defs when locating `rules.items`; scan both definitions and $defs to find DurationParts and add positivity anyOf.
 - Fix schema test: handle RRStackJson root under definitions/$defs when locating `rules`; resolve $ref for Rule (rules.items) and DurationParts; assert positivity anyOf on the resolved node.
 - Follow-ups for JSON Schema export:  - Fix typecheck: replace invalid `as const` on imported JSON with a
-    JSONSchema7 assertion via `unknown` in RRStack.schema.ts.
-  - Decouple Zod option refine from coverage/time.ts to avoid pulling
+    JSONSchema7 assertion via `unknown` in RRStack.schema.ts.  - Decouple Zod option refine from coverage/time.ts to avoid pulling
     rrule into the schema generator; use Luxon IANAZone directly.
   - Replace rrule Frequency import with a numeric literal-union Zod
     schema for `options.freq` (emits enum [0..6]) so the generator can
