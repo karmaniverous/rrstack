@@ -95,7 +95,7 @@
   },
   "release-it": {
     "git": {
-      "changelog": "npx auto-changelog --stdout --commit-limit false --unreleased --template https://raw.githubusercontent.com/release-it/release-it/main/templates/changelog-compact.hbs",
+      "changelog": "npx auto-changelog -u --stdout --template https://raw.githubusercontent.com/release-it/release-it/main/templates/changelog-compact.hbs",
       "commitMessage": "chore: release v${version}",
       "requireBranch": "main"
     },
@@ -130,6 +130,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "changelog": "auto-changelog",
     "context": "concurrently -n archive,typecheck,lint,test,build -c auto \"npm:context:archive\" \"npm:context:typecheck\" \"npm:context:lint\" \"npm:context:test\" \"npm:context:build\"",
     "context:archive": "tsx archive.ts",
     "context:build": "npm run build > context/build.txt 2>&1",
