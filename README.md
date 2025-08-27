@@ -278,6 +278,34 @@ fromIsoDuration('P2W'); // { weeks: 2 }
   - Example: “2021-03-14 01:30 + 1h” in America/Chicago → 03:30 local (spring forward)
   - Example: “2021-11-07 01:30 + 1h” → 01:30 local (repeated hour on fall back)
 
+### Selecting and enumerating time zones
+
+- RRStackOptions.timezone expects an IANA time zone identifier (e.g., 'America/Chicago', 'Europe/London', 'UTC').
+- Validation is performed at runtime (Luxon’s IANAZone.isValidZone). Acceptance depends on the host’s ICU/Intl data (Node build, browser, OS). Always validate user input:
+  - RRStack.isValidTimeZone('America/Chicago') => boolean
+  - RRStack.asTimeZoneId('America/Chicago') => branded type or throws
+- Enumerate supported zones in the current environment (when available):
+
+  ```ts
+  import { RRStack } from '@karmaniverous/rrstack';
+
+  // List zones supported by this runtime (modern Node/browsers)
+  const zones =
+    typeof Intl.supportedValuesOf === 'function'
+      ? Intl.supportedValuesOf('timeZone')
+      : [];
+
+  // Optional: filter/validate with RRStack to be safe
+  const validZones = zones.filter(RRStack.isValidTimeZone);
+  ```
+
+- Cross-environment pickers: ship a curated list (still validate at runtime)
+  - Lightweight: @vvo/tzdb (JSON of IANA zones + metadata)
+  - Heavier: moment-timezone (moment.tz.names())
+- References
+  - IANA TZDB: https://www.iana.org/time-zones
+  - Wikipedia list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
 ## Version handling
 
 - toJson writes the current package version via a build-time injected constant (**RRSTACK_VERSION**) so no package.json import is needed at runtime.

@@ -1,15 +1,15 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-08-26 (UTC)
+Last updated: 2025-08-27 (UTC)
 
 ## This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
 Completed (recent)
 
+- Clarify README: document RRStackOptions.timezone as an IANA time zone id, note environment-dependent validation (Luxon/ICU), and show how to enumerate zones (Intl.supportedValuesOf, curated lists like @vvo/tzdb), with examples and references.
 - Fix schema generator: handle RRStackJson under definitions/$defs when locating `rules.items`; scan both definitions and $defs to find DurationParts and add positivity anyOf.
 - Fix schema test: handle RRStackJson root under definitions/$defs when locating `rules`; resolve $ref for Rule (rules.items) and DurationParts; assert positivity anyOf on the resolved node.
-- Follow-ups for JSON Schema export:
-  - Fix typecheck: replace invalid `as const` on imported JSON with a
+- Follow-ups for JSON Schema export:  - Fix typecheck: replace invalid `as const` on imported JSON with a
     JSONSchema7 assertion via `unknown` in RRStack.schema.ts.
   - Decouple Zod option refine from coverage/time.ts to avoid pulling
     rrule into the schema generator; use Luxon IANAZone directly.
