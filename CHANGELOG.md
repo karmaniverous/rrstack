@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.4.1](https://github.com/karmaniverous/rrstack/compare/0.4.0...0.4.1)
+
+- updated docs [`9c11e5d`](https://github.com/karmaniverous/rrstack/commit/9c11e5d979f7d9eaafc7d8405c694c91597bdd4f)
+- updated docs [`4d1b3b9`](https://github.com/karmaniverous/rrstack/commit/4d1b3b954674270d6aeb2ff88b1fcecf8bf36846)
+- docs(readme): clarify timezone reference and enum [`24b9cdf`](https://github.com/karmaniverous/rrstack/commit/24b9cdf284c5f89703ad615de39e0981cd07d254)
+- updated release script [`d9e8b76`](https://github.com/karmaniverous/rrstack/commit/d9e8b768ccf2dd21057ad7336ce3df2367935c49)
+- updated engines [`59fcc13`](https://github.com/karmaniverous/rrstack/commit/59fcc13ddfe30076184049182ee7bb50ef7b1b8b)
+- relese script update [`df2fae4`](https://github.com/karmaniverous/rrstack/commit/df2fae486c93e1882437f5dc109411cd6e0e5743)
+
 #### [0.4.0](https://github.com/karmaniverous/rrstack/compare/0.3.0...0.4.0)
+
+> 27 August 2025
 
 - update stan [`414f81b`](https://github.com/karmaniverous/rrstack/commit/414f81b11a784324c4a4f481168dba8789cc14a4)
 - feat(schema): export RRSTACK_JSON_SCHEMA and generate from Zod [`d4e55d2`](https://github.com/karmaniverous/rrstack/commit/d4e55d277d46bf2088daee88e48e441bd4930393)
@@ -10,6 +21,7 @@ All notable changes to this project will be documented in this file. Dates are d
 - fix(schema): pass typecheck/lint; decouple TZ refine [`e27aaf4`](https://github.com/karmaniverous/rrstack/commit/e27aaf425ee65e57cb4b73577f37f7d54f5171e5)
 - chore(schema): rename artifact to rrstackconfig.schema.json [`8b6f9f2`](https://github.com/karmaniverous/rrstack/commit/8b6f9f26ab9e92de2b3844038d83bb3c9c3fb7d6)
 - fix(schema): make freq enum generator-safe; relax typing [`a960e17`](https://github.com/karmaniverous/rrstack/commit/a960e1717dde28f997a3510d81a39f71e78d0a65)
+- chore: release v0.4.0 [`ba25010`](https://github.com/karmaniverous/rrstack/commit/ba25010e062c2680a5a062e8ce182b5326b30683)
 - updated docs [`11600cf`](https://github.com/karmaniverous/rrstack/commit/11600cf227007094d63c22b29f6ffdc05f632b41)
 - fix(schema-gen): locate RR root under defs/$defs; add positivity anyOf [`e0925ef`](https://github.com/karmaniverous/rrstack/commit/e0925efa0ca3759e83b3363aeeb558d9d85f3936)
 - updated docs [`5eaa83d`](https://github.com/karmaniverous/rrstack/commit/5eaa83d46854b13ba8dc61390429019026281b84)
