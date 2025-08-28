@@ -2,8 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.6.0](https://github.com/karmaniverous/rrstack/compare/0.5.3...0.6.0)
+
+- feat(api)!: RRStack.isActiveAt now returns boolean [`04d69ab`](https://github.com/karmaniverous/rrstack/commit/04d69abff0a952c06914d1717d475cca2c2b44d3)
+
 #### [0.5.3](https://github.com/karmaniverous/rrstack/compare/0.5.2...0.5.3)
 
+> 28 August 2025
+
+- chore: release v0.5.3 [`0afcc59`](https://github.com/karmaniverous/rrstack/commit/0afcc5961689d45872e7e9aba7e61bac60919e14)
 - fix(types): emit dist/index.d.ts for TS resolution [`ca788bb`](https://github.com/karmaniverous/rrstack/commit/ca788bb341ad7aa210b98ed797ebb9a03932f8f7)
 
 #### [0.5.2](https://github.com/karmaniverous/rrstack/compare/0.5.1...0.5.2)
