@@ -7,19 +7,19 @@
 import type { CompiledRule } from './compile';
 import { ruleCoversInstant } from './coverage';
 import { classifyRange, getEffectiveBounds, getSegments } from './sweep';
-import type { instantStatus, rangeStatus } from './types';
+import type { rangeStatus } from './types';
 
 export const isActiveAtCompiled = (
   compiled: CompiledRule[],
   t: number,
-): instantStatus => {
-  let status: instantStatus = 'blackout';
+): boolean => {
+  let isActive = false;
   for (let i = 0; i < compiled.length; i++) {
     if (ruleCoversInstant(compiled[i], t)) {
-      status = compiled[i].effect;
+      isActive = compiled[i].effect === 'active';
     }
   }
-  return status;
+  return isActive;
 };
 
 export const getSegmentsOverWindow = (

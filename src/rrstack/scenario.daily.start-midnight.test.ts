@@ -24,18 +24,18 @@ describe('Daily 09:00 starting at midnight (America/Chicago)', () => {
     const stack = new RRStack({ timezone: tz, rules: [rule] });
 
     // Before the start date: no activation.
-    expect(stack.isActiveAt(ms('2021-04-30T09:30:00'))).toBe('blackout');
+    expect(stack.isActiveAt(ms('2021-04-30T09:30:00'))).toBe(false);
 
     // On the start date, before 09:00: not yet active.
-    expect(stack.isActiveAt(ms('2021-05-01T08:59:59'))).toBe('blackout');
+    expect(stack.isActiveAt(ms('2021-05-01T08:59:59'))).toBe(false);
 
     // On the start date, within 09:00–10:00: active.
-    expect(stack.isActiveAt(ms('2021-05-01T09:30:00'))).toBe('active');
+    expect(stack.isActiveAt(ms('2021-05-01T09:30:00'))).toBe(true);
 
     // On the start date, at or after 10:00: no longer active.
-    expect(stack.isActiveAt(ms('2021-05-01T10:00:00'))).toBe('blackout');
+    expect(stack.isActiveAt(ms('2021-05-01T10:00:00'))).toBe(false);
 
     // Subsequent day at 09:30 should be active as well.
-    expect(stack.isActiveAt(ms('2021-05-02T09:30:00'))).toBe('active');
+    expect(stack.isActiveAt(ms('2021-05-02T09:30:00'))).toBe(true);
   });
 });

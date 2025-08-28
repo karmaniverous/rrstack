@@ -27,12 +27,11 @@ describe('RRStack', () => {
     const day = Date.UTC(2024, 0, 2);
     const five = day + 5 * 3600 * 1000;
     const four = day + 4 * 3600 * 1000;
-    expect(stack.isActiveAt(five)).toBe('active');
-    expect(stack.isActiveAt(four)).toBe('blackout');
+    expect(stack.isActiveAt(five)).toBe(true);
+    expect(stack.isActiveAt(four)).toBe(false);
     const roundTrip = stack.toJson();
     expect(roundTrip.timezone).toEqual('UTC');
-    expect((roundTrip.rules ?? []).length).toBe(1);
-    expect((roundTrip.rules ?? [])[0]?.label).toBe('morning-hour');
+    expect((roundTrip.rules ?? []).length).toBe(1);    expect((roundTrip.rules ?? [])[0]?.label).toBe('morning-hour');
     expect(typeof roundTrip.version).toBe('string');
   });
 

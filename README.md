@@ -69,12 +69,11 @@ const stack = new RRStack({
   rules,
 });
 
-// 3) Point query: active or blackout?
+// 3) Point query: active?
 const t = Date.now();
-const status = stack.isActiveAt(t); // 'active' | 'blackout'
+const isActive = stack.isActiveAt(t); // boolean
 
-// 4) Enumerate segments over a window (half-open [from, to))
-const from = Date.UTC(2024, 0, 2, 5, 0, 0);
+// 4) Enumerate segments over a window (half-open [from, to))const from = Date.UTC(2024, 0, 2, 5, 0, 0);
 const to = Date.UTC(2024, 0, 2, 6, 0, 0);
 for (const seg of stack.getSegments(from, to)) {
   // { start: number; end: number; status: 'active' | 'blackout' }
@@ -133,11 +132,10 @@ RRStack.isValidTimeZone(tz: string): boolean
 RRStack.asTimeZoneId(tz: string): TimeZoneId // throws if invalid
 
 // Queries
-stack.isActiveAt(ms: number): 'active' | 'blackout'
+stack.isActiveAt(ms: number): boolean               // true when active
 stack.getSegments(
   from: number,
-  to: number,
-): Iterable<{ start: number; end: number; status: 'active' | 'blackout' }>
+  to: number,): Iterable<{ start: number; end: number; status: 'active' | 'blackout' }>
 
 stack.classifyRange(
   from: number,

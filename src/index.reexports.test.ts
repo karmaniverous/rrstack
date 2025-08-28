@@ -24,7 +24,7 @@ describe('package re-exports (src/index.ts)', () => {
     const tActive = day + 12 * 3600 * 1000 + 15 * 60 * 1000;
     const tBlackout = day + 11 * 3600 * 1000 + 59 * 60 * 1000;
 
-    expect(stack.isActiveAt(tActive)).toBe('active');
-    expect(stack.isActiveAt(tBlackout)).toBe('blackout');
+    expect(stack.isActiveAt(tActive)).toBe(true);
+    expect(stack.isActiveAt(tBlackout)).toBe(false);
   });
 });

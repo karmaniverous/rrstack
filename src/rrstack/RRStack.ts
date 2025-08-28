@@ -203,17 +203,16 @@ export class RRStack {
   // Queries -------------------------------------------------------------------
 
   /**
-   * Determine whether the stack is active or blackout at `t`.
+   * Determine whether the stack is active at `t`.
    * @param t - Timestamp in the configured unit.
-   * @returns `'active' | 'blackout'`
+   * @returns true when active; false when blackout.
    */
-  isActiveAt(t: number): instantStatus {
+  isActiveAt(t: number): boolean {
     return isActiveAtCompiled(this.compiled, t);
   }
 
   /**
-   * Stream contiguous status segments over `[from, to)`.
-   *
+   * Stream contiguous status segments over `[from, to)`.   *
    * @param from - Start of the window (inclusive), in the configured unit.
    * @param to - End of the window (exclusive), in the configured unit.
    * @returns An iterable of `{ start, end, status }` entries. Memory-bounded

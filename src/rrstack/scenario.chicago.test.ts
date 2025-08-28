@@ -65,12 +65,12 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
     });
 
     const may18_0530 = ms('2021-05-18T05:30:00');
-    expect(stack.isActiveAt(may18_0530)).toBe('active');
+    expect(stack.isActiveAt(may18_0530)).toBe(true);
 
     const jul16_2019_0530 = ms('2019-07-16T05:30:00');
-    expect(stack.isActiveAt(jul16_2019_0530)).toBe('blackout');
+    expect(stack.isActiveAt(jul16_2019_0530)).toBe(false);
 
     const jul20_2021_0530 = ms('2021-07-20T05:30:00');
-    expect(stack.isActiveAt(jul20_2021_0530)).toBe('active');
+    expect(stack.isActiveAt(jul20_2021_0530)).toBe(true);
   });
 });

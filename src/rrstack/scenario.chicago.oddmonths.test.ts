@@ -67,14 +67,14 @@ describe('Scenario (America/Chicago): 3-rule cascade (odd months)', () => {
 
     // May 2021 (3rd Tuesday is the 18th) => active
     const may18_0530 = ms('2021-05-18T05:30:00');
-    expect(stack.isActiveAt(may18_0530)).toBe('active');
+    expect(stack.isActiveAt(may18_0530)).toBe(true);
 
     // A July where 3rd Tuesday is not the 20th => blackout override applies
     const jul18_2023_0530 = ms('2023-07-18T05:30:00');
-    expect(stack.isActiveAt(jul18_2023_0530)).toBe('blackout');
+    expect(stack.isActiveAt(jul18_2023_0530)).toBe(false);
 
     // 2021-07-20 is 3rd Tuesday AND day 20 => re-activated
     const jul20_2021_0530 = ms('2021-07-20T05:30:00');
-    expect(stack.isActiveAt(jul20_2021_0530)).toBe('active');
+    expect(stack.isActiveAt(jul20_2021_0530)).toBe(true);
   });
 });
