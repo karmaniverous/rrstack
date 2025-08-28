@@ -2,27 +2,26 @@
 // - Frequency/interval-aware search horizon (unit-aware).
 // - Enumerate candidate starts affecting a [from,to) window.
 
-import * as rrule from 'rrule';
-
 import type { CompiledRule } from '../compile';
+import { Frequency } from '../rrule.runtime';
 import { dayLength, epochToWallDate, floatingDateToZonedEpoch, horizonForDuration } from './time';
 
-export const enumerationHorizon = (rule: CompiledRule): number => {  const unit = rule.unit;
+export const enumerationHorizon = (rule: CompiledRule): number => {
+  const unit = rule.unit;
   const interval =
     typeof rule.options.interval === 'number' && rule.options.interval > 0
       ? rule.options.interval
       : 1;
 
-  if (rule.options.freq === rrule.Frequency.YEARLY) {
+  if (rule.options.freq === Frequency.YEARLY) {
     return (366 * interval + 1) * dayLength(unit);
   }
-  if (rule.options.freq === rrule.Frequency.MONTHLY) {
+  if (rule.options.freq === Frequency.MONTHLY) {
     return (32 * interval + 1) * dayLength(unit);
   }
   return horizonForDuration(rule.duration, unit);
 };
-export const enumerateStarts = (
-  rule: CompiledRule,
+export const enumerateStarts = (  rule: CompiledRule,
   from: number,
   to: number,
   horizon: number,

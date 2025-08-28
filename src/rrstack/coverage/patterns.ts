@@ -5,21 +5,21 @@
  */
 
 import { DateTime } from 'luxon';
-import type { Weekday } from 'rrule';
-import * as rrule from 'rrule';
+import type { Weekday as WeekdayType } from 'rrule';
 
 import type { CompiledRule } from '../compile';
+import { Frequency, Weekday } from '../rrule.runtime';
 import { computeOccurrenceEnd, floatingDateToZonedEpoch } from './time';
 
-type WeekdayLike = number | Weekday;
+type WeekdayLike = number | WeekdayType;
 const normalizeByweekday = (v: unknown): WeekdayLike[] => {
   if (Array.isArray(v)) {
     return v.filter(
-      (x): x is WeekdayLike =>
-        typeof x === 'number' || x instanceof rrule.Weekday,
+      (x): x is WeekdayLike => typeof x === 'number' || x instanceof Weekday,
     );
   }
-  if (typeof v === 'number' || v instanceof rrule.Weekday) return [v];
+  if (typeof v === 'number' || v instanceof Weekday)
+    return [v];
   return [];
 };
 
@@ -27,7 +27,7 @@ export const localDayMatchesDailyTimes = (
   rule: CompiledRule,
   t: number,
 ): boolean => {
-  if (rule.options.freq !== rrule.Frequency.DAILY) return false;
+  if (rule.options.freq !== Frequency.DAILY) return false;
 
   const tz = rule.tz;
   const local =
@@ -122,20 +122,14 @@ export const localDayMatchesCommonPatterns = (
   const s = Array.isArray(options.bysecond) ? options.bysecond[0] : 0;
   if (typeof h !== 'number') return false;
 
-  if (
-    options.freq !== rrule.Frequency.MONTHLY &&
-    options.freq !== rrule.Frequency.YEARLY
-  )
+  if (options.freq !== Frequency.MONTHLY && options.freq !== Frequency.YEARLY)
     return false;
 
-  if (
-    options.freq === rrule.Frequency.YEARLY &&
-    Array.isArray(options.bymonth)
-  ) {
+  if (options.freq === Frequency.YEARLY && Array.isArray(options.bymonth)) {
     if (!options.bymonth.includes(local.month)) return false;
   }
 
-  if (options.freq === rrule.Frequency.MONTHLY) {
+  if (options.freq === Frequency.MONTHLY) {
     const interval =
       typeof options.interval === 'number' && options.interval > 0
         ? options.interval
@@ -169,8 +163,9 @@ export const localDayMatchesCommonPatterns = (
         : undefined;
 
     const anyMatches = byweekdayArr.some((w) => {
-      const weekdayIndex = typeof w === 'number' ? w : w.weekday;
-      const nth = typeof w === 'number' ? undefined : w.n;
+      const weekdayIndex =
+        typeof w === 'number' ? w : (w).weekday;
+      const nth = typeof w === 'number' ? undefined : (w).n;
       const isSameWeekday = ((weekdayIndex + 1) % 7 || 7) === wd; // map 0..6→1..7
       if (typeof nth === 'number' && nth !== 0)
         return isSameWeekday && weekOrdinal === nth;

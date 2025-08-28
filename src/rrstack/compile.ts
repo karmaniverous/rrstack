@@ -13,10 +13,11 @@ import type {
   Options as RRuleOptions,
   RRule as RRuleClass,
 } from 'rrule';
-import * as rrule from 'rrule';
 
 import { domainMax, domainMin } from './coverage/time';
-import {  type FrequencyStr,
+import { datetime, Frequency, RRule } from './rrule.runtime';
+import {
+  type FrequencyStr,
   type instantStatus,
   type RuleJson,
   type RuleOptionsJson,
@@ -38,13 +39,13 @@ export interface CompiledRule {
 
 // Internal mapping from human-readable freq to rrule enum
 const FREQ_MAP: Record<FrequencyStr, RRuleFrequency> = {
-  yearly: rrule.Frequency.YEARLY,
-  monthly: rrule.Frequency.MONTHLY,
-  weekly: rrule.Frequency.WEEKLY,
-  daily: rrule.Frequency.DAILY,
-  hourly: rrule.Frequency.HOURLY,
-  minutely: rrule.Frequency.MINUTELY,
-  secondly: rrule.Frequency.SECONDLY,
+  yearly: Frequency.YEARLY,
+  monthly: Frequency.MONTHLY,
+  weekly: Frequency.WEEKLY,
+  daily: Frequency.DAILY,
+  hourly: Frequency.HOURLY,
+  minutely: Frequency.MINUTELY,
+  secondly: Frequency.SECONDLY,
 };
 
 /** @internal */
@@ -53,7 +54,7 @@ const toWall = (epoch: number, tz: string, unit: UnixTimeUnit): Date => {
     unit === 'ms'
       ? DateTime.fromMillis(epoch, { zone: tz })
       : DateTime.fromSeconds(epoch, { zone: tz });
-  return rrule.datetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
+  return datetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
 };
 /**
  * Convert a JSON-friendly rule options object into rrule Options with
@@ -124,7 +125,7 @@ export const compileRule = (
   const isOpenEnd = rule.options.ends === undefined;
 
   const options = toRRuleOptions(rule.options, timezone, unit);
-  const r = new rrule.RRule(options);
+  const r = new RRule(options);
 
   return {
     effect: rule.effect,
