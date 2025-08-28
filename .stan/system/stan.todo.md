@@ -6,12 +6,12 @@ Last updated: 2025-08-28 (UTC)
 
 Completed (recent)
 
+- Fix: Finalize rrule shim TS/lint cleanup (remove conflicting type imports; no-any; safe guards) to unblock typecheck/docs.
 - Fix: Harden rrule ESM/CJS interop with a runtime shim that prefers default export when present; re-export Frequency/RRule/Weekday/datetime.
 - Fix: ESM/CJS interop for rrule — switch to namespace imports to avoid named export errors in ESM consumers that resolve rrule as CJS.
 - Build: externalize runtime dependencies in Rollup (deps/peers marked external) to remove Luxon circular warnings and avoid bundling.
 - Fix tests after RRStackOptions unification: mark freq literals with 'as const' and guard optional rules from toJson in rrstack.test.ts.
-- Unify JSON shapes: remove RRStackJson/fromJson; add optional version to RRStackOptions; constructor ignores version; toJson writes version.
-- TypeDoc: link to the raw JSON schema on the RRSTACK_CONFIG_SCHEMA page.
+- Unify JSON shapes: remove RRStackJson/fromJson; add optional version to RRStackOptions; constructor ignores version; toJson writes version.- TypeDoc: link to the raw JSON schema on the RRSTACK_CONFIG_SCHEMA page.
 ---
 
 0. Top Priority — Stabilize template baseline (pre-implementation)

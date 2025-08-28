@@ -4,12 +4,19 @@ import { __pickRRuleNamespace } from './rrule.runtime';
 
 describe('rrule.runtime shim', () => {
   it('uses default export when it contains rrule surface', () => {
-    const fake = {
+    const fake: {
+      default: {
+        RRule: () => void;
+        Weekday: () => void;
+        Frequency: { YEARLY: number };
+        datetime: () => Date;
+      };
+    } = {
       default: {
         RRule: function R() {},
         Weekday: function W() {},
         Frequency: { YEARLY: 0 },
-        datetime: (..._args: unknown[]) => new Date(),
+        datetime: () => new Date(),
       },
     };
     const ns = __pickRRuleNamespace(fake);
@@ -24,7 +31,7 @@ describe('rrule.runtime shim', () => {
       RRule: function R() {},
       Weekday: function W() {},
       Frequency: { YEARLY: 0 },
-      datetime: (..._args: unknown[]) => new Date(),
+      datetime: () => new Date(),
     };
     const ns = __pickRRuleNamespace(fake);
     expect(typeof ns.RRule).toBe('function');
