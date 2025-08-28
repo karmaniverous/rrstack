@@ -6,34 +6,9 @@ Last updated: 2025-08-28 (UTC)
 
 Completed (recent)
 
-- Fix tests after RRStackOptions unification: mark freq literals with 'as const' and guard optional rules from toJson in rrstack.test.ts. No runtime changes.
-- TypeDoc: add a direct link to the raw JSON schema on the RRSTACK_CONFIG_SCHEMA page via TSDoc comment (links to GitHub raw and repo view).
-- Clarify README: document RRStackOptions.timezone as an IANA time zone id, note environment-dependent validation (Luxon/ICU), and show how to enumerate zones (Intl.supportedValuesOf, curated lists like @vvo/tzdb), with examples and references.
-- Fix schema generator: handle RRStackJson under definitions/$defs when locating `rules.items`; scan both definitions and $defs to find DurationParts and add positivity anyOf.- Fix schema test: handle RRStackJson root under definitions/$defs when locating `rules`; resolve $ref for Rule (rules.items) and DurationParts; assert positivity anyOf on the resolved node.
-- Follow-ups for JSON Schema export: - Fix typecheck: replace invalid `as const` on imported JSON with a
-  JSONSchema7 assertion via `unknown` in RRStack.schema.ts.
-  - Decouple Zod option refine from coverage/time.ts to avoid pulling
-    rrule into the schema generator; use Luxon IANAZone directly.
-  - Replace rrule Frequency import with a numeric literal-union Zod
-    schema for `options.freq` (emits enum [0..6]) so the generator can
-    run without bundling `rrule`.
-  - Make scripts/gen-schema.ts fully typed (no any/unsafe) and follow
-    $ref safely; mutate DurationParts anyOf in place.
-  - Make schema.test.ts fully typed (no any/unsafe).
-- Export JSON Schema as a package-level constant:
-  - Added zod-to-json-schema generator (scripts/gen-schema.ts).
-  - New artifact assets/rrstackconfig.schema.json generated at docs/build time (renamed from rrstackjson.schema.json).
-  - New export RRSTACK_CONFIG_SCHEMA (src/rrstack/RRStack.schema.ts) and re-exported from src/index.ts.
-  - Tightened options.freq to an enum; post-processed DurationParts with
-    anyOf requiring at least one non-zero component.
-  - Added schema test (src/rrstack/schema.test.ts).
-  - Updated docs script to run the generator before typedoc.
-- Added minimal documentation hook (schema present; link can be added to README later).
-- No changes to runtime parsing behavior (existing JsonSchema remains as-is).
-- Add README “JSON Schema” section linking to assets/rrstackconfig.schema.json and the exported RRSTACK_CONFIG_SCHEMA constant.
-- Replace numeric RRULE Frequency enum in RuleOptionsJson.freq with a lower-case string union; map to rrule’s numeric enum internally during compilation; update README and tests accordingly.
-- Update schema generator to enforce Rule.options.freq as a lower-case string enum; keep it in sync with public types. Fixed a test typo that commented out `starts`.
-- Change schema root to reflect RRStackOptions (constructor input) instead of RRStackJson; the generated schema no longer includes `version` at the top level.
+- Fix tests after RRStackOptions unification: mark freq literals with 'as const' and guard optional rules from toJson in rrstack.test.ts.
+- Unify JSON shapes: remove RRStackJson/fromJson; add optional version to RRStackOptions; constructor ignores version; toJson writes version.
+- TypeDoc: link to the raw JSON schema on the RRSTACK_CONFIG_SCHEMA page.
 
 ---
 
@@ -45,7 +20,7 @@ Completed (recent)
 1. Requirements (confirmed)
 
 - Options
-  - RRStackOptions (input): { timezone, timeUnit? = 'ms', rules? = [] }
+  - RRStackOptions (input/serialized): { version?; timezone; timeUnit? = 'ms'; rules? = [] }
   - RRStackOptionsNormalized (stored): extends Omit<…> with timeUnit required, rules required, timezone: TimeZoneId (branded).
 - Timezones
   - Validate with Luxon IANAZone.isValidZone; store branded TimeZoneId; helpers asTimeZoneId/isValidTimeZone.
@@ -59,7 +34,7 @@ Completed (recent)
 - Mutability
   - options frozen; property setters for timezone/rules; batch update via updateOptions; timeUnit immutable.
 - Persistence/version
-  - toJson writes build-injected version; fromJson validates; transforms added later if needed.
+  - toJson writes build-injected version; constructor accepts and ignores version; no fromJson API; transforms may be added later if needed.
 - Module split
   - coverage/{time.ts, patterns.ts, enumerate.ts, coverage.ts}; unit-aware compile/sweep.
 
@@ -97,8 +72,8 @@ Completed (recent)
 6. Validation & constraints
 
 - Zod schemas:
-  - RRStackOptions (constructor/fromJson).
-  - Setter/mutation “rule-lite” checks (effect literal, options.freq numeric, starts/ends finite if present); full RRULE Options validation remains in compile.
+  - RRStackOptions (constructor).
+  - Rule-lite checks on mutations (effect literal, options.freq string, starts/ends finite if present); full RRULE Options validation remains in compile.
 
 ---
 

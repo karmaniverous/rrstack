@@ -1,18 +1,22 @@
 # RRStack — Project Requirements (repo-specific)
 
-Last updated: 2025-08-24 (UTC)
+Last updated: 2025-08-28 (UTC)
 
 Purpose
+
 - Capture durable, repository-specific requirements for RRStack. This file governs design and implementation across iterations. Short-term work items live in stan.todo.md.
 
 Targets and runtime
+
 - Library runs in both Node and browsers.
 - Pure library surface (no I/O side effects); suitable for UI, workers, and server.
 - ESM/CJS bundles provided via Rollup; types included.
 
 Public API (core types and shapes)
+
 - Interfaces (prefer interfaces; extend where useful; use utility types sparingly):
-  - RRStackOptions (constructor input)
+  - RRStackOptions (constructor input AND serialized output)
+    - version?: string (optional; ignored by constructor; written by toJson)
     - timezone: string (validated at runtime; narrowed internally)
     - timeUnit?: 'ms' | 's' (default 'ms')
     - rules?: RuleJson[] (default [])
@@ -21,14 +25,13 @@ Public API (core types and shapes)
     - timeUnit: 'ms' | 's'
     - rules: RuleJson[]
     - timezone: TimeZoneId (branded, validated string)
-  - RRStackJson (serialized shape; flattened)
-    - extends RRStackOptionsNormalized
-    - version: string (current package version at serialization time)
+
 - JSON persistence
-  - toJson(): RRStackJson — writes version as a build-time injected constant; does not import package.json at runtime (browser-friendly).
-  - fromJson(json: RRStackJson): RRStack — validates and constructs; future version-based transforms live here; version is NOT stored on the instance.
+  - toJson(): RRStackOptions — writes version as a build-time injected constant; does not import package.json at runtime (browser-friendly).
+  - The constructor accepts RRStackOptions; version is ignored (reserved for future transforms). No RRStack.fromJson() API.
 
 Options, mutability, and setters
+
 - The instance exposes a single authoritative options object:
   - public readonly options: RRStackOptionsNormalized
   - options is normalized (defaults applied) and frozen.
@@ -41,12 +44,13 @@ Options, mutability, and setters
   - Convenience rule mutators (addRule/swap/up/down/top/bottom) remain and delegate to rules update.
 
 Units and domain (no internal ms canonicalization)
+
 - All public inputs/outputs (and internal algorithms) operate in the configured unit end-to-end.
 - timeUnit semantics:
   - 'ms': millisecond timestamps (Date.now()) with Luxon millisecond methods.
   - 's': integer seconds; RRULE starts are already second-granular; ends are rounded up to the next integer second to honor [start, end) and avoid boundary false negatives.
 - Domain bounds:
-  - Eliminate EPOCH_*_MS constants entirely.
+  - Eliminate EPOCH\_\*\_MS constants entirely.
   - Internal helpers (not exported):
     - domainMin(unit) = 0
     - domainMax(unit):
@@ -54,6 +58,7 @@ Units and domain (no internal ms canonicalization)
       - s: Math.floor(8_640_000_000_000_000 / 1000) = 8_640_000_000_000
 
 Timezone validation and typing (dependency-driven)
+
 - Validate timezone strings at all entry points (constructor, fromJson, setters) using Luxon:
   - IANAZone.isValidZone(tz) is the primary check.
   - Error messages note that validity depends on ICU/Intl data available to the host environment.
@@ -65,6 +70,7 @@ Timezone validation and typing (dependency-driven)
 - Note: Intl.supportedValuesOf('timeZone') may be present in modern browsers and can improve error messaging, but Luxon remains the source of truth.
 
 Core algorithms and behavior
+
 - isActiveAt(t: number): instantStatus — point query in the configured unit.
 - getSegments(from?: number, to?: number): Iterable<{ start: number; end: number; status: instantStatus }>
   - Streaming, memory-bounded k-way merge over per-rule boundary streams (starts/ends), using a min-heap.
@@ -78,6 +84,7 @@ Core algorithms and behavior
 - now(): number — returns current time in configured unit (ms or s).
 
 Compilation and coverage (module split)
+
 - No internal conversion to ms; compile and coverage operate in the configured unit.
 - Module layout:
   - compile.ts — unit-aware; returns CompiledRule { tz, unit, … }.
@@ -86,39 +93,48 @@ Compilation and coverage (module split)
     - patterns.ts — local structural matching helpers (daily and monthly/yearly).
     - enumerate.ts — per-rule enumeration horizons and lazy occurrence generation.
     - coverage.ts — ruleCoversInstant orchestration.
-  - sweep.ts — streaming merge for segments; unit-aware; no EPOCH_* usage.
+  - sweep.ts — streaming merge for segments; unit-aware; no EPOCH\_\* usage.
 
 Validation policy (zod)
+
 - Use zod minimally for:
-  - RRStackOptions and RRStackJson parsing (constructor/fromJson).
-  - Setter/mutation “rule-lite” checks (effect literal, options.freq numeric, starts/ends finite if present); full RRULE Options validation remains in compile.
-- Keep schemas small and focused for low overhead in both Node and browser.
+  - RRStackOptions parsing (constructor).
+  - Setter/mutation “rule-lite” checks (effect literal, options.freq string, starts/ends finite if present); full RRULE Options validation remains in compile.
 
 Version handling (persistence only)
+
 - Version is only needed at serialization:
-  - toJson writes the current package version injected at build time as a constant (e.g., __RRSTACK_VERSION__ replaced by Rollup).
-  - The version is not stored on the instance.
-- fromJson uses version for future transforms only; none implemented yet in 0.x.
+  - toJson writes the current package version injected at build time as a constant (e.g., **RRSTACK_VERSION** replaced by Rollup).
+  - The constructor accepts RRStackOptions with an optional version key and ignores it. Future transforms may be added in the constructor without changing the public shape.
+
+Generated artifacts policy
+
+- Artifacts under assets/ (e.g., assets/rrstackconfig.schema.json) are generated by scripts and must not be edited manually.
+- To update schema artifacts, run the generator (npm run schema) and commit the resulting files; do not hand-edit assets/.
 
 Changelog policy
+
 - Ensure CHANGELOG.md includes ALL commits by configuring auto-changelog in package.json:
   - "auto-changelog": { "output": "CHANGELOG.md", "unreleased": true, "commitLimit": false, "hideCredit": true }
   - Release step runs: npx auto-changelog -p
 
 Documentation
+
 - README documents:
-  - RRStackOptions/RRStackJson flattened shapes.
+  - Unified RRStackOptions shape (with optional version).
   - timeUnit semantics ('ms' vs 's'); seconds rounding behavior.
-  - Timezone validation and environment note (ICU/Intl).
+  - Timezone validation and environment note (Luxon/ICU).
   - Property-style setters and batch update.
   - Streaming segments and bounds behavior.
   - Browser/worker guidance for long windows (yield to UI or use Worker).
 
 Non-functional requirements
+
 - Performance: streaming algorithms are memory-bounded; avoid precomputing large occurrence sets; heap merges scale with actual overlaps.
 - Determinism: comparisons use half-open intervals [start, end); 's' mode rounds end upward to avoid boundary false negatives.
 - Immutability: options are frozen; mutators perform immutable updates and recompile exactly once per call.
 
 Out of scope (for now)
+
 - Changing timeUnit on an existing instance (re-interpretation) — not supported; construct a new instance instead.
 - Full RRULE Options schema validation via zod — compile remains the authoritative validator.

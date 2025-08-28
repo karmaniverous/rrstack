@@ -84,9 +84,9 @@ for (const seg of stack.getSegments(from, to)) {
 // 5) Classify a whole range
 const range = stack.classifyRange(from, to); // 'active' | 'blackout' | 'partial'
 
-// 6) Persist / restore
-const json = stack.toJson(); // RRStackJson
-const stack2 = RRStack.fromJson(json);
+// 6) Persist / restore (roundtrip)
+const json = stack.toJson(); // RRStackOptions (includes version)
+const stack2 = new RRStack(json);
 ```
 
 ## What problem does RRStack solve?
@@ -114,10 +114,8 @@ Many scheduling problems require more than a single RRULE. You might have a base
 ```ts
 import { RRStack, toIsoDuration, fromIsoDuration } from '@karmaniverous/rrstack';
 
-new RRStack(opts: { timezone: string; timeUnit?: 'ms' | 's'; rules?: RuleJson[] });
-
-RRStack.fromJson(json: RRStackJson): RRStack
-stack.toJson(): RRStackJson
+new RRStack(opts: { version?: string; timezone: string; timeUnit?: 'ms' | 's'; rules?: RuleJson[] });
+stack.toJson(): RRStackOptions // with version
 
 // Options (frozen); property-style setters
 stack.timezone: string                  // getter
@@ -205,12 +203,16 @@ export interface RuleJson {
   label?: string;
 }
 
-export interface RRStackJson {
-  version: string;
-  timezone: TimeZoneId;
-  timeUnit: 'ms' | 's';
-  rules: RuleJson[];
-}
+/**
+ * Unified, round-trippable options shape.
+ * - version is optional on input and ignored by the constructor,
+ *   and always written by toJson().
+ */
+export interface RRStackOptions {
+  version?: string;
+  timezone: string;
+  timeUnit?: 'ms' | 's';
+  rules?: RuleJson[];
 ```
 
 Notes
@@ -243,7 +245,7 @@ Example (programmatic access):
 import { RRSTACK_CONFIG_SCHEMA } from '@karmaniverous/rrstack';
 
 // pass to your JSON Schema validator of choice (e.g., Ajv)
-console.log(RRSTACK_CONFIG_SCHEMA.$schema, 'RRStackJson schema loaded');
+console.log(RRSTACK_CONFIG_SCHEMA.$schema, 'RRStackOptions schema loaded');
 ```
 
 ## Duration helpers
@@ -309,7 +311,7 @@ fromIsoDuration('P2W'); // { weeks: 2 }
 ## Version handling
 
 - toJson writes the current package version via a build-time injected constant (**RRSTACK_VERSION**) so no package.json import is needed at runtime.
-- fromJson accepts a versioned shape (RRStackJson). Version-based transforms may be added in the future without changing the public shape.
+- The constructor accepts RRStackOptions with an optional version key and ignores it. Version-based transforms may be added in the future without changing the public shape.
 
 ## Common Patterns
 
@@ -323,12 +325,13 @@ const thirdTuesday = {
   duration: { hours: 1 },
   options: {
     freq: 'monthly',
+    bysetpos: 3,
     byweekday: [RRule.TU.nth(3)],
     byhour: [5],
     byminute: [0],
     bysecond: [0],
     // Optional: anchor the cadence with starts to define the interval phase.
-    // starts: Date.UTC(2021, 0, 19, 5, 0, 0),
+    // starts: Date.UTC(2024, 0, 16, 5, 0, 0),
   },
   label: '3rd-tue-05',
 };
