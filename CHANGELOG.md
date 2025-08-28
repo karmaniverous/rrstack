@@ -2,9 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.5.3](https://github.com/karmaniverous/rrstack/compare/0.5.2...0.5.3)
+
+- fix(types): emit dist/index.d.ts for TS resolution [`ca788bb`](https://github.com/karmaniverous/rrstack/commit/ca788bb341ad7aa210b98ed797ebb9a03932f8f7)
+
 #### [0.5.2](https://github.com/karmaniverous/rrstack/compare/0.5.1...0.5.2)
 
+> 28 August 2025
+
 - fix(rrule): harden ESM/CJS interop with runtime shim [`ada51d1`](https://github.com/karmaniverous/rrstack/commit/ada51d17aacd5d7d8bbdde3caf0346fb631975fe)
+- chore: release v0.5.2 [`4db1e84`](https://github.com/karmaniverous/rrstack/commit/4db1e84726d0fc3f4b9322e752ab39fd158eee41)
 - fix(shim): clean TS/lint and harden rrule interop [`b42a48f`](https://github.com/karmaniverous/rrstack/commit/b42a48fec3f151744883105df5c85b8c2185ccf3)
 
 #### [0.5.1](https://github.com/karmaniverous/rrstack/compare/0.5.0...0.5.1)
