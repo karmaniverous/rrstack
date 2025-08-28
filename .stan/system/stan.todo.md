@@ -6,14 +6,15 @@ Last updated: 2025-08-28 (UTC)
 
 Completed (recent)
 
-- Knip: removed auto-changelog from ignoreDependencies.
-- Docs: update README to reference __RRSTACK_VERSION__ constant.
+- Fix: ESM/CJS interop for rrule — switch to namespace imports to avoid named export errors in ESM consumers that resolve rrule as CJS.
 - Build: externalize runtime dependencies in Rollup (deps/peers marked external) to remove Luxon circular warnings and avoid bundling.
 - Fix tests after RRStackOptions unification: mark freq literals with 'as const' and guard optional rules from toJson in rrstack.test.ts.
 - Unify JSON shapes: remove RRStackJson/fromJson; add optional version to RRStackOptions; constructor ignores version; toJson writes version.
 - TypeDoc: link to the raw JSON schema on the RRSTACK_CONFIG_SCHEMA page.
 
----0. Top Priority — Stabilize template baseline (pre-implementation)
+---
+
+0. Top Priority — Stabilize template baseline (pre-implementation)
    [unchanged]
 
 ---

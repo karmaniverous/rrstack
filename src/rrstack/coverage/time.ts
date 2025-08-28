@@ -5,11 +5,10 @@
 // - Horizons in the configured unit.
 
 import { DateTime, type Duration, IANAZone } from 'luxon';
-import { datetime as rruleDatetime } from 'rrule';
+import * as rrule from 'rrule';
 
 import type { CompiledRule } from '../compile';
 import type { UnixTimeUnit } from '../types';
-
 export const isValidTimeZone = (tz: string): boolean => IANAZone.isValidZone(tz);
 
 export const domainMin = (): number => 0;
@@ -28,9 +27,8 @@ export const epochToWallDate = (value: number, tz: string, unit: UnixTimeUnit): 
     unit === 'ms'
       ? DateTime.fromMillis(value, { zone: tz })
       : DateTime.fromSeconds(value, { zone: tz });
-  return rruleDatetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
+  return rrule.datetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
 };
-
 /**
  * Convert a "floating" Date from rrule to an epoch value in the given unit
  * in the given IANA timezone.

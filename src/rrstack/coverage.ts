@@ -6,7 +6,7 @@
  */
 
 import { DateTime } from 'luxon';
-import { datetime as rruleDatetime } from 'rrule';
+import * as rrule from 'rrule';
 
 import type { CompiledRule } from './compile';
 import { enumerationHorizon } from './coverage/enumerate';
@@ -44,20 +44,18 @@ export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
       rule.unit === 'ms'
         ? DateTime.fromMillis(t, { zone: rule.tz })
         : DateTime.fromSeconds(t, { zone: rule.tz });
-    const dayStartWall = rruleDatetime(
+    const dayStartWall = rrule.datetime(
       local.year,
       local.month,
-      local.day,
-      0,
+      local.day,      0,
       0,
       0,
     );
     const nextDay = local.plus({ days: 1 });
-    const dayEndWallExclusive = rruleDatetime(
+    const dayEndWallExclusive = rrule.datetime(
       nextDay.year,
       nextDay.month,
-      nextDay.day,
-      0,
+      nextDay.day,      0,
       0,
       0,
     );

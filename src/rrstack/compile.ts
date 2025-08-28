@@ -8,16 +8,15 @@
 
 import { DateTime, Duration } from 'luxon';
 import { shake } from 'radash';
-import {
-  datetime as rruleDatetime,
-  Frequency,
-  type Options as RRuleOptions,
-  RRule,
+import type {
+  Frequency as RRuleFrequency,
+  Options as RRuleOptions,
+  RRule as RRuleClass,
 } from 'rrule';
+import * as rrule from 'rrule';
 
 import { domainMax, domainMin } from './coverage/time';
-import {
-  type FrequencyStr,
+import {  type FrequencyStr,
   type instantStatus,
   type RuleJson,
   type RuleOptionsJson,
@@ -34,18 +33,18 @@ export interface CompiledRule {
   unit: UnixTimeUnit;
   isOpenStart: boolean;
   isOpenEnd: boolean;
-  rrule: RRule;
+  rrule: RRuleClass;
 }
 
 // Internal mapping from human-readable freq to rrule enum
-const FREQ_MAP: Record<FrequencyStr, Frequency> = {
-  yearly: Frequency.YEARLY,
-  monthly: Frequency.MONTHLY,
-  weekly: Frequency.WEEKLY,
-  daily: Frequency.DAILY,
-  hourly: Frequency.HOURLY,
-  minutely: Frequency.MINUTELY,
-  secondly: Frequency.SECONDLY,
+const FREQ_MAP: Record<FrequencyStr, RRuleFrequency> = {
+  yearly: rrule.Frequency.YEARLY,
+  monthly: rrule.Frequency.MONTHLY,
+  weekly: rrule.Frequency.WEEKLY,
+  daily: rrule.Frequency.DAILY,
+  hourly: rrule.Frequency.HOURLY,
+  minutely: rrule.Frequency.MINUTELY,
+  secondly: rrule.Frequency.SECONDLY,
 };
 
 /** @internal */
@@ -54,9 +53,8 @@ const toWall = (epoch: number, tz: string, unit: UnixTimeUnit): Date => {
     unit === 'ms'
       ? DateTime.fromMillis(epoch, { zone: tz })
       : DateTime.fromSeconds(epoch, { zone: tz });
-  return rruleDatetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
+  return rrule.datetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
 };
-
 /**
  * Convert a JSON-friendly rule options object into rrule Options with
  * timezone and domain bounds applied.
@@ -126,7 +124,7 @@ export const compileRule = (
   const isOpenEnd = rule.options.ends === undefined;
 
   const options = toRRuleOptions(rule.options, timezone, unit);
-  const rrule = new RRule(options);
+  const r = new rrule.RRule(options);
 
   return {
     effect: rule.effect,
@@ -137,6 +135,6 @@ export const compileRule = (
     unit,
     isOpenStart,
     isOpenEnd,
-    rrule,
+    rrule: r,
   };
 };

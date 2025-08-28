@@ -1,10 +1,12 @@
-// Requirements addressed:
-// - Local structural matching for DAILY and common MONTHLY/YEARLY patterns.
-// - Unit-aware date handling.
-// - Reuse computeOccurrenceEnd for DST-correct coverage checks.
+/* Requirements addressed:
+ * - Local structural matching for DAILY and common MONTHLY/YEARLY patterns.
+ * - Unit-aware date handling.
+ * - Reuse computeOccurrenceEnd for DST-correct coverage checks.
+ */
 
 import { DateTime } from 'luxon';
-import { Frequency, Weekday } from 'rrule';
+import type { Weekday } from 'rrule';
+import * as rrule from 'rrule';
 
 import type { CompiledRule } from '../compile';
 import { computeOccurrenceEnd, floatingDateToZonedEpoch } from './time';
@@ -13,15 +15,19 @@ type WeekdayLike = number | Weekday;
 const normalizeByweekday = (v: unknown): WeekdayLike[] => {
   if (Array.isArray(v)) {
     return v.filter(
-      (x): x is WeekdayLike => typeof x === 'number' || x instanceof Weekday,
+      (x): x is WeekdayLike =>
+        typeof x === 'number' || x instanceof rrule.Weekday,
     );
   }
-  if (typeof v === 'number' || v instanceof Weekday) return [v];
+  if (typeof v === 'number' || v instanceof rrule.Weekday) return [v];
   return [];
 };
 
-export const localDayMatchesDailyTimes = (rule: CompiledRule, t: number): boolean => {
-  if (rule.options.freq !== Frequency.DAILY) return false;
+export const localDayMatchesDailyTimes = (
+  rule: CompiledRule,
+  t: number,
+): boolean => {
+  if (rule.options.freq !== rrule.Frequency.DAILY) return false;
 
   const tz = rule.tz;
   const local =
@@ -50,14 +56,18 @@ export const localDayMatchesDailyTimes = (rule: CompiledRule, t: number): boolea
 
   let dtstartEpoch = 0;
   if (rule.options.dtstart instanceof Date) {
-    dtstartEpoch = floatingDateToZonedEpoch(rule.options.dtstart, tz, rule.unit);
+    dtstartEpoch = floatingDateToZonedEpoch(
+      rule.options.dtstart,
+      tz,
+      rule.unit,
+    );
   }
 
   for (const h of hours) {
     for (const m of minutes) {
       for (const s of seconds) {
         const startLocal =
-          (rule.unit === 'ms'
+          rule.unit === 'ms'
             ? DateTime.fromObject(
                 {
                   year: local.year,
@@ -83,7 +93,7 @@ export const localDayMatchesDailyTimes = (rule: CompiledRule, t: number): boolea
                   },
                   { zone: tz },
                 ).toSeconds(),
-              ));
+              );
 
         if (startLocal < dtstartEpoch) continue;
 
@@ -96,7 +106,10 @@ export const localDayMatchesDailyTimes = (rule: CompiledRule, t: number): boolea
   return false;
 };
 
-export const localDayMatchesCommonPatterns = (rule: CompiledRule, t: number): boolean => {
+export const localDayMatchesCommonPatterns = (
+  rule: CompiledRule,
+  t: number,
+): boolean => {
   const { options } = rule;
   const tz = rule.tz;
   const local =
@@ -109,14 +122,20 @@ export const localDayMatchesCommonPatterns = (rule: CompiledRule, t: number): bo
   const s = Array.isArray(options.bysecond) ? options.bysecond[0] : 0;
   if (typeof h !== 'number') return false;
 
-  if (options.freq !== Frequency.MONTHLY && options.freq !== Frequency.YEARLY)
+  if (
+    options.freq !== rrule.Frequency.MONTHLY &&
+    options.freq !== rrule.Frequency.YEARLY
+  )
     return false;
 
-  if (options.freq === Frequency.YEARLY && Array.isArray(options.bymonth)) {
+  if (
+    options.freq === rrule.Frequency.YEARLY &&
+    Array.isArray(options.bymonth)
+  ) {
     if (!options.bymonth.includes(local.month)) return false;
   }
 
-  if (options.freq === Frequency.MONTHLY) {
+  if (options.freq === rrule.Frequency.MONTHLY) {
     const interval =
       typeof options.interval === 'number' && options.interval > 0
         ? options.interval
