@@ -2,9 +2,28 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.5.0](https://github.com/karmaniverous/rrstack/compare/0.4.1...0.5.0)
+
+- docs update [`ddb871f`](https://github.com/karmaniverous/rrstack/commit/ddb871fbf2f9b4241a827d0d56b4c53682393c5f)
+- updated docs [`01eae48`](https://github.com/karmaniverous/rrstack/commit/01eae4829653cbc6427bcb857267647afa95cda1)
+- updated docs [`1238954`](https://github.com/karmaniverous/rrstack/commit/12389549448f9d2b3ceee5324fa3b14ad8013918)
+- docs: unify README to RRStackOptions; update requirements; prune dev plan [`91093c1`](https://github.com/karmaniverous/rrstack/commit/91093c147953edc202586a034822687abf865452)
+- feat(api): unify JSON shape; remove RRStackJson/fromJson; add optional version to RRStackOptions [`37903b1`](https://github.com/karmaniverous/rrstack/commit/37903b107973f64963ca1dd90e2a855ef7c547b1)
+- build: externalize runtime dependencies [`a44f603`](https://github.com/karmaniverous/rrstack/commit/a44f6039cf9ff6d180ba760bfa3dc7123811632c)
+- fix(tests): satisfy FrequencyStr and optional rules in rrstack.test.ts [`3206904`](https://github.com/karmaniverous/rrstack/commit/320690417d416b47ee77dce5534f315ed5b2180a)
+- docs(typedoc): link raw JSON schema on RRSTACK_CONFIG_SCHEMA [`0c35578`](https://github.com/karmaniverous/rrstack/commit/0c35578e38ab488c4fddf78960f8a8dc4da29812)
+- docs: fix version constant; update todo [`d3f610f`](https://github.com/karmaniverous/rrstack/commit/d3f610fc7d13dfcc54480bea0aa66346129ee85b)
+- docs(todo): add test-fix note and update timestamp [`8b4b80d`](https://github.com/karmaniverous/rrstack/commit/8b4b80d0f4a5c9994194e1de995b85337b7f2e01)
+- docs(typedoc): link raw JSON schema on RRSTACK_CONFIG_SCHEMA [`b01476b`](https://github.com/karmaniverous/rrstack/commit/b01476b047249e99e729cc5168faca4fb7129e46)
+- updated stan [`26b7680`](https://github.com/karmaniverous/rrstack/commit/26b76807010e4aac1956b736118f6a557ec523cd)
+- updated stan [`97225b2`](https://github.com/karmaniverous/rrstack/commit/97225b2047e6f061a4c1bb149383b38b5b95183c)
+
 #### [0.4.1](https://github.com/karmaniverous/rrstack/compare/0.4.0...0.4.1)
 
+> 27 August 2025
+
 - updated docs [`9c11e5d`](https://github.com/karmaniverous/rrstack/commit/9c11e5d979f7d9eaafc7d8405c694c91597bdd4f)
+- chore: release v0.4.1 [`566bed9`](https://github.com/karmaniverous/rrstack/commit/566bed99182f5cd58913234893a3949092215a44)
 - updated docs [`4d1b3b9`](https://github.com/karmaniverous/rrstack/commit/4d1b3b954674270d6aeb2ff88b1fcecf8bf36846)
 - docs(readme): clarify timezone reference and enum [`24b9cdf`](https://github.com/karmaniverous/rrstack/commit/24b9cdf284c5f89703ad615de39e0981cd07d254)
 - updated release script [`d9e8b76`](https://github.com/karmaniverous/rrstack/commit/d9e8b768ccf2dd21057ad7336ce3df2367935c49)
