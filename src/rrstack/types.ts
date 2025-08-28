@@ -82,8 +82,14 @@ export interface RuleJson {
   label?: string;
 }
 
-/** Constructor input (user-provided). */
+/**
+ * Constructor input and serialized output (round-trippable).
+ * - `version` is optional on input and ignored by the constructor.
+ * - {@link RRStack.toJson | toJson()} always writes the current package version.
+ */
 export interface RRStackOptions {
+  /** Optional version string; ignored by the constructor. */
+  version?: string;
   /** IANA timezone id (validated at runtime). */
   timezone: string;
   /** Time unit ('ms' | 's'). Defaults to 'ms'. */
@@ -103,15 +109,6 @@ export interface RRStackOptionsNormalized
   timeUnit: UnixTimeUnit;
   rules: ReadonlyArray<RuleJson>;
   timezone: TimeZoneId;
-}
-
-/**
- * Flattened JSON shape (no nested options) with version string.
- * - Written by {@link RRStack.toJson | RRStack.toJson}.
- * - Accepted by {@link RRStack.fromJson | RRStack.fromJson}.
- */
-export interface RRStackJson extends RRStackOptionsNormalized {
-  version: string;
 }
 
 // Re-export useful rrule types so consumers can import from package API.

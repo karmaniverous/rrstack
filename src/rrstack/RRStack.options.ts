@@ -53,13 +53,11 @@ export const TimeZoneIdSchema = z
   .brand<'TimeZoneId'>();
 
 export const OptionsSchema = z.object({
+  // Optional version in the unified input/serialization shape (ignored on input).
+  version: z.string().optional(),
   timezone: TimeZoneIdSchema,
   timeUnit: z.enum(['ms', 's']).default('ms'),
   rules: z.array(z.any()).default([]),
-});
-
-export const JsonSchema = OptionsSchema.extend({
-  version: z.string().min(1),
 });
 
 // String literal-union for RRULE frequency (lower-case human-readable).
@@ -85,14 +83,6 @@ export const RuleLiteSchema = z.object({
     .passthrough(),
   label: z.string().optional(),
 });
-/**
- * Zod schema for the persisted RRStackJson shape (used to generate JSON Schema).
- * - Keeps runtime parse schema (JsonSchema) unchanged to avoid tightening behavior.
- * - Here we strengthen `rules` to RuleLiteSchema for accurate JSON Schema generation.
- */
-export const RRStackJsonZod = JsonSchema.extend({
-  rules: z.array(RuleLiteSchema),
-});
 
 /**
  * Normalize constructor options using the OptionsSchema.
@@ -101,6 +91,7 @@ export const normalizeOptions = (
   opts: RRStackOptions,
 ): RRStackOptionsNormalized => {
   const parsed = OptionsSchema.parse({
+    version: opts.version,
     timezone: opts.timezone,
     timeUnit: opts.timeUnit ?? ('ms' as UnixTimeUnit),
     rules: opts.rules ?? ([] as RuleJson[]),

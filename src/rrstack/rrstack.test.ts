@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { RRStack } from './';
-import type { RRStackJson } from './types';
 
 describe('RRStack', () => {
-  it('constructs from JSON and evaluates isActiveAt', () => {
+  it('constructs from JSON-like options and evaluates isActiveAt', () => {
     const json = {
       version: '0.0.0',
       timezone: 'UTC',
@@ -24,7 +23,7 @@ describe('RRStack', () => {
       ],
     };
 
-    const stack = RRStack.fromJson(json as unknown as RRStackJson);
+    const stack = new RRStack(json);
     const day = Date.UTC(2024, 0, 2);
     const five = day + 5 * 3600 * 1000;
     const four = day + 4 * 3600 * 1000;
@@ -34,6 +33,7 @@ describe('RRStack', () => {
     expect(roundTrip.timezone).toEqual('UTC');
     expect(roundTrip.rules.length).toBe(1);
     expect(roundTrip.rules[0].label).toBe('morning-hour');
+    expect(typeof roundTrip.version).toBe('string');
   });
 
   it('supports rule reordering via setter without throwing', () => {
@@ -53,5 +53,6 @@ describe('RRStack', () => {
       },
     ];
     // No throws; simple smoke
-    expect(Array.isArray(stack.rules)).toBe(true);  });
+    expect(Array.isArray(stack.rules)).toBe(true);
+  });
 });

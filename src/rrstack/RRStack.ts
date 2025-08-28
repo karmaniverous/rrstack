@@ -22,7 +22,7 @@ import {
   RuleLiteSchema,
   TimeZoneIdSchema,
 } from './RRStack.options';
-import { parseJsonPayload, toJsonSnapshot } from './RRStack.persistence';
+import { toJsonSnapshot } from './RRStack.persistence';
 import {
   classifyRangeOverWindow,
   getEffectiveBoundsFromCompiled,
@@ -32,7 +32,6 @@ import {
 import {
   type instantStatus,
   type rangeStatus,
-  type RRStackJson,
   type RRStackOptions,
   type RRStackOptionsNormalized,
   type RuleJson,
@@ -57,7 +56,7 @@ export class RRStack {
    *
    * @param opts - Constructor options. `timeUnit` defaults to `'ms'`.
    * @remarks Options are normalized and frozen on the instance. The stack
-   *          compiles its rules immediately.
+   *          compiles its rules immediately. The optional `version` is ignored.
    */
   constructor(opts: RRStackOptions) {
     const normalized = normalizeOptions(opts);
@@ -191,23 +190,14 @@ export class RRStack {
 
   /**
    * Serialize the stack to JSON.
-   * @returns A {@link RRStackJson} including `version` injected at build time
+   * @returns A {@link RRStackOptions} including `version` injected at build time
    *          (fallback `'0.0.0'` in dev/test).
    */
-  toJson(): RRStackJson {
+  toJson(): RRStackOptions {
     const v =
       (typeof __RRSTACK_VERSION__ === 'string' && __RRSTACK_VERSION__) ||
       undefined;
     return toJsonSnapshot(this.options, v);
-  }
-
-  /**
-   * Construct a stack from a JSON payload.
-   * @param json - A {@link RRStackJson} produced by {@link toJson}.
-   */
-  static fromJson(json: RRStackJson): RRStack {
-    const opts = parseJsonPayload(json);
-    return new RRStack(opts);
   }
 
   // Queries -------------------------------------------------------------------
@@ -226,7 +216,7 @@ export class RRStack {
    *
    * @param from - Start of the window (inclusive), in the configured unit.
    * @param to - End of the window (exclusive), in the configured unit.
-   * @returns An iterable of `\{ start, end, status \}` entries. Memory-bounded
+   * @returns An iterable of `{ start, end, status }` entries. Memory-bounded
    *          and stable for long windows.
    *
    * @example
@@ -254,7 +244,7 @@ export class RRStack {
 
   /**
    * Compute effective active bounds across all rules.
-   * @returns `\{ start?: number; end?: number; empty: boolean \}`
+   * @returns `{ start?: number; end?: number; empty: boolean }`
    * - `start` and/or `end` are omitted for open-sided coverage.
    * - `empty` indicates no active coverage.
    */

@@ -12,7 +12,6 @@ export type {
   FrequencyStr,
   instantStatus,
   rangeStatus,
-  RRStackJson,
   RRStackOptions,
   RRStackOptionsNormalized,
   RRuleOptions,

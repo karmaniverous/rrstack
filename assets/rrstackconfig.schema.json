@@ -4,6 +4,9 @@
     "RRStackOptions": {
       "type": "object",
       "properties": {
+        "version": {
+          "type": "string"
+        },
         "timezone": {
           "type": "string",
           "minLength": 1
