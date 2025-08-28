@@ -117,7 +117,8 @@ export const buildLibrary = (dest: string): RollupOptions => ({
 
 export const buildTypes = (dest: string): RollupOptions => ({
   input: 'src/index.ts',
-  output: [{ dir: `${dest}/types`, format: 'esm' }],
+  // Emit a single declaration file at dist/index.d.ts to match package.json
+  output: { file: `${dest}/index.d.ts`, format: 'es' },
   plugins: [dtsPlugin()],
 });
 
