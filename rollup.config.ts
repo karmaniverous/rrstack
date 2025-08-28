@@ -29,23 +29,35 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Resolve package version once for define replacement (typed and safe)
+// Also collect runtime dependency names (dependencies + peerDependencies) to mark as external.
 let pkgVersion = '0.0.0';
+let runtimeExternalPkgs = new Set<string>();
 try {
   const pkgJsonText = readFileSync(
     path.resolve(__dirname, 'package.json'),
     'utf8',
   );
   const parsedUnknown: unknown = JSON.parse(pkgJsonText);
-  if (
-    typeof parsedUnknown === 'object' &&
-    parsedUnknown !== null &&
-    'version' in parsedUnknown &&
-    typeof (parsedUnknown as { version?: unknown }).version === 'string'
-  ) {
-    pkgVersion = (parsedUnknown as { version: string }).version;
+  if (typeof parsedUnknown === 'object' && parsedUnknown !== null) {
+    if (
+      'version' in parsedUnknown &&
+      typeof (parsedUnknown as { version?: unknown }).version === 'string'
+    ) {
+      pkgVersion = (parsedUnknown as { version: string }).version;
+    }
+    const deps =
+      (parsedUnknown as { dependencies?: Record<string, string> })
+        .dependencies ?? {};
+    const peers =
+      (parsedUnknown as { peerDependencies?: Record<string, string> })
+        .peerDependencies ?? {};
+    runtimeExternalPkgs = new Set<string>([
+      ...Object.keys(deps),
+      ...Object.keys(peers),
+    ]);
   }
 } catch {
-  // noop — fallback remains '0.0.0'
+  // noop — fallback remains '0.0.0' and external set stays empty
 }
 
 const srcAbs = path.resolve(__dirname, 'src');
@@ -58,15 +70,9 @@ const nodeExternals = new Set([
   ...builtinModules.map((m) => `node:${m}`),
 ]);
 
-// Runtime deps that must not be bundled (rely on package assets / fallbacks)
-const externalPkgs = new Set<string>([
-  'clipboardy', // requires platform fallback binaries at runtime; bundling breaks resolution
-]);
-
 const makePlugins = (minify: boolean, extras: Plugin[] = []): Plugin[] => {
   const base: Plugin[] = [
-    alias,
-    nodeResolve({ exportConditions: ['node', 'module', 'default'] }),
+    alias,    nodeResolve({ exportConditions: ['node', 'module', 'default'] }),
     commonjsPlugin(),
     jsonPlugin(),
     replacePlugin({
@@ -93,15 +99,15 @@ const commonInputOptions = (
   },
   external: (id) =>
     nodeExternals.has(id) ||
-    externalPkgs.has(id) ||
-    // also treat deep subpath imports as external (e.g., clipboardy/fallbacks/...)
-    Array.from(externalPkgs).some((p) => id === p || id.startsWith(`${p}/`)),
+    // treat runtime dependencies and peer deps as external (and their deep subpaths)
+    Array.from(runtimeExternalPkgs).some(
+      (p) => id === p || id.startsWith(`${p}/`),
+    ),
 });
 
 const outCommon = (dest: string): OutputOptions[] => [
   { dir: `${dest}/mjs`, format: 'esm', sourcemap: false },
-  { dir: `${dest}/cjs`, format: 'cjs', sourcemap: false },
-];
+  { dir: `${dest}/cjs`, format: 'cjs', sourcemap: false },];
 
 export const buildLibrary = (dest: string): RollupOptions => ({
   input: 'src/index.ts',
