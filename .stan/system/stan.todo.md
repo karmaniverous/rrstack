@@ -47,7 +47,6 @@ Completed (recent)
 - Options
   - RRStackOptions (input): { timezone, timeUnit? = 'ms', rules? = [] }
   - RRStackOptionsNormalized (stored): extends Omit<…> with timeUnit required, rules required, timezone: TimeZoneId (branded).
-  - Flattened RRStackJson extends normalized options and adds { version: string }.
 - Timezones
   - Validate with Luxon IANAZone.isValidZone; store branded TimeZoneId; helpers asTimeZoneId/isValidTimeZone.
 - Units
@@ -99,7 +98,7 @@ Completed (recent)
 
 - Zod schemas:
   - RRStackOptions (constructor/fromJson).
-  - Rule-lite checks on mutations (effect literal, options.freq numeric, starts/ends finite if present); full RRULE Options validation remains in compile.
+  - Setter/mutation “rule-lite” checks (effect literal, options.freq numeric, starts/ends finite if present); full RRULE Options validation remains in compile.
 
 ---
 
