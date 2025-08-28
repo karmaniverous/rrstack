@@ -2,8 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.5.1](https://github.com/karmaniverous/rrstack/compare/0.5.0...0.5.1)
+
+- fix(rrule): robust ESM/CJS interop via namespace import [`7d407f0`](https://github.com/karmaniverous/rrstack/commit/7d407f011085cdd8c806c8945a297173430092ba)
+
 #### [0.5.0](https://github.com/karmaniverous/rrstack/compare/0.4.1...0.5.0)
 
+> 28 August 2025
+
+- chore: release v0.5.0 [`c9c3f96`](https://github.com/karmaniverous/rrstack/commit/c9c3f96efd70f272598f2811c24ef5e7d5795683)
 - docs update [`ddb871f`](https://github.com/karmaniverous/rrstack/commit/ddb871fbf2f9b4241a827d0d56b4c53682393c5f)
 - updated docs [`01eae48`](https://github.com/karmaniverous/rrstack/commit/01eae4829653cbc6427bcb857267647afa95cda1)
 - updated docs [`1238954`](https://github.com/karmaniverous/rrstack/commit/12389549448f9d2b3ceee5324fa3b14ad8013918)
