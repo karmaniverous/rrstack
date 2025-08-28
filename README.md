@@ -310,11 +310,10 @@ fromIsoDuration('P2W'); // { weeks: 2 }
 
 ## Version handling
 
-- toJson writes the current package version via a build-time injected constant (**RRSTACK_VERSION**) so no package.json import is needed at runtime.
+- toJson writes the current package version via a build-time injected constant (**__RRSTACK_VERSION__**) so no package.json import is needed at runtime.
 - The constructor accepts RRStackOptions with an optional version key and ignores it. Version-based transforms may be added in the future without changing the public shape.
 
 ## Common Patterns
-
 Third Tuesday monthly at 05:00–06:00
 
 ```ts
