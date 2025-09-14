@@ -23,6 +23,6 @@ describe('tests from the field', () => {
       ],
     });
 
-    expect(bangkokStack).to.exist;
+    expect(bangkokStack).toBeDefined();
   });
 });
