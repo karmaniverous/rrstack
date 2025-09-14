@@ -1,9 +1,10 @@
 stanPath: .stan
 includes: []
 excludes:
+  - '*.local'
+  - CHANGELOG.md
   - docs
   - package-lock.json
-  - "*.local"
 scripts:
   typecheck: npm run typecheck
   lint: npm run lint:fix
@@ -12,3 +13,4 @@ scripts:
   docs: npm run stan:docs
   knip: npm run knip
 patchOpenCommand: code -g {file}
+
