@@ -2,8 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.6.1](https://github.com/karmaniverous/rrstack/compare/0.6.0...0.6.1)
+
+- fix(rrule): only set 'until' when ends is provided [`730e913`](https://github.com/karmaniverous/rrstack/commit/730e91393479f4024f3176e02b39f6c3cc0052fc)
+- fixed test [`9e51ed0`](https://github.com/karmaniverous/rrstack/commit/9e51ed06081345e6e12e74ecbc48878874850f81)
+
 #### [0.6.0](https://github.com/karmaniverous/rrstack/compare/0.5.3...0.6.0)
 
+> 28 August 2025
+
+- chore: release v0.6.0 [`5753c60`](https://github.com/karmaniverous/rrstack/commit/5753c6033ae7029541d0215495faff71bbca855e)
 - feat(api)!: RRStack.isActiveAt now returns boolean [`04d69ab`](https://github.com/karmaniverous/rrstack/commit/04d69abff0a952c06914d1717d475cca2c2b44d3)
 
 #### [0.5.3](https://github.com/karmaniverous/rrstack/compare/0.5.2...0.5.3)
