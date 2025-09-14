@@ -14,7 +14,7 @@ import type {
   RRule as RRuleClass,
 } from 'rrule';
 
-import { domainMax, domainMin } from './coverage/time';
+import { domainMin } from './coverage/time';
 import { datetime, Frequency, RRule } from './rrule.runtime';
 import {
   type FrequencyStr,
@@ -24,7 +24,6 @@ import {
   type TimeZoneId,
   type UnixTimeUnit,
 } from './types';
-
 export interface CompiledRule {
   effect: instantStatus;
   label?: string;
@@ -89,17 +88,17 @@ export const toRRuleOptions = (
   if (typeof options.starts === 'number') {
     partial.dtstart = toWall(options.starts, timezone, unit);
   } else {
+    // Preserve previous behavior: open start defaults to domainMin()
+    // to anchor cadence deterministically.
     partial.dtstart = toWall(domainMin(), timezone, unit);
   }
   if (typeof options.ends === 'number') {
+    // Only set 'until' when explicitly provided to avoid invalid far-future dates.
     partial.until = toWall(options.ends, timezone, unit);
-  } else {
-    partial.until = toWall(domainMax(unit), timezone, unit);
   }
 
   return shake(partial) as RRuleOptions;
 };
-
 /**
  * Compile a JSON rule into a unit- and timezone-aware {@link CompiledRule}.
  *

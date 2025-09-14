@@ -6,10 +6,13 @@ Last updated: 2025-08-28 (UTC)
 
 Completed (recent)
 
+- Fix(compile): only set RRULE 'until' when ends is provided. Avoids
+  constructing invalid far-future 'until' Dates in some timezones (e.g.,
+  Asia/Bangkok) that caused rrule to throw "Invalid options: until".
+  Preserved dtstart default to domainMin() for stability.
 - BREAKING: RRStack.isActiveAt now returns boolean (true => active).
 - Docs: update README to reflect boolean return of isActiveAt.
-- Fix(types): emit dist/index.d.ts (rollup-plugin-dts) so package.json
-  “types” and export mappings resolve. Fixes ESM TS “declaration file not
+- Fix(types): emit dist/index.d.ts (rollup-plugin-dts) so package.json  “types” and export mappings resolve. Fixes ESM TS “declaration file not
   found” error when importing the package.- Fix: Finalize rrule shim TS/lint cleanup (remove conflicting type imports; no-any; safe guards) to unblock typecheck/docs.
 - Fix: Harden rrule ESM/CJS interop with a runtime shim that prefers default export when present; re-export Frequency/RRule/Weekday/datetime.- Fix: ESM/CJS interop for rrule — switch to namespace imports to avoid named export errors in ESM consumers that resolve rrule as CJS.
 - Build: externalize runtime dependencies in Rollup (deps/peers marked external) to remove Luxon circular warnings and avoid bundling.
