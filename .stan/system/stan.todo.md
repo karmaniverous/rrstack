@@ -6,10 +6,15 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Docs: final README polish
+  - Split merged parameters in classifyRange snippet so `from` and `to`
+    appear on separate lines.
+  - Use code formatting for the build-time constant
+    `__RRSTACK_VERSION__` in Version handling.
+
 - Docs: fix merged API Overview line and split combined inline comment
   in Quick Start step 4 to improve readability and avoid formatting
-  ambiguity. No behavioral changes; aligns README with current API
-  surfaces.
+  ambiguity. No behavioral changes; aligns README with current API  surfaces.
 
 - Docs: polish README formatting and fence hygiene
   - Split merged comment/code in Quick Start step 4.
