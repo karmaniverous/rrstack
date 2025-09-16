@@ -6,10 +6,15 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Fix(bounds): refine open-end detection to consider future occurrences
+  after the far-future probe. If any open-ended active rule has a start
+  after the probe, return end as undefined. This addresses schedules
+  that are blackout exactly at the probe instant (e.g., daily windows)
+  but continue indefinitely thereafter.
+
 - Fix(bounds): when coverage is active at the far-future probe and any
   active rule has an open end, report end as undefined regardless of a
-  backward-scan latestEnd value (which always exists before the probe).
-  This corrects the open-ended end detection and satisfies the failing
+  backward-scan latestEnd value (which always exists before the probe).  This corrects the open-ended end detection and satisfies the failing
   test in bounds.open.test.ts.
 
 - Feat(bounds): detect open-ended end in getEffectiveBounds. Use a safe

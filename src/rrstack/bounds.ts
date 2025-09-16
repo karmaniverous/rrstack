@@ -33,7 +33,6 @@ const lastStartBefore = (
   if (!d) return undefined;
   return floatingDateToZonedEpoch(d, rule.tz, rule.unit);
 };
-
 /**
  * Compute effective active bounds across the entire rule set.
  *
@@ -199,10 +198,19 @@ export const getEffectiveBounds = (
     }
   }
 
-  // Open-ended end detection: active at probe with at least one open-ended active rule.
-  const openEndDetected =
-    statusAtProbe === 'active' &&
-    rules.some((r) => r.effect === 'active' && r.isOpenEnd);
+  // Open-ended end detection:
+  // Consider coverage beyond the probe by checking whether any open-ended
+  // active rule produces an occurrence strictly after the probe.
+  const wallProbePerRule = rules.map((r) =>
+    epochToWallDate(probe, r.tz, r.unit),
+  );
+  const anyFutureOpenRule = rules.some((r, i) => {
+    if (!(r.effect === 'active' && r.isOpenEnd)) return false;
+    const next = r.rrule.after(wallProbePerRule[i], false);
+    return !!next;
+  });
+
+  const openEndDetected = anyFutureOpenRule;
 
   const empty =
     earliestStart === undefined &&
