@@ -25,6 +25,29 @@ describe('bounds: open-sided detection and empty set', () => {
     expect(b.empty).toBe(false);
     expect(b.start).toBeUndefined(); // open start detected
   });
+  it('detects open end when coverage extends beyond the probe with open end', () => {
+    // Active daily 05:00–06:00, starts clamped but no ends => open end.
+    const starts = Date.UTC(2024, 0, 10, 0, 0, 0);
+    const active = compileRule(
+      {
+        effect: 'active',
+        duration: { hours: 1 },
+        options: {
+          freq: 'daily',
+          byhour: [5],
+          byminute: [0],
+          bysecond: [0],
+          starts,
+        },
+      },
+      'UTC' as unknown as TimeZoneId,
+      'ms',
+    );
+    const b = getEffectiveBounds([active]);
+    expect(b.empty).toBe(false);
+    expect(b.start).toBe(Date.UTC(2024, 0, 10, 5, 0, 0));
+    expect(b.end).toBeUndefined(); // open end detected
+  });
   it('returns empty=true when no rules present', () => {
     const b = getEffectiveBounds([]);
     expect(b.empty).toBe(true);

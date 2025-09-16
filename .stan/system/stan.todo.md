@@ -6,10 +6,14 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Feat(bounds): detect open-ended end in getEffectiveBounds. Use a safe
+  far-future probe bounded by domainMax and return end as undefined
+  when the cascade is active at the probe and any active rule has an
+  open end. Avoid false-empty by checking probe status.
+
 - Feat(segments): add optional per-call `limit` to getSegments (public
   RRStack.getSegments also accepts opts). When the number of yielded
-  segments would exceed the limit, throw explicitly (no silent
-  truncation).
+  segments would exceed the limit, throw explicitly (no silent  truncation).
 - Feat(RRStack): add convenience mutators addRule/swap/up/down/top/bottom.
   Each performs immutable updates and delegates to the rules setter for a
   single recompile.
