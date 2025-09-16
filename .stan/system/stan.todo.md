@@ -1,15 +1,18 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-08-28 (UTC)
+Last updated: 2025-09-16 (UTC)
 
 ## This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
 Completed (recent)
 
+- Feat(describe): add human-readable rule description helper leveraging
+  rrule.toText(). Export describeRule(rule, tz, unit, opts?) from the
+  package API. Includes duration phrasing and optional timezone/bounds
+  details.
 - Fix(compile): only set RRULE 'until' when ends is provided. Avoids
   constructing invalid far-future 'until' Dates in some timezones (e.g.,
-  Asia/Bangkok) that caused rrule to throw "Invalid options: until".
-  Preserved dtstart default to domainMin() for stability.
+  Asia/Bangkok) that caused rrule to throw "Invalid options: until".  Preserved dtstart default to domainMin() for stability.
 - BREAKING: RRStack.isActiveAt now returns boolean (true => active).
 - Docs: update README to reflect boolean return of isActiveAt.
 - Fix(types): emit dist/index.d.ts (rollup-plugin-dts) so package.json  “types” and export mappings resolve. Fixes ESM TS “declaration file not

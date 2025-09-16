@@ -1,16 +1,16 @@
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { fromIsoDuration,RRStack, toIsoDuration } from './index';
+import { describeRule, fromIsoDuration, RRStack, toIsoDuration } from './index';
 
 describe('package re-exports (src/index.ts)', () => {
-  it('exposes RRStack and duration helpers', () => {
+  it('exposes RRStack, duration helpers, and description helper', () => {
     expect(typeof RRStack).toBe('function');
     expect(toIsoDuration({ minutes: 15 })).toBe('PT15M');
     expect(fromIsoDuration('PT15M')).toEqual({ minutes: 15 });
+    expect(typeof describeRule).toBe('function');
   });
 
-  it('constructs a working RRStack instance via root index', () => {
-    const stack = new RRStack({
+  it('constructs a working RRStack instance via root index', () => {    const stack = new RRStack({
       timezone: 'UTC',
       rules: [
         {

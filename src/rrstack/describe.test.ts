@@ -1,0 +1,38 @@
+import { describe, expect, it } from 'vitest';
+
+import { compileRule } from './compile';
+import { describeCompiledRule, describeRule } from './describe';
+import type { RuleJson, TimeZoneId } from './types';
+
+describe('rule description helpers', () => {
+  const tz = 'UTC' as unknown as TimeZoneId;
+
+  const rule: RuleJson = {
+    effect: 'active',
+    duration: { hours: 1, minutes: 30 },
+    options: {
+      freq: 'daily',
+      byhour: [5],
+      byminute: [0],
+      bysecond: [0],
+    },
+  };
+
+  it('describeCompiledRule includes effect, duration, and recurrence text', () => {
+    const compiled = compileRule(rule, tz, 'ms');
+    const text = describeCompiledRule(compiled);
+    const lower = text.toLowerCase();
+    expect(lower).toContain('active');
+    expect(lower).toContain('1 hour 30 minutes');
+    // rrule.toText() default English typically includes "every day"
+    expect(lower).toContain('every day');
+    expect(lower).toContain('timezone utc');
+  });
+
+  it('describeRule compiles and produces a human-friendly string', () => {
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('active');
+    expect(lower).toContain('every day');
+  });
+});
