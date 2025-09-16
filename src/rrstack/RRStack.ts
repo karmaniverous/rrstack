@@ -32,7 +32,8 @@ import {
 } from './RRStack.queries';
 import {
   type instantStatus,
-  type rangeStatus,  type RRStackOptions,
+  type rangeStatus,
+  type RRStackOptions,
   type RRStackOptionsNormalized,
   type RuleJson,
   type TimeZoneId,
@@ -227,6 +228,24 @@ export class RRStack {
    *   // { start: number; end: number; status: 'active' | 'blackout' }
    * }
    * ```
+   *
+   * @example Using a limit to cap enumeration and guard long windows
+   * ```ts
+   * const segs: Array<{ start: number; end: number; status: 'active' | 'blackout' }> = [];
+   * try {
+   *   for (const seg of stack.getSegments(from, to, { limit: 1000 })) {
+   *     segs.push(seg);
+   *   }
+   * } catch (err) {
+   *   // If more than 1000 segments would be produced, an Error is thrown.
+   *   // Consider reducing the window or processing in chunks (e.g., day/week).
+   * }
+   * ```
+   *
+   * Note: The iterator is streaming and memory-bounded, but the number of
+   * segments can be large when many rules overlap across long windows.
+   * Use the `limit` option to make this explicit, or query in smaller chunks
+   * for real-time UIs.
    */
   getSegments(
     from: number,
@@ -234,8 +253,7 @@ export class RRStack {
     opts?: { limit?: number },
   ): Iterable<{ start: number; end: number; status: instantStatus }> {
     return getSegmentsOverWindow(this.compiled, from, to, opts);
-  }
-  /**
+  } /**
    * Classify a range `[from, to)` as `'active'`, `'blackout'`, or `'partial'`.
    * @param from - Start of the window (inclusive), in the configured unit.
    * @param to - End of the window (exclusive), in the configured unit.
@@ -249,11 +267,24 @@ export class RRStack {
    * @returns `{ start?: number; end?: number; empty: boolean }`
    * - `start` and/or `end` are omitted for open-sided coverage.
    * - `empty` indicates no active coverage.
+   *
+   * @example Open-ended end
+   * ```ts
+   * const stack = new RRStack({
+   *   timezone: 'UTC',
+   *   rules: [{
+   *     effect: 'active',
+   *     duration: { hours: 1 },
+   *     options: { freq: 'daily', byhour: [5], byminute: [0], bysecond: [0], starts: Date.UTC(2024, 0, 10, 0, 0, 0) },
+   *   }],
+   * });
+   * const b = stack.getEffectiveBounds();
+   * // b.start is 2024-01-10T05:00:00Z (number); b.end is undefined (open end)
+   * ```
    */
   getEffectiveBounds(): { start?: number; end?: number; empty: boolean } {
     return getEffectiveBoundsFromCompiled(this.compiled);
   }
-
   /**
    * Describe a rule by index as human-readable text.
    * Leverages rrule.toText() plus effect and duration phrasing.
@@ -261,12 +292,19 @@ export class RRStack {
    * @param index - Zero-based index into {@link rules}.
    * @param opts - Description options (timezone/bounds toggles).
    * @throws RangeError if index is out of bounds; TypeError if not an integer.
+   *
+   * @example
+   * ```ts
+   * const text = stack.describeRule(0, { includeTimeZone: true, includeBounds: true });
+   * // e.g., "Active for 1 hour: every day at 5:00 (timezone UTC) [from 2024-01-10T00:00:00Z]"
+   * ```
    */
   describeRule(index: number, opts: DescribeOptions = {}): string {
     if (!Number.isInteger(index)) {
       throw new TypeError('rule index must be an integer');
     }
-    if (index < 0 || index >= this.compiled.length) throw new RangeError('rule index out of range');
+    if (index < 0 || index >= this.compiled.length)
+      throw new RangeError('rule index out of range');
     return describeCompiledRule(this.compiled[index], opts);
   }
 
@@ -283,8 +321,10 @@ export class RRStack {
     if (index === undefined) {
       next.push(rule);
     } else {
-      if (!Number.isInteger(index)) throw new TypeError('index must be an integer');
-      if (index < 0 || index > next.length) throw new RangeError('index out of range');
+      if (!Number.isInteger(index))
+        throw new TypeError('index must be an integer');
+      if (index < 0 || index > next.length)
+        throw new RangeError('index out of range');
       next.splice(index, 0, rule);
     }
     this.rules = next;
@@ -298,7 +338,8 @@ export class RRStack {
       throw new TypeError('indices must be integers');
     }
     const n = this.options.rules.length;
-    if (i < 0 || i >= n || j < 0 || j >= n) throw new RangeError('index out of range');
+    if (i < 0 || i >= n || j < 0 || j >= n)
+      throw new RangeError('index out of range');
     if (i === j) return;
     const next = [...(this.options.rules as RuleJson[])];
     [next[i], next[j]] = [next[j], next[i]];

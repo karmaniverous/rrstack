@@ -73,16 +73,20 @@ export const describeCompiledRule = (
   const effect = compiled.effect === 'active' ? 'Active' : 'Blackout';
   const durText = durationToTextFromCompiled(compiled);
   let s = `${effect} for ${durText}: ${compiled.rrule.toText()}`;
-
   if (includeTimeZone) {
     s += ` (timezone ${compiled.tz})`;
   }
 
   if (includeBounds) {
+    // Example:
+    // describeCompiledRule(compiled, { includeBounds: true })
+    // → "... [from 2024-01-10T00:00:00.000Z; until 2024-02-01T00:00:00.000Z]"
+    // (bounds appear only if the rule options include clamps that compiled
+    //  to dtstart/until)
+
     const tz = compiled.tz;
     const fmt = (d: Date | null | undefined) =>
-      d
-        ? DateTime.fromJSDate(d, { zone: tz }).toISO({ suppressMilliseconds: true })
+      d        ? DateTime.fromJSDate(d, { zone: tz }).toISO({ suppressMilliseconds: true })
         : undefined;
     const from = fmt((compiled.options as { dtstart?: Date | null }).dtstart);
     const until = fmt((compiled.options as { until?: Date | null }).until);
@@ -109,3 +113,13 @@ export const describeRule = (
   const compiled = compileRule(rule, timezone, unit);
   return describeCompiledRule(compiled, opts);
 };
+
+/**
+ * @example
+ * ```ts
+ * const text = describeRule(rule, RRStack.asTimeZoneId('UTC'), 'ms', {
+ *   includeTimeZone: true,
+ *   includeBounds: true,
+ * });
+ * ```
+ */

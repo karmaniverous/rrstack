@@ -6,10 +6,17 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Docs (typedoc): add examples for getSegments limit usage and long-window
+  guidance; add open-ended bounds example to getEffectiveBounds; add
+  includeBounds/timezone toggles to description helpers.
+
+- Docs (README): add “Open-ended bounds example” section and a short
+  performance note under “Segment enumeration limit” encouraging window
+  chunking and the per-call `limit` for very long windows.
+
 - Docs: final README polish
   - Split merged parameters in classifyRange snippet so `from` and `to`
-    appear on separate lines.
-  - Use code formatting for the build-time constant
+    appear on separate lines.  - Use code formatting for the build-time constant
     `__RRSTACK_VERSION__` in Version handling.
 
 - Docs: fix merged API Overview line and split combined inline comment

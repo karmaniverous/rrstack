@@ -326,6 +326,36 @@ fromIsoDuration('P2W'); // { weeks: 2 }
 - getSegments accepts an optional per-call limit to bound enumeration explicitly:
   - [...stack.getSegments(from, to, { limit: 1000 })] throws once the limit would be exceeded (no silent truncation).
 
+Performance note
+
+- The iterator is streaming and memory-bounded, but the number of segments can
+  grow large when many rules overlap across long windows. For very large windows
+  or real-time UI, prefer chunking by day/week and use the limit option to
+  guard enumeration.
+
+## Open-ended bounds example
+
+```ts
+// Daily 05:00–06:00 starting on 2024-01-10, with no end clamp (open end)
+const stack = new RRStack({
+  timezone: 'UTC',
+  rules: [
+    {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'daily',
+        byhour: [5],
+        byminute: [0],
+        bysecond: [0],
+        starts: Date.UTC(2024, 0, 10, 0, 0, 0),
+      },
+    },
+  ],
+});
+const b = stack.getEffectiveBounds(); // { start: 2024-01-10T05:00Z, end: undefined, empty: false }
+```
+
 ## Timezones and DST
 
 - All coverage is computed in the rule’s IANA timezone (tzid).
