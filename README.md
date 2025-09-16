@@ -33,7 +33,6 @@ pnpm add @karmaniverous/rrstack
 
 ```ts
 import { RRStack } from '@karmaniverous/rrstack';
-
 // 1) Define rules (JSON serializable)
 const rules = [
   // Daily 05:00–06:00 active
@@ -86,10 +85,13 @@ const range = stack.classifyRange(from, to); // 'active' | 'blackout' | 'partial
 // 6) Persist / restore (roundtrip)
 const json = stack.toJson(); // RRStackOptions (includes version)
 const stack2 = new RRStack(json);
+
+// 7) Describe a rule (plain-language)
+// e.g., "Active for 1 hour: every day at 5:00 (timezone America/Chicago)"
+const description = stack.describeRule(0);
 ```
 
 ## What problem does RRStack solve?
-
 Many scheduling problems require more than a single RRULE. You might have a base “active” cadence and a set of blackout exceptions that override it in specific conditions, or a few “reactivation” windows that override blackouts. RRStack provides a minimal, deterministic cascade:
 
 - Rules are evaluated in order; the last rule that covers an instant determines that instant’s status.
@@ -111,11 +113,10 @@ Many scheduling problems require more than a single RRULE. You might have a base
 ## API Overview
 
 ```ts
-import { RRStack, toIsoDuration, fromIsoDuration } from '@karmaniverous/rrstack';
+import { RRStack, toIsoDuration, fromIsoDuration, describeRule } from '@karmaniverous/rrstack';
 
 new RRStack(opts: { version?: string; timezone: string; timeUnit?: 'ms' | 's'; rules?: RuleJson[] });
 stack.toJson(): RRStackOptions // with version
-
 // Options (frozen); property-style setters
 stack.timezone: string                  // getter
 stack.timezone = 'America/Chicago'      // setter (validates and recompiles)
@@ -126,16 +127,22 @@ stack.timeUnit: 'ms' | 's'              // getter (immutable)
 // Batch update
 stack.updateOptions({ timezone?: string, rules?: RuleJson[] }): void
 
+// Rule management (convenience mutators; each performs one recompile)
+stack.addRule(rule: RuleJson, index?: number): void
+stack.swap(i: number, j: number): void
+stack.up(i: number): void; stack.down(i: number): void
+stack.top(i: number): void; stack.bottom(i: number): void
+
 // Helpers
 stack.now(): number                     // current time in configured unit
-RRStack.isValidTimeZone(tz: string): boolean
-RRStack.asTimeZoneId(tz: string): TimeZoneId // throws if invalid
+RRStack.isValidTimeZone(tz: string): booleanRRStack.asTimeZoneId(tz: string): TimeZoneId // throws if invalid
 
 // Queries
 stack.isActiveAt(ms: number): boolean               // true when active
 stack.getSegments(
   from: number,
-  to: number,): Iterable<{ start: number; end: number; status: 'active' | 'blackout' }>
+  to: number,
+  opts?: { limit?: number },): Iterable<{ start: number; end: number; status: 'active' | 'blackout' }>
 
 stack.classifyRange(
   from: number,
@@ -143,10 +150,12 @@ stack.classifyRange(
 ): 'active' | 'blackout' | 'partial'
 
 stack.getEffectiveBounds(): { start?: number; end?: number; empty: boolean }
+
+// Plain-language description
+stack.describeRule(index: number, opts?: DescribeOptions): string
 ```
 
 See full API docs: https://karmaniverous.github.io/rrstack
-
 ## JSON Shapes and Types
 
 The public types closely mirror rrule’s Options, with a few adjustments to make JSON persistence straightforward and unit-aware operation explicit.
@@ -246,10 +255,43 @@ import { RRSTACK_CONFIG_SCHEMA } from '@karmaniverous/rrstack';
 console.log(RRSTACK_CONFIG_SCHEMA.$schema, 'RRStackOptions schema loaded');
 ```
 
+## Rule description helpers
+
+Build a human-readable string describing a rule’s cadence using rrule’s toText(), augmented with effect and duration.
+
+- Instance method (describe compiled rule by index):
+
+```ts
+const text = stack.describeRule(0); // "Active for 1 hour: every day at 5:00 (timezone America/Chicago)"
+const textWithBounds = stack.describeRule(0, {
+  includeTimeZone: true,  // default true
+  includeBounds: false,   // default false; when true, appends [from ...; until ...] if present
+});
+```
+
+- Helper function (compile on the fly from JSON):
+
+```ts
+import { describeRule, RRStack } from '@karmaniverous/rrstack';
+
+const rule = {
+  effect: 'active' as const,
+  duration: { hours: 1 },
+  options: {
+    freq: 'daily' as const,
+    byhour: [9],
+    byminute: [0],
+    bysecond: [0],
+  },
+};
+
+const text = describeRule(rule, RRStack.asTimeZoneId('UTC'), 'ms');
+// => "Active for 1 hour: every day at 9:00 (timezone UTC)"
+```
+
 ## Duration helpers
 
 These utilities can be handy for interop (config files, CLI, or user input).
-
 ```ts
 import { toIsoDuration, fromIsoDuration } from '@karmaniverous/rrstack';
 
@@ -271,10 +313,14 @@ fromIsoDuration('P2W'); // { weeks: 2 }
 // - mixed weeks with other fields like 'P1W2D'
 ```
 
+## Segment enumeration limit
+
+- getSegments accepts an optional per-call limit to bound enumeration explicitly:
+  - [...stack.getSegments(from, to, { limit: 1000 })] throws once the limit would be exceeded (no silent truncation).
+
 ## Timezones and DST
 
-- All coverage is computed in the rule’s IANA timezone (tzid).
-- Occurrence end times are computed by adding the rule’s duration in the rule’s timezone using Luxon. This keeps “spring forward” and “fall back” behavior correct:
+- All coverage is computed in the rule’s IANA timezone (tzid).- Occurrence end times are computed by adding the rule’s duration in the rule’s timezone using Luxon. This keeps “spring forward” and “fall back” behavior correct:
   - Example: “2021-03-14 01:30 + 1h” in America/Chicago → 03:30 local (spring forward)
   - Example: “2021-11-07 01:30 + 1h” → 01:30 local (repeated hour on fall back)
 

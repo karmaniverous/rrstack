@@ -6,10 +6,15 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Docs: update README to reflect new APIs and behavior:
+  - describeRule export and RRStack.describeRule(index, opts?)
+  - getSegments(from, to, { limit }) explicit cap/throw
+  - RRStack mutators (addRule, swap, up, down, top, bottom)
+  - notes and examples for rule descriptions
+
 - Fix(bounds): refine open-end detection to consider future occurrences
   after the far-future probe. If any open-ended active rule has a start
-  after the probe, return end as undefined. This addresses schedules
-  that are blackout exactly at the probe instant (e.g., daily windows)
+  after the probe, return end as undefined. This addresses schedules  that are blackout exactly at the probe instant (e.g., daily windows)
   but continue indefinitely thereafter.
 
 - Fix(bounds): when coverage is active at the far-future probe and any
