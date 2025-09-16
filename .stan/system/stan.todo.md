@@ -6,10 +6,14 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Docs: polish README formatting and fence hygiene
+  - Split merged comment/code in Quick Start step 4.
+  - Split combined Helpers line into two lines.
+  - Fix merged bullet under Timezones and DST.
+
 - Docs: update README to reflect new APIs and behavior:
   - describeRule export and RRStack.describeRule(index, opts?)
-  - getSegments(from, to, { limit }) explicit cap/throw
-  - RRStack mutators (addRule, swap, up, down, top, bottom)
+  - getSegments(from, to, { limit }) explicit cap/throw  - RRStack mutators (addRule, swap, up, down, top, bottom)
   - notes and examples for rule descriptions
 
 - Fix(bounds): refine open-end detection to consider future occurrences

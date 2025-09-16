@@ -72,11 +72,11 @@ const stack = new RRStack({
 const t = Date.now();
 const isActive = stack.isActiveAt(t); // boolean
 
-// 4) Enumerate segments over a window (half-open [from, to))const from = Date.UTC(2024, 0, 2, 5, 0, 0);
+// 4) Enumerate segments over a window (half-open [from, to))
+const from = Date.UTC(2024, 0, 2, 5, 0, 0);
 const to = Date.UTC(2024, 0, 2, 6, 0, 0);
 for (const seg of stack.getSegments(from, to)) {
-  // { start: number; end: number; status: 'active' | 'blackout' }
-  // 05:00–05:30 active, 05:30–05:45 blackout, 05:45–06:00 active
+  // { start: number; end: number; status: 'active' | 'blackout' }  // 05:00–05:30 active, 05:30–05:45 blackout, 05:45–06:00 active
 }
 
 // 5) Classify a whole range
@@ -135,11 +135,11 @@ stack.top(i: number): void; stack.bottom(i: number): void
 
 // Helpers
 stack.now(): number                     // current time in configured unit
-RRStack.isValidTimeZone(tz: string): booleanRRStack.asTimeZoneId(tz: string): TimeZoneId // throws if invalid
+RRStack.isValidTimeZone(tz: string): boolean
+RRStack.asTimeZoneId(tz: string): TimeZoneId // throws if invalid
 
 // Queries
-stack.isActiveAt(ms: number): boolean               // true when active
-stack.getSegments(
+stack.isActiveAt(ms: number): boolean               // true when activestack.getSegments(
   from: number,
   to: number,
   opts?: { limit?: number },): Iterable<{ start: number; end: number; status: 'active' | 'blackout' }>
@@ -320,10 +320,10 @@ fromIsoDuration('P2W'); // { weeks: 2 }
 
 ## Timezones and DST
 
-- All coverage is computed in the rule’s IANA timezone (tzid).- Occurrence end times are computed by adding the rule’s duration in the rule’s timezone using Luxon. This keeps “spring forward” and “fall back” behavior correct:
+- All coverage is computed in the rule’s IANA timezone (tzid).
+- Occurrence end times are computed by adding the rule’s duration in the rule’s timezone using Luxon. This keeps “spring forward” and “fall back” behavior correct:
   - Example: “2021-03-14 01:30 + 1h” in America/Chicago → 03:30 local (spring forward)
   - Example: “2021-11-07 01:30 + 1h” → 01:30 local (repeated hour on fall back)
-
 ### Selecting and enumerating time zones
 
 - RRStackOptions.timezone expects an IANA time zone identifier (e.g., 'America/Chicago', 'Europe/London', 'UTC').
