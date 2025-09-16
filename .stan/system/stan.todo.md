@@ -6,10 +6,13 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Feat(RRStack): add describeRule(index, opts?) instance method that
+  returns a plain-language description for a rule using rrule.toText()
+  plus effect/duration phrasing. Validates index and supports options
+  for timezone/bounds inclusion.
 - Feat(describe): add human-readable rule description helper leveraging
   rrule.toText(). Export describeRule(rule, tz, unit, opts?) from the
-  package API. Includes duration phrasing and optional timezone/bounds
-  details.
+  package API. Includes duration phrasing and optional timezone/bounds  details.
 - Fix(compile): only set RRULE 'until' when ends is provided. Avoids
   constructing invalid far-future 'until' Dates in some timezones (e.g.,
   Asia/Bangkok) that caused rrule to throw "Invalid options: until".  Preserved dtstart default to domainMin() for stability.

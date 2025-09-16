@@ -26,6 +26,20 @@ Public API (core types and shapes)
     - rules: RuleJson[]
     - timezone: TimeZoneId (branded, validated string)
 
+Human-readable rule descriptions
+
+- Provide helpers that leverage rrule's toText():
+  - describeRule(
+    rule: RuleJson,
+    timezone: TimeZoneId,
+    unit: UnixTimeUnit,
+    opts?: { includeTimeZone?: boolean; includeBounds?: boolean },
+    ): string
+  - RRStack.prototype.describeRule(
+    index: number,
+    opts?: { includeTimeZone?: boolean; includeBounds?: boolean },
+    ): string
+
 - JSON persistence
   - toJson(): RRStackOptions — writes version as a build-time injected constant; does not import package.json at runtime (browser-friendly).
   - The constructor accepts RRStackOptions; version is ignored (reserved for future transforms). No RRStack.fromJson() API.

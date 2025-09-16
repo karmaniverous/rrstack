@@ -6,15 +6,14 @@
 
 import { DateTime } from 'luxon';
 
-import { compileRule } from './compile';
 import type { CompiledRule } from './compile';
+import { compileRule } from './compile';
 import type { DurationParts, RuleJson, TimeZoneId, UnixTimeUnit } from './types';
 
-const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? '' : 's'}`;
+const plural = (n: number, unit: string) => String(n) + ' ' + unit + (n === 1 ? '' : 's');
 
 const durationToTextFromParts = (parts: DurationParts): string => {
-  const order: Array<keyof DurationParts> = [
-    'years',
+  const order: Array<keyof DurationParts> = [    'years',
     'months',
     'weeks',
     'days',
@@ -81,12 +80,12 @@ export const describeCompiledRule = (
 
   if (includeBounds) {
     const tz = compiled.tz;
-    const fmt = (d?: Date) =>
+    const fmt = (d: Date | null | undefined) =>
       d
         ? DateTime.fromJSDate(d, { zone: tz }).toISO({ suppressMilliseconds: true })
         : undefined;
-    const from = fmt(compiled.options.dtstart);
-    const until = fmt(compiled.options.until);
+    const from = fmt((compiled.options as { dtstart?: Date | null }).dtstart);
+    const until = fmt((compiled.options as { until?: Date | null }).until);
     if (from || until) {
       s += ' [';
       if (from) s += `from ${from}`;
@@ -97,7 +96,6 @@ export const describeCompiledRule = (
   }
   return s;
 };
-
 /**
  * Build a plain-language description of a JSON rule in a given tz/unit.
  * Convenience wrapper that compiles the rule with the provided context.

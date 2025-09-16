@@ -29,10 +29,10 @@ import {
   getSegmentsOverWindow,
   isActiveAtCompiled,
 } from './RRStack.queries';
+import { describeCompiledRule, type DescribeOptions } from './describe';
 import {
   type instantStatus,
-  type rangeStatus,
-  type RRStackOptions,
+  type rangeStatus,  type RRStackOptions,
   type RRStackOptionsNormalized,
   type RuleJson,
   type TimeZoneId,
@@ -249,5 +249,21 @@ export class RRStack {
    */
   getEffectiveBounds(): { start?: number; end?: number; empty: boolean } {
     return getEffectiveBoundsFromCompiled(this.compiled);
+  }
+
+  /**
+   * Describe a rule by index as human-readable text.
+   * Leverages rrule.toText() plus effect and duration phrasing.
+   *
+   * @param index - Zero-based index into {@link rules}.
+   * @param opts - Description options (timezone/bounds toggles).
+   * @throws RangeError if index is out of bounds; TypeError if not an integer.
+   */
+  describeRule(index: number, opts: DescribeOptions = {}): string {
+    if (!Number.isInteger(index)) {
+      throw new TypeError('rule index must be an integer');
+    }
+    if (index < 0 || index >= this.compiled.length) throw new RangeError('rule index out of range');
+    return describeCompiledRule(this.compiled[index], opts);
   }
 }
