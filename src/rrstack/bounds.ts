@@ -8,8 +8,9 @@ import type { CompiledRule } from './compile';
 import { ruleCoversInstant } from './coverage';
 import {
   computeOccurrenceEnd,
-domainMax,
-  domainMin,    epochToWallDate,
+  domainMax,
+  domainMin,
+  epochToWallDate,
   floatingDateToZonedEpoch,
 } from './coverage/time';
 import type { UnixTimeUnit } from './types';
@@ -18,7 +19,8 @@ import { maxBoundary, minBoundary } from './util/heap';
 const cascadedStatus = (covering: boolean[], rules: CompiledRule[]) => {
   for (let i = covering.length - 1; i >= 0; i--) {
     if (covering[i]) return rules[i].effect;
-  }  return 'blackout' as const;
+  }
+  return 'blackout' as const;
 };
 
 // Find last start <= cursor; returns its epoch in unit or undefined.
@@ -199,11 +201,16 @@ export const getEffectiveBounds = (
 
   // Open-ended end detection: active at probe with at least one open-ended active rule.
   const openEndDetected =
-    latestEnd === undefined &&
     statusAtProbe === 'active' &&
     rules.some((r) => r.effect === 'active' && r.isOpenEnd);
 
   const empty =
-    earliestStart === undefined && latestEnd === undefined && statusAtProbe === 'blackout';
-  return { start: earliestStart, end: openEndDetected ? undefined : latestEnd, empty };
+    earliestStart === undefined &&
+    latestEnd === undefined &&
+    statusAtProbe === 'blackout';
+  return {
+    start: earliestStart,
+    end: openEndDetected ? undefined : latestEnd,
+    empty,
+  };
 };

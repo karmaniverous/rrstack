@@ -6,10 +6,15 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Fix(bounds): when coverage is active at the far-future probe and any
+  active rule has an open end, report end as undefined regardless of a
+  backward-scan latestEnd value (which always exists before the probe).
+  This corrects the open-ended end detection and satisfies the failing
+  test in bounds.open.test.ts.
+
 - Feat(bounds): detect open-ended end in getEffectiveBounds. Use a safe
   far-future probe bounded by domainMax and return end as undefined
-  when the cascade is active at the probe and any active rule has an
-  open end. Avoid false-empty by checking probe status.
+  when the cascade is active at the probe and any active rule has an  open end. Avoid false-empty by checking probe status.
 
 - Feat(segments): add optional per-call `limit` to getSegments (public
   RRStack.getSegments also accepts opts). When the number of yielded
