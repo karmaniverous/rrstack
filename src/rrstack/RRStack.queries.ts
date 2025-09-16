@@ -26,7 +26,9 @@ export const getSegmentsOverWindow = (
   compiled: CompiledRule[],
   from: number,
   to: number,
-) => getSegments(compiled, from, to);
+  opts?: { limit?: number },
+): Iterable<{ start: number; end: number; status: 'active' | 'blackout' }> =>
+  getSegments(compiled, from, to, opts);
 
 export const classifyRangeOverWindow = (
   compiled: CompiledRule[],

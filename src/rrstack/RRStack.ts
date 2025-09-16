@@ -17,6 +17,7 @@
 
 import { type CompiledRule, compileRule } from './compile';
 import { isValidTimeZone } from './coverage/time';
+import { describeCompiledRule, type DescribeOptions } from './describe';
 import {
   normalizeOptions,
   RuleLiteSchema,
@@ -29,7 +30,6 @@ import {
   getSegmentsOverWindow,
   isActiveAtCompiled,
 } from './RRStack.queries';
-import { describeCompiledRule, type DescribeOptions } from './describe';
 import {
   type instantStatus,
   type rangeStatus,  type RRStackOptions,
@@ -215,6 +215,9 @@ export class RRStack {
    * Stream contiguous status segments over `[from, to)`.   *
    * @param from - Start of the window (inclusive), in the configured unit.
    * @param to - End of the window (exclusive), in the configured unit.
+   * @param opts - Optional settings:
+   *   - limit?: number — maximum number of segments to yield; throws
+   *     if more would be produced (no silent truncation).
    * @returns An iterable of `{ start, end, status }` entries. Memory-bounded
    *          and stable for long windows.
    *
@@ -228,10 +231,10 @@ export class RRStack {
   getSegments(
     from: number,
     to: number,
+    opts?: { limit?: number },
   ): Iterable<{ start: number; end: number; status: instantStatus }> {
-    return getSegmentsOverWindow(this.compiled, from, to);
+    return getSegmentsOverWindow(this.compiled, from, to, opts);
   }
-
   /**
    * Classify a range `[from, to)` as `'active'`, `'blackout'`, or `'partial'`.
    * @param from - Start of the window (inclusive), in the configured unit.
@@ -265,5 +268,94 @@ export class RRStack {
     }
     if (index < 0 || index >= this.compiled.length) throw new RangeError('rule index out of range');
     return describeCompiledRule(this.compiled[index], opts);
+  }
+
+  // Convenience rule mutators -------------------------------------------------
+
+  /**
+   * Insert a rule at a specific index (or append when index is omitted).
+   * Delegates to the {@link rules} setter (single recompile).
+   */
+  addRule(rule: RuleJson, index?: number): void {
+    // Lightweight validation
+    RuleLiteSchema.parse(rule);
+    const next = [...(this.options.rules as RuleJson[])];
+    if (index === undefined) {
+      next.push(rule);
+    } else {
+      if (!Number.isInteger(index)) throw new TypeError('index must be an integer');
+      if (index < 0 || index > next.length) throw new RangeError('index out of range');
+      next.splice(index, 0, rule);
+    }
+    this.rules = next;
+  }
+
+  /**
+   * Swap two rules by index (no-op if indices are equal).
+   */
+  swap(i: number, j: number): void {
+    if (!Number.isInteger(i) || !Number.isInteger(j)) {
+      throw new TypeError('indices must be integers');
+    }
+    const n = this.options.rules.length;
+    if (i < 0 || i >= n || j < 0 || j >= n) throw new RangeError('index out of range');
+    if (i === j) return;
+    const next = [...(this.options.rules as RuleJson[])];
+    [next[i], next[j]] = [next[j], next[i]];
+    this.rules = next;
+  }
+
+  /**
+   * Move a rule up by one (toward index 0). No-op if already at the top.
+   */
+  up(i: number): void {
+    if (!Number.isInteger(i)) throw new TypeError('index must be an integer');
+    const n = this.options.rules.length;
+    if (i < 0 || i >= n) throw new RangeError('index out of range');
+    if (i === 0) return;
+    const next = [...(this.options.rules as RuleJson[])];
+    [next[i - 1], next[i]] = [next[i], next[i - 1]];
+    this.rules = next;
+  }
+
+  /**
+   * Move a rule down by one (toward the end). No-op if already at the bottom.
+   */
+  down(i: number): void {
+    if (!Number.isInteger(i)) throw new TypeError('index must be an integer');
+    const n = this.options.rules.length;
+    if (i < 0 || i >= n) throw new RangeError('index out of range');
+    if (i === n - 1) return;
+    const next = [...(this.options.rules as RuleJson[])];
+    [next[i], next[i + 1]] = [next[i + 1], next[i]];
+    this.rules = next;
+  }
+
+  /**
+   * Move a rule to the top (index 0).
+   */
+  top(i: number): void {
+    if (!Number.isInteger(i)) throw new TypeError('index must be an integer');
+    const n = this.options.rules.length;
+    if (i < 0 || i >= n) throw new RangeError('index out of range');
+    if (i === 0) return;
+    const next = [...(this.options.rules as RuleJson[])];
+    const [r] = next.splice(i, 1);
+    next.unshift(r);
+    this.rules = next;
+  }
+
+  /**
+   * Move a rule to the bottom (last index).
+   */
+  bottom(i: number): void {
+    if (!Number.isInteger(i)) throw new TypeError('index must be an integer');
+    const n = this.options.rules.length;
+    if (i < 0 || i >= n) throw new RangeError('index out of range');
+    if (i === n - 1) return;
+    const next = [...(this.options.rules as RuleJson[])];
+    const [r] = next.splice(i, 1);
+    next.push(r);
+    this.rules = next;
   }
 }

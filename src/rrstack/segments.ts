@@ -40,6 +40,7 @@ const lastStartBefore = (
  * @param rules - Compiled rule set (later rules override earlier ones).
  * @param from - Start of the window (inclusive), in the configured unit.
  * @param to - End of the window (exclusive), in the configured unit.
+ * @param opts - Optional settings (`limit` caps yielded segments; throws if exceeded).
  * @returns A memory-bounded iterable of `{ start, end, status }` entries.
  * @remarks Ends are computed in the rule timezone (DST-correct) and honor
  *          half-open semantics; in 's' mode ends are rounded up.
@@ -48,8 +49,12 @@ export function* getSegments(
   rules: CompiledRule[],
   from: number,
   to: number,
+  opts?: { limit?: number },
 ): Iterable<{ start: number; end: number; status: instantStatus }> {
   if (!(from < to)) return;
+
+  const limit = typeof opts?.limit === 'number' ? opts.limit : undefined;
+  let emitted = 0;
 
   const n = rules.length;
   const covering = new Array<boolean>(n).fill(false);
@@ -80,7 +85,11 @@ export function* getSegments(
     const t = minBoundary(nextStart, nextEnd);
     if (t === undefined || t >= to) {
       if (prevT < to) {
+        if (typeof limit === 'number' && emitted >= limit) {
+          throw new Error('getSegments: segment limit exceeded');
+        }
         yield { start: prevT, end: to, status: prevStatus };
+        emitted++;
       }
       return;
     }
@@ -109,7 +118,11 @@ export function* getSegments(
     const status = cascadedStatus(covering, rules);
     if (status !== prevStatus) {
       if (prevT < t) {
+        if (typeof limit === 'number' && emitted >= limit) {
+          throw new Error('getSegments: segment limit exceeded');
+        }
         yield { start: prevT, end: t, status: prevStatus };
+        emitted++;
       }
       prevT = t;
       prevStatus = status;

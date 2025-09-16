@@ -6,10 +6,17 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Feat(segments): add optional per-call `limit` to getSegments (public
+  RRStack.getSegments also accepts opts). When the number of yielded
+  segments would exceed the limit, throw explicitly (no silent
+  truncation).
+- Feat(RRStack): add convenience mutators addRule/swap/up/down/top/bottom.
+  Each performs immutable updates and delegates to the rules setter for a
+  single recompile.
+
 - Feat(RRStack): add describeRule(index, opts?) instance method that
   returns a plain-language description for a rule using rrule.toText()
-  plus effect/duration phrasing. Validates index and supports options
-  for timezone/bounds inclusion.
+  plus effect/duration phrasing. Validates index and supports options  for timezone/bounds inclusion.
 - Feat(describe): add human-readable rule description helper leveraging
   rrule.toText(). Export describeRule(rule, tz, unit, opts?) from the
   package API. Includes duration phrasing and optional timezone/bounds  details.
