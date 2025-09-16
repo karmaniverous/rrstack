@@ -2,8 +2,28 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.7.0](https://github.com/karmaniverous/rrstack/compare/0.6.1...0.7.0)
+
+- updated docs [`79c9e3e`](https://github.com/karmaniverous/rrstack/commit/79c9e3e6c558a38e2003ce165d0f06ce0bf732c3)
+- feat: getSegments limit and RRStack rule mutators [`3dfcd1c`](https://github.com/karmaniverous/rrstack/commit/3dfcd1c27eef9ef9da872638d73c05e8ab87cc78)
+- feat: add rule description helper leveraging rrule.toText [`0e8c13b`](https://github.com/karmaniverous/rrstack/commit/0e8c13bf6139aee4faf659acfc5a71e1d8f65da3)
+- docs: add typedoc examples and README open-ended bounds [`f0219b3`](https://github.com/karmaniverous/rrstack/commit/f0219b3afaf2bbe876b7af0e2f76d7a95c5c47ec)
+- feat: RRStack.describeRule(index, opts) + fix describe types [`70d28aa`](https://github.com/karmaniverous/rrstack/commit/70d28aa6d97e6f2c801a8fa40144447b0457354b)
+- docs: update README for describeRule, segments limit, mutators [`e9ddcca`](https://github.com/karmaniverous/rrstack/commit/e9ddcca7f06e26bee0395f61b3b87b06f75631b6)
+- feat(bounds): detect open-ended end in effective bounds [`c5cfa8b`](https://github.com/karmaniverous/rrstack/commit/c5cfa8b81a97e088684b93a52c29dca053f2648b)
+- docs: repair README API snippet and comment formatting [`268e9c5`](https://github.com/karmaniverous/rrstack/commit/268e9c53381ea31c8f64f366a5489d94bd7a1b87)
+- fix(bounds): set end undefined when active at probe (open end) [`36f1189`](https://github.com/karmaniverous/rrstack/commit/36f1189a82fbcb867824e89c0aada0988b2abf0b)
+- fix(bounds): detect open end when future occurrences exist after probe [`d0132c0`](https://github.com/karmaniverous/rrstack/commit/d0132c0350d454e7e4c5763ce5f7f8cc7a87712c)
+- docs: README formatting polish and fence hygiene fixes [`e1bc71e`](https://github.com/karmaniverous/rrstack/commit/e1bc71e39c543db96c912d34876a414cf0c8d485)
+- docs: finalize README polish (classifyRange + version constant) [`8279574`](https://github.com/karmaniverous/rrstack/commit/82795748d410577350128da22af6b69834dbf01d)
+- updated readme [`497576c`](https://github.com/karmaniverous/rrstack/commit/497576cd68e8ec148e4d2c9b6db49d8953dcfd82)
+- Added change log to stan excludes [`26bbe4e`](https://github.com/karmaniverous/rrstack/commit/26bbe4eecf604fdb7d298b80a229823388d9ac2c)
+
 #### [0.6.1](https://github.com/karmaniverous/rrstack/compare/0.6.0...0.6.1)
 
+> 14 September 2025
+
+- chore: release v0.6.1 [`0fd7f79`](https://github.com/karmaniverous/rrstack/commit/0fd7f79a0176fa5bda4a1706f9647c77e0936d26)
 - fix(rrule): only set 'until' when ends is provided [`730e913`](https://github.com/karmaniverous/rrstack/commit/730e91393479f4024f3176e02b39f6c3cc0052fc)
 - fixed test [`9e51ed0`](https://github.com/karmaniverous/rrstack/commit/9e51ed06081345e6e12e74ecbc48878874850f81)
 
