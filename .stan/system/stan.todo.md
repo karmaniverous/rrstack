@@ -6,10 +6,14 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Docs: fix merged API Overview line and split combined inline comment
+  in Quick Start step 4 to improve readability and avoid formatting
+  ambiguity. No behavioral changes; aligns README with current API
+  surfaces.
+
 - Docs: polish README formatting and fence hygiene
   - Split merged comment/code in Quick Start step 4.
-  - Split combined Helpers line into two lines.
-  - Fix merged bullet under Timezones and DST.
+  - Split combined Helpers line into two lines.  - Fix merged bullet under Timezones and DST.
 
 - Docs: update README to reflect new APIs and behavior:
   - describeRule export and RRStack.describeRule(index, opts?)

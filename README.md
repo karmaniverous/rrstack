@@ -76,9 +76,9 @@ const isActive = stack.isActiveAt(t); // boolean
 const from = Date.UTC(2024, 0, 2, 5, 0, 0);
 const to = Date.UTC(2024, 0, 2, 6, 0, 0);
 for (const seg of stack.getSegments(from, to)) {
-  // { start: number; end: number; status: 'active' | 'blackout' }  // 05:00–05:30 active, 05:30–05:45 blackout, 05:45–06:00 active
+  // { start: number; end: number; status: 'active' | 'blackout' }
+  // 05:00–05:30 active, 05:30–05:45 blackout, 05:45–06:00 active
 }
-
 // 5) Classify a whole range
 const range = stack.classifyRange(from, to); // 'active' | 'blackout' | 'partial'
 
@@ -92,6 +92,7 @@ const description = stack.describeRule(0);
 ```
 
 ## What problem does RRStack solve?
+
 Many scheduling problems require more than a single RRULE. You might have a base “active” cadence and a set of blackout exceptions that override it in specific conditions, or a few “reactivation” windows that override blackouts. RRStack provides a minimal, deterministic cascade:
 
 - Rules are evaluated in order; the last rule that covers an instant determines that instant’s status.
@@ -139,14 +140,19 @@ RRStack.isValidTimeZone(tz: string): boolean
 RRStack.asTimeZoneId(tz: string): TimeZoneId // throws if invalid
 
 // Queries
-stack.isActiveAt(ms: number): boolean               // true when activestack.getSegments(
+stack.isActiveAt(ms: number): boolean               // true when active
+stack.getSegments(
   from: number,
   to: number,
-  opts?: { limit?: number },): Iterable<{ start: number; end: number; status: 'active' | 'blackout' }>
+  opts?: { limit?: number },
+): Iterable<{
+  start: number;
+  end: number;
+  status: 'active' | 'blackout';
+}>
 
 stack.classifyRange(
-  from: number,
-  to: number,
+  from: number,  to: number,
 ): 'active' | 'blackout' | 'partial'
 
 stack.getEffectiveBounds(): { start?: number; end?: number; empty: boolean }
@@ -156,6 +162,7 @@ stack.describeRule(index: number, opts?: DescribeOptions): string
 ```
 
 See full API docs: https://karmaniverous.github.io/rrstack
+
 ## JSON Shapes and Types
 
 The public types closely mirror rrule’s Options, with a few adjustments to make JSON persistence straightforward and unit-aware operation explicit.
@@ -264,8 +271,8 @@ Build a human-readable string describing a rule’s cadence using rrule’s toTe
 ```ts
 const text = stack.describeRule(0); // "Active for 1 hour: every day at 5:00 (timezone America/Chicago)"
 const textWithBounds = stack.describeRule(0, {
-  includeTimeZone: true,  // default true
-  includeBounds: false,   // default false; when true, appends [from ...; until ...] if present
+  includeTimeZone: true, // default true
+  includeBounds: false, // default false; when true, appends [from ...; until ...] if present
 });
 ```
 
@@ -292,6 +299,7 @@ const text = describeRule(rule, RRStack.asTimeZoneId('UTC'), 'ms');
 ## Duration helpers
 
 These utilities can be handy for interop (config files, CLI, or user input).
+
 ```ts
 import { toIsoDuration, fromIsoDuration } from '@karmaniverous/rrstack';
 
@@ -324,6 +332,7 @@ fromIsoDuration('P2W'); // { weeks: 2 }
 - Occurrence end times are computed by adding the rule’s duration in the rule’s timezone using Luxon. This keeps “spring forward” and “fall back” behavior correct:
   - Example: “2021-03-14 01:30 + 1h” in America/Chicago → 03:30 local (spring forward)
   - Example: “2021-11-07 01:30 + 1h” → 01:30 local (repeated hour on fall back)
+
 ### Selecting and enumerating time zones
 
 - RRStackOptions.timezone expects an IANA time zone identifier (e.g., 'America/Chicago', 'Europe/London', 'UTC').
@@ -354,10 +363,11 @@ fromIsoDuration('P2W'); // { weeks: 2 }
 
 ## Version handling
 
-- toJson writes the current package version via a build-time injected constant (**__RRSTACK_VERSION__**) so no package.json import is needed at runtime.
+- toJson writes the current package version via a build-time injected constant (\***\*RRSTACK_VERSION\*\***) so no package.json import is needed at runtime.
 - The constructor accepts RRStackOptions with an optional version key and ignores it. Version-based transforms may be added in the future without changing the public shape.
 
 ## Common Patterns
+
 Third Tuesday monthly at 05:00–06:00
 
 ```ts
