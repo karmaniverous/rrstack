@@ -131,8 +131,10 @@ stack.updateOptions({ timezone?: string, rules?: RuleJson[] }): void
 // Rule management (convenience mutators; each performs one recompile)
 stack.addRule(rule: RuleJson, index?: number): void
 stack.swap(i: number, j: number): void
-stack.up(i: number): void; stack.down(i: number): void
-stack.top(i: number): void; stack.bottom(i: number): void
+stack.up(i: number): void;
+stack.down(i: number): void
+stack.top(i: number): void;
+stack.bottom(i: number): void
 
 // Helpers
 stack.now(): number                     // current time in configured unit
