@@ -2,8 +2,30 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.8.0](https://github.com/karmaniverous/rrstack/compare/0.7.1...0.8.0)
+
+- feat: RRStack subscribe/unsubscribe + React hooks and subpath export [`2c38f3b`](https://github.com/karmaniverous/rrstack/commit/2c38f3b9fca0875b92d2d6b9a8f9b619147627e8)
+- updated docs [`3bd81de`](https://github.com/karmaniverous/rrstack/commit/3bd81deee0cdbab9d77a8c8e0dc5714902834bfb)
+- updated docs [`acb60b6`](https://github.com/karmaniverous/rrstack/commit/acb60b675961b54ee08e83def7bfb5dc2bd2977e)
+- test(react): add leading debounce and flush() cases [`310e014`](https://github.com/karmaniverous/rrstack/commit/310e01404a17d8bffb9a38690dfb351c320fcf69)
+- fix(react): make useRRStack debounce/flush stable across renders [`8154593`](https://github.com/karmaniverous/rrstack/commit/815459371a3e7c72071e86c800b7a3fa9e2f12d4)
+- test(react): await microtask inside async act callbacks [`983cc17`](https://github.com/karmaniverous/rrstack/commit/983cc17cc0ddfbcc451e4a0565954bb2f6e9101e)
+- fix(react): make flush() timer-proof; raise bounds test timeout [`9dd73ea`](https://github.com/karmaniverous/rrstack/commit/9dd73ea76315da659d46b658336fbb3f80c27509)
+- fix(react): initialize refs and clean lints in useRRStack [`e686a9c`](https://github.com/karmaniverous/rrstack/commit/e686a9caa905115ccb5ccd4071251e96a6ac7630)
+- fix(react): ensure flush() sees pending; raise test timeout [`2893a75`](https://github.com/karmaniverous/rrstack/commit/2893a75b0ed76d34a5d26c8dabdcf603e1c4bb0c)
+- dev(react): add DOM types and fix act import in tests [`e7b1d6a`](https://github.com/karmaniverous/rrstack/commit/e7b1d6ac796b71ce37a758d390a3a0e0663cd570)
+- fix(react): make useRRStack snapshot timer-proof; lint clean [`f8ab8a9`](https://github.com/karmaniverous/rrstack/commit/f8ab8a90a2ff1d8cfe6356cc24307e4ede1a4be5)
+- test(react): fix TS global augmentation and flush effects with async act [`1679610`](https://github.com/karmaniverous/rrstack/commit/167961063013d6ce72c4933a8cd4176d88c45be2)
+- test(react): enable act() via setup; register in Vitest [`94ce684`](https://github.com/karmaniverous/rrstack/commit/94ce6841c7d548f95464817490a3074ba908a581)
+- fix(react): use monotonic snapshot in useRRStack [`24285fd`](https://github.com/karmaniverous/rrstack/commit/24285fdace4cd4a9d87fb5aa5f9390e6d7d8eb49)
+- fix(react): decouple hook version from Date.now [`c6e2960`](https://github.com/karmaniverous/rrstack/commit/c6e296056f311523753df795f1f599be8b37434b)
+- fix(react): use monotonic snapshot in useRRStack [`89d9e44`](https://github.com/karmaniverous/rrstack/commit/89d9e44dfc969d766924596c327293363c8f4433)
+
 #### [0.7.1](https://github.com/karmaniverous/rrstack/compare/0.7.0...0.7.1)
 
+> 17 September 2025
+
+- chore: release v0.7.1 [`ef55afe`](https://github.com/karmaniverous/rrstack/commit/ef55afe1f04f19e5c846640fa4a3698b4b8b4d14)
 - updated docs [`f5cea8b`](https://github.com/karmaniverous/rrstack/commit/f5cea8bda79cb21154fe601a31b03d3245d924c6)
 - test(rrstack): add error-path coverage for mutators [`8b08fee`](https://github.com/karmaniverous/rrstack/commit/8b08fee2a771242115b686c37d2a1a3ab22a3e9d)
 - feat(rrstack): add removeRule(index) mutator [`50ee1b3`](https://github.com/karmaniverous/rrstack/commit/50ee1b3a9f1c55afe7476daa89f233241aa79066)
