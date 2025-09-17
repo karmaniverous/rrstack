@@ -6,10 +6,16 @@ Last updated: 2025-09-17 (UTC)
 
 Completed (recent)
 
+- Fix(react/useRRStack): resolve TS2554 and lint issues
+  - Initialize cfgRef and debouncedRef with explicit initial values
+    (cfgRef from current debounce config; debouncedRef = null) to satisfy
+    React’s useRef signature and avoid “expected 1 argument” errors.
+  - Use a null check once and non-null assertions where the debounced
+    wrapper is guaranteed to exist; remove unnecessary optional chaining.
+  - Re-run scripts to confirm typecheck/lint/docs/build/tests are green.
 - Fix(react/useRRStack): preserve debounced state across renders so flush() can
   emit pending trailing onChange immediately. Previous implementation recreated
-  the debounced closure on each render (due to identity‑based dependencies),
-  losing the pending value; moved timer/pending/inWindow to refs and read the
+  the debounced closure on each render (due to identity‑based dependencies),  losing the pending value; moved timer/pending/inWindow to refs and read the
   latest onChange/debounce config via refs. Subscription now calls a stable
   debouncedRef. Re‑run tests to confirm the flush() test passes under fake
   timers.
