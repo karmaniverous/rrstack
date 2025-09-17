@@ -53,4 +53,13 @@ describe('RRStack convenience mutators', () => {
     s.bottom(0);
     expect(s.rules.map((r) => r.label)).toEqual(['A', 'B', 'C']);
   });
+
+  it('removeRule deletes a rule at index and preserves remaining order', () => {
+    const s = new RRStack({
+      timezone: 'UTC',
+      rules: [ruleAt(5, 'A'), ruleAt(6, 'B'), ruleAt(7, 'C')],
+    });
+    s.removeRule(1);
+    expect(s.rules.map((r) => r.label)).toEqual(['A', 'C']);
+  });
 });

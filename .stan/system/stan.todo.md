@@ -1,14 +1,16 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-09-16 (UTC)
+Last updated: 2025-09-17 (UTC)
 
 ## This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
 Completed (recent)
 
+- Tests: add unit test for removeRule mutator (RRStack.removeRule removes
+  the specified rule and preserves remaining order).
+
 - Feat(RRStack): add removeRule(index) convenience mutator to remove a rule
   by index and recompile (delegates to the rules setter).
-
 - Docs (typedoc): add examples for getSegments limit usage and long-window
   guidance; add open-ended bounds example to getEffectiveBounds; add
   includeBounds/timezone toggles to description helpers.
