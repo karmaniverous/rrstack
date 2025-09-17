@@ -11,10 +11,13 @@ Completed (recent)
     snapshot and increments it on each RRStack notification. This avoids test
     flakiness under vi.useFakeTimers (where Date.now() is frozen) that could
     suppress re-renders and leave DOM state stale in debounce tests.
+  - Follow-up: this also resolves the lingering "data-count '1' vs '4'"
+    failure in useRRStack debounce test and fixes the lint error for an
+    unused useRef import once the counter is wired to the hook snapshot.
+    Re-run lint/test to confirm green.
 
 - Tests/React: add awaited microtasks inside async act() callbacks
-  - useRRStack.test.ts: include `await Promise.resolve()` inside async act
-    blocks to satisfy @typescript-eslint/require-await and reliably flush
+  - useRRStack.test.ts: include `await Promise.resolve()` inside async act    blocks to satisfy @typescript-eslint/require-await and reliably flush
     effects/store updates under happy-dom/React 19. Fixes the remaining
     debounce test failure (expected count '4').
 
