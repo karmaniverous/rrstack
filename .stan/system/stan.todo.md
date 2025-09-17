@@ -6,10 +6,13 @@ Last updated: 2025-09-17 (UTC)
 
 Completed (recent)
 
+- Dev: configure React act() for tests
+  - Add test/setup.ts setting globalThis.IS_REACT_ACT_ENVIRONMENT = true.
+  - Register setup in vitest.config.ts (setupFiles).
+
 - Dev: add React globals support for tests/build
   - tsconfig.json: include DOM in compilerOptions.lib to provide `document`
-    and other DOM globals for React tests.
-  - React tests: import `act` from 'react' (React 19) to flush effects and
+    and other DOM globals for React tests.  - React tests: import `act` from 'react' (React 19) to flush effects and
     avoid deprecation warnings.
 
 - Feat(RRStack): add subscribe/unsubscribe mutation notifications. Notify

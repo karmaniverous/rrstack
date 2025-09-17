@@ -9,10 +9,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
+    setupFiles: ['test/setup.ts'],
     exclude: [...configDefaults.exclude, '**/.rollup.cache/**', '.stan/**'],
     testTimeout: 20000,
-    coverage: {
-      provider: 'v8',
+    coverage: {      provider: 'v8',
       reporter: ['text', 'lcov'],
       include: ['src/**/*.ts'],
       exclude: [
