@@ -6,10 +6,17 @@ Last updated: 2025-09-17 (UTC)
 
 Completed (recent)
 
+- Fix(react/useRRStack): preserve debounced state across renders so flush() can
+  emit pending trailing onChange immediately. Previous implementation recreated
+  the debounced closure on each render (due to identity‑based dependencies),
+  losing the pending value; moved timer/pending/inWindow to refs and read the
+  latest onChange/debounce config via refs. Subscription now calls a stable
+  debouncedRef. Re‑run tests to confirm the flush() test passes under fake
+  timers.
+
 - Fix(react/useRRStack): decouple hook snapshot from Date.now()
   - useRRStack now uses a monotonic counter for the useSyncExternalStore
-    snapshot and increments it on each RRStack notification. This avoids test
-    flakiness under vi.useFakeTimers (where Date.now() is frozen) that could
+    snapshot and increments it on each RRStack notification. This avoids test    flakiness under vi.useFakeTimers (where Date.now() is frozen) that could
     suppress re-renders and leave DOM state stale in debounce tests.
   - Follow-up: this also resolves the lingering "data-count '1' vs '4'"
     failure in useRRStack debounce test and fixes the lint error for an

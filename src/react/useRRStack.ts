@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 
 import { RRStack } from '../rrstack/RRStack';
 import type { RRStackOptions } from '../rrstack/types';
@@ -11,10 +17,14 @@ export type DebounceOption =
     };
 
 interface Options {
-  resetKey?: string | number;  debounce?: DebounceOption;
+  resetKey?: string | number;
+  debounce?: DebounceOption;
   logger?:
     | boolean
-    | ((e: { type: 'init' | 'reset' | 'mutate' | 'flush'; rrstack: RRStack }) => void);
+    | ((e: {
+        type: 'init' | 'reset' | 'mutate' | 'flush';
+        rrstack: RRStack;
+      }) => void);
 }
 
 const toDebounceCfg = (
@@ -44,7 +54,6 @@ export function useRRStack(
       if (!logger) return;
       const payload = { type, rrstack };
       if (logger === true) {
-         
         console.debug('[rrstack]', {
           type,
           tz: rrstack.timezone,
@@ -61,27 +70,32 @@ export function useRRStack(
     [logger, rrstack],
   );
 
-  // Debounced onChange wrapper (leading/trailing policy).
-  const debounced = useMemo(() => {
-    const cfg = toDebounceCfg(debounceOpt);
-    if (!onChange || !cfg) {
-      return {
-        call: (s: RRStack) => onChange?.(s),
-        flush: () => {
-          /* noop */
-        },
-      };
-    }
-    const { delay, leading, trailing } = cfg;
+  // Stable debounced wrapper across renders:
+  // - Keep latest onChange and debounce config in refs
+  // - Keep timer/pending/inWindow in a singleton ref so flush() survives re-renders
+  const onChangeRef = useRef<typeof onChange>(onChange);
+  onChangeRef.current = onChange;
+  const cfgRef = useRef<ReturnType<typeof toDebounceCfg>>();
+  cfgRef.current = toDebounceCfg(debounceOpt);
+  const debouncedRef = useRef<{
+    call: (s: RRStack) => void;
+    flush: () => void;
+  }>();
+  if (!debouncedRef.current) {
     let timer: ReturnType<typeof setTimeout> | undefined;
     let pending: RRStack | undefined;
     let inWindow = false;
-
     const call = (s: RRStack) => {
-      // leading: fire immediately if not in window
+      const cfg = cfgRef.current;
+      const cb = onChangeRef.current;
+      if (!cb || !cfg) {
+        cb?.(s);
+        return;
+      }
+      const { delay, leading, trailing } = cfg;
       if (leading && !inWindow) {
         try {
-          onChange(s);
+          cb(s);
         } catch {
           /* noop */
         }
@@ -97,7 +111,7 @@ export function useRRStack(
           pending = undefined;
           if (p) {
             try {
-              onChange(p);
+              onChangeRef.current?.(p);
             } catch {
               /* noop */
             }
@@ -112,11 +126,8 @@ export function useRRStack(
         }, delay);
       }
     };
-
-    const flush = () => {
-      // Emit any pending trailing call immediately. The presence of a pending
-      // value is authoritative; the timer handle may be absent when using fake
-      // timers or after clock adjustments.
+    const flushInner = () => {
+      // Emit any pending trailing call immediately.
       if (!pending) return;
       if (timer) clearTimeout(timer);
       timer = undefined;
@@ -124,14 +135,14 @@ export function useRRStack(
       pending = undefined;
       inWindow = false;
       try {
-        onChange(p);
+        onChangeRef.current?.(p);
       } catch {
         /* noop */
       }
     };
+    debouncedRef.current = { call, flush: flushInner };
+  }
 
-    return { call, flush };
-  }, [debounceOpt, onChange]);
   // React external-store binding: one React-level subscriber per hook instance.
   // Use a monotonic counter for the snapshot; Date.now() can be frozen by fake timers.
   const versionRef = useRef(0);
@@ -142,7 +153,7 @@ export function useRRStack(
         const unsub = rrstack.subscribe(() => {
           // call debounced onChange & log
           try {
-            debounced.call(rrstack);
+            debouncedRef.current?.call(rrstack);
           } catch {
             /* noop */
           }
@@ -157,19 +168,21 @@ export function useRRStack(
         });
         return () => {
           unsub();
-        };      },
-      [rrstack, debounced, log],
+        };
+      },
+      [rrstack, log],
     ),
     () => versionRef.current,
     () => 0,
   );
 
   useEffect(() => {
-    if (resetKey !== undefined) log('reset');  }, [resetKey, log]);
+    if (resetKey !== undefined) log('reset');
+  }, [resetKey, log]);
 
   const flush = useCallback(() => {
-    debounced.flush();
+    debouncedRef.current?.flush();
     log('flush');
-  }, [debounced, log]);
+  }, [log]);
   return { rrstack, version, flush };
 }
