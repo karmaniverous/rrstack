@@ -6,9 +6,14 @@ Last updated: 2025-09-17 (UTC)
 
 Completed (recent)
 
+- Dev: add React globals support for tests/build
+  - tsconfig.json: include DOM in compilerOptions.lib to provide `document`
+    and other DOM globals for React tests.
+  - React tests: import `act` from 'react' (React 19) to flush effects and
+    avoid deprecation warnings.
+
 - Feat(RRStack): add subscribe/unsubscribe mutation notifications. Notify
   exactly once after successful state changes; suppress during constructor.
-
 - Feat(react): add hooks under subpath export "./react":
   - useRRStack(json, onChange?, { resetKey?, debounce?, logger? }) → { rrstack, version, flush }
     • debounce supports leading/trailing; flush emits pending trailing call.

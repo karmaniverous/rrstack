@@ -1,11 +1,11 @@
-import { act } from 'react-dom/test-utils';
-import { createRoot } from 'react-dom/client';
+import { act } from 'react';
 import React, { useEffect, useMemo, useRef } from 'react';
+import { createRoot } from 'react-dom/client';
 import { describe, expect, it, vi } from 'vitest';
 
-import { useRRStack } from './useRRStack';
 import type { RRStack } from '../rrstack/RRStack';
 import type { RRStackOptions, RuleJson } from '../rrstack/types';
+import { useRRStack } from './useRRStack';
 
 const EXAMPLE_A: RRStackOptions = {
   timezone: 'UTC',
@@ -152,11 +152,14 @@ describe('useRRStack (react)', () => {
     const div = app.container.querySelector('div')!;
 
     // We queued 3 quick adds above: the rule count in DOM already reflects them
+    // Ensure effects have flushed
+    act(() => {
+      /* no-op to flush pending effects */
+    });
     expect(div.getAttribute('data-count')).toBe('4');
 
     // No onChange call yet (trailing debounce)
     expect(events.length).toBe(0);
-
     // Advance the debounce window (50ms)
     act(() => {
       vi.advanceTimersByTime(50);

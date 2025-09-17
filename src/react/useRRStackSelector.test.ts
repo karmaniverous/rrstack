@@ -1,12 +1,12 @@
-import { act } from 'react-dom/test-utils';
-import { createRoot } from 'react-dom/client';
+import { act } from 'react';
 import React, { useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
 import { describe, expect, it } from 'vitest';
 
-import { useRRStack } from './useRRStack';
-import { useRRStackSelector } from './useRRStackSelector';
 import type { RRStack } from '../rrstack/RRStack';
 import type { RRStackOptions, RuleJson } from '../rrstack/types';
+import { useRRStack } from './useRRStack';
+import { useRRStackSelector } from './useRRStackSelector';
 
 const EXAMPLE: RRStackOptions = {
   timezone: 'UTC',
