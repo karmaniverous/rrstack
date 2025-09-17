@@ -6,6 +6,12 @@ Last updated: 2025-09-17 (UTC)
 
 Completed (recent)
 
+- Fix(react/useRRStack): decouple hook snapshot from Date.now()
+  - useRRStack now uses a monotonic counter for the useSyncExternalStore
+    snapshot and increments it on each RRStack notification. This avoids test
+    flakiness under vi.useFakeTimers (where Date.now() is frozen) that could
+    suppress re-renders and leave DOM state stale in debounce tests.
+
 - Tests/React: add awaited microtasks inside async act() callbacks
   - useRRStack.test.ts: include `await Promise.resolve()` inside async act
     blocks to satisfy @typescript-eslint/require-await and reliably flush
