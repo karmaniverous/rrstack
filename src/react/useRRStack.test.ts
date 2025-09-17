@@ -152,8 +152,8 @@ describe('useRRStack (react)', () => {
     const div = app.container.querySelector('div')!;
 
     // We queued 3 quick adds above: the rule count in DOM already reflects them
-    // Ensure effects and store updates have flushed
-    await act(async () => {});
+    // Ensure effects and store updates have flushed (await a microtask)
+    await act(async () => { await Promise.resolve(); });
     expect(div.getAttribute('data-count')).toBe('4');
 
     // No onChange call yet (trailing debounce)
@@ -161,11 +161,11 @@ describe('useRRStack (react)', () => {
     // Advance the debounce window (50ms)
     await act(async () => {
       vi.advanceTimersByTime(50);
+      await Promise.resolve();
     });
 
     // One trailing onChange fire, with final rule count (4)
     expect(events).toEqual([4]);
-
     app.unmount();
     vi.useRealTimers();
   });
