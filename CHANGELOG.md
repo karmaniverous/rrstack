@@ -2,10 +2,20 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.7.1](https://github.com/karmaniverous/rrstack/compare/0.7.0...0.7.1)
+
+- updated docs [`f5cea8b`](https://github.com/karmaniverous/rrstack/commit/f5cea8bda79cb21154fe601a31b03d3245d924c6)
+- test(rrstack): add error-path coverage for mutators [`8b08fee`](https://github.com/karmaniverous/rrstack/commit/8b08fee2a771242115b686c37d2a1a3ab22a3e9d)
+- feat(rrstack): add removeRule(index) mutator [`50ee1b3`](https://github.com/karmaniverous/rrstack/commit/50ee1b3a9f1c55afe7476daa89f233241aa79066)
+- test(rrstack): add removeRule mutator unit test [`ce323d5`](https://github.com/karmaniverous/rrstack/commit/ce323d5f6e950f8378ba9b2a7b8d17e7a15dfd27)
+
 #### [0.7.0](https://github.com/karmaniverous/rrstack/compare/0.6.1...0.7.0)
+
+> 17 September 2025
 
 - updated docs [`79c9e3e`](https://github.com/karmaniverous/rrstack/commit/79c9e3e6c558a38e2003ce165d0f06ce0bf732c3)
 - feat: getSegments limit and RRStack rule mutators [`3dfcd1c`](https://github.com/karmaniverous/rrstack/commit/3dfcd1c27eef9ef9da872638d73c05e8ab87cc78)
+- chore: release v0.7.0 [`19576bb`](https://github.com/karmaniverous/rrstack/commit/19576bb63c0a20f4e5eec6a0ed303b100b6d3b4f)
 - feat: add rule description helper leveraging rrule.toText [`0e8c13b`](https://github.com/karmaniverous/rrstack/commit/0e8c13bf6139aee4faf659acfc5a71e1d8f65da3)
 - docs: add typedoc examples and README open-ended bounds [`f0219b3`](https://github.com/karmaniverous/rrstack/commit/f0219b3afaf2bbe876b7af0e2f76d7a95c5c47ec)
 - feat: RRStack.describeRule(index, opts) + fix describe types [`70d28aa`](https://github.com/karmaniverous/rrstack/commit/70d28aa6d97e6f2c801a8fa40144447b0457354b)
