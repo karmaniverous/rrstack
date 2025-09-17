@@ -44,10 +44,14 @@ import {
 declare const __RRSTACK_VERSION__: string | undefined;
 
 export class RRStack {
+  /** Internal: listeners for post‑mutation notifications. */
+  private readonly __listeners = new Set<(self: RRStack) => void>();
+  /** Internal: true after construction; used to suppress initial notify. */
+  private __initialized = false;
+
   /**
    * Normalized, frozen options. Mutate via {@link timezone}, {@link rules},
-   * or {@link updateOptions}.
-   */
+   * or {@link updateOptions}.   */
   public readonly options: RRStackOptionsNormalized;
 
   private compiled: CompiledRule[] = [];
@@ -62,16 +66,18 @@ export class RRStack {
   constructor(opts: RRStackOptions) {
     const normalized = normalizeOptions(opts);
     this.options = normalized;
-    this.recompile();
+    this.recompile(); // initial compile (no notify yet)
+    // enable notifications for subsequent changes
+    this.__initialized = true;
   }
 
   private recompile(): void {
     const { timezone, timeUnit, rules } = this.options;
     this.compiled = rules.map((r) => compileRule(r, timezone, timeUnit));
+    if (this.__initialized) this.__notify();
   }
 
   // Convenience helpers -------------------------------------------------------
-
   /**
    * Validate an IANA timezone id.
    * @param tz - Candidate IANA timezone string.
@@ -92,6 +98,28 @@ export class RRStack {
     return tz as unknown as TimeZoneId;
   }
 
+  // Observability -------------------------------------------------------------
+
+  /**
+   * Subscribe to post‑mutation notifications. The listener is invoked exactly
+   * once after a successful state change (after recompile). The constructor
+   * initialization does not trigger notifications.
+   *
+   * @returns Unsubscribe function.
+   */
+  subscribe(listener: (self: RRStack) => void): () => void {
+    this.__listeners.add(listener);
+    return () => {
+      this.__listeners.delete(listener);
+    };
+  }
+
+  /** @internal Notify all listeners (best‑effort; errors are swallowed). */
+  private __notify(): void {
+    for (const l of this.__listeners) {
+      try { l(this); } catch { /* noop */ }
+    }
+  }
   // Getters / setters (property-style) ---------------------------------------
 
   /**
@@ -144,8 +172,7 @@ export class RRStack {
     this.recompile();
   }
 
-  /**
-   * Get the configured time unit ('ms' | 's'). Immutable.
+  /**   * Get the configured time unit ('ms' | 's'). Immutable.
    */
   get timeUnit(): UnixTimeUnit {
     return this.options.timeUnit;
@@ -177,7 +204,6 @@ export class RRStack {
   }
 
   // Helpers -------------------------------------------------------------------
-
   /**
    * Return the current time in the configured unit.
    */
@@ -350,8 +376,7 @@ export class RRStack {
   /**
    * Swap two rules by index (no-op if indices are equal).
    */
-  swap(i: number, j: number): void {    if (!Number.isInteger(i) || !Number.isInteger(j)) {
-      throw new TypeError('indices must be integers');
+  swap(i: number, j: number): void {    if (!Number.isInteger(i) || !Number.isInteger(j)) {      throw new TypeError('indices must be integers');
     }
     const n = this.options.rules.length;
     if (i < 0 || i >= n || j < 0 || j >= n)

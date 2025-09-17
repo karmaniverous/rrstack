@@ -19,7 +19,11 @@
   },
   "out": "./docs/",
   "plugin": ["typedoc-plugin-mdn-links", "typedoc-plugin-replace-text"],
-  "projectDocuments": ["./CHANGELOG.md"],
+  "projectDocuments": [
+    "./handbook/overview.md",
+    "./handbook/react.md",
+    "./CHANGELOG.md"
+  ],
   "replaceText": {
     "replacements": [
       {

@@ -6,9 +6,17 @@ Last updated: 2025-09-17 (UTC)
 
 Completed (recent)
 
+- Feat(RRStack): add subscribe/unsubscribe mutation notifications. Notify
+  exactly once after successful state changes; suppress during constructor.
+
+- Feat(react): add hooks under subpath export "./react":
+  - useRRStack(json, onChange?, { resetKey?, debounce?, logger? }) → { rrstack, version, flush }
+    • debounce supports leading/trailing; flush emits pending trailing call.
+    • logger: true => console.debug; function => custom sink.
+  - useRRStackSelector(rrstack, selector, isEqual?) for derived memo.
+
 - Tests: add unit test for removeRule mutator (RRStack.removeRule removes
   the specified rule and preserves remaining order).
-
 - Tests: add error-case coverage for mutators — removeRule, swap, up,
   down, top, bottom — asserting TypeError on non-integer indices and
   RangeError on out-of-range indices.

@@ -110,7 +110,10 @@ const outCommon = (dest: string): OutputOptions[] => [
   { dir: `${dest}/cjs`, format: 'cjs', sourcemap: false },];
 
 export const buildLibrary = (dest: string): RollupOptions => ({
-  input: 'src/index.ts',
+  input: {
+    index: 'src/index.ts',
+    'react/index': 'src/react/index.ts',
+  },
   output: outCommon(dest),
   ...commonInputOptions(true),
 });
@@ -122,4 +125,14 @@ export const buildTypes = (dest: string): RollupOptions => ({
   plugins: [dtsPlugin()],
 });
 
-export default [buildLibrary(outputPath), buildTypes(outputPath)];
+export const buildTypesReact = (dest: string): RollupOptions => ({
+  input: 'src/react/index.ts',
+  output: { file: `${dest}/react/index.d.ts`, format: 'es' },
+  plugins: [dtsPlugin()],
+});
+
+export default [
+  buildLibrary(outputPath),
+  buildTypes(outputPath),
+  buildTypesReact(outputPath),
+];

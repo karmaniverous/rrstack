@@ -1,10 +1,11 @@
 /** See <stanPath>/system/stan.project.md for global requirements. */
 
-import {  buildLibrary, buildTypes } from './rollup.config';
+import {  buildLibrary, buildTypes, buildTypesReact } from './rollup.config';
 
 const outputPath = '.stan/dist';
 
 export default [
   buildLibrary(outputPath),
   buildTypes(outputPath),
+  buildTypesReact(outputPath),
 ];

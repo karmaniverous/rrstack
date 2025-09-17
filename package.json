@@ -26,9 +26,11 @@
     "@rollup/plugin-replace": "^5.0.5",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.4",
-    "@types/luxon": "^3.7.1",
     "@types/json-schema": "^7.0.15",
+    "@types/luxon": "^3.7.1",
     "@types/node": "^24.3.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
     "@vitest/coverage-v8": "^3.2.4",
     "auto-changelog": "^2.5.0",
     "concurrently": "^9.2.0",
@@ -42,6 +44,8 @@
     "knip": "^5.62.0",
     "lefthook": "^1.12.3",
     "prettier": "^3.6.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "release-it": "^19.0.4",
     "rimraf": "^6.0.1",
     "rollup": "^4.46.2",
@@ -70,6 +74,16 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/cjs/index.js"
       }
+    },
+    "./react": {
+      "import": {
+        "types": "./dist/react/index.d.ts",
+        "default": "./dist/mjs/react/index.js"
+      },
+      "require": {
+        "types": "./dist/react/index.d.ts",
+        "default": "./dist/cjs/react/index.js"
+      }
     }
   },
   "files": [
@@ -90,6 +104,9 @@
   "main": "dist/cjs/index.js",
   "module": "dist/mjs/index.js",
   "name": "@karmaniverous/rrstack",
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
   "publishConfig": {
     "access": "public"
   },
