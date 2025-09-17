@@ -119,7 +119,7 @@ describe('useRRStack (react)', () => {
     app.unmount();
   });
 
-  it('debounces onChange and supports flush()', () => {
+  it('debounces onChange and supports flush()', async () => {
     vi.useFakeTimers();
     const events: number[] = [];
 
@@ -152,16 +152,14 @@ describe('useRRStack (react)', () => {
     const div = app.container.querySelector('div')!;
 
     // We queued 3 quick adds above: the rule count in DOM already reflects them
-    // Ensure effects have flushed
-    act(() => {
-      /* no-op to flush pending effects */
-    });
+    // Ensure effects and store updates have flushed
+    await act(async () => {});
     expect(div.getAttribute('data-count')).toBe('4');
 
     // No onChange call yet (trailing debounce)
     expect(events.length).toBe(0);
     // Advance the debounce window (50ms)
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(50);
     });
 
