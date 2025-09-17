@@ -5,13 +5,13 @@ import type { RRStackOptions } from '../rrstack/types';
 export type DebounceOption =
   | number
   | {
-      delay: number;      leading?: boolean;
+      delay: number;
+      leading?: boolean;
       trailing?: boolean;
     };
 
 interface Options {
-  resetKey?: string | number;
-  debounce?: DebounceOption;
+  resetKey?: string | number;  debounce?: DebounceOption;
   logger?:
     | boolean
     | ((e: { type: 'init' | 'reset' | 'mutate' | 'flush'; rrstack: RRStack }) => void);
@@ -132,11 +132,15 @@ export function useRRStack(
   }, [debounceOpt, onChange]);
 
   // React external-store binding: one React-level subscriber per hook instance.
+  // Use a monotonic counter for the snapshot; Date.now() can be frozen by fake timers.
+  const versionRef = useRef(0);
   const version = useSyncExternalStore(
     useCallback(
       (reactCb) => {
         log('init');
         const unsub = rrstack.subscribe(() => {
+          // bump snapshot first so React sees a changed value
+          versionRef.current++;
           // notify React
           try {
             reactCb();
@@ -157,17 +161,12 @@ export function useRRStack(
       },
       [rrstack, debounced, log],
     ),
-    () => {
-      // We don't expose a public tick; returning a timestamp is sufficient to
-      // force re-render on every notify.
-      return Date.now();
-    },
+    () => versionRef.current,
     () => 0,
   );
 
   useEffect(() => {
-    if (resetKey !== undefined) log('reset');
-  }, [resetKey, log]);
+    if (resetKey !== undefined) log('reset');  }, [resetKey, log]);
 
   const flush = useCallback(() => {
     debounced.flush();

@@ -15,10 +15,13 @@ Completed (recent)
     failure in useRRStack debounce test and fixes the lint error for an
     unused useRef import once the counter is wired to the hook snapshot.
     Re-run lint/test to confirm green.
+  - Finalize: wire the useRef counter into useSyncExternalStore getSnapshot
+    and increment it before notifying React. Clears the @typescript-eslint/
+    no-unused-vars error and makes re-renders deterministic under fake timers.
+    Expect the debounce test to pass.
 
 - Tests/React: add awaited microtasks inside async act() callbacks
-  - useRRStack.test.ts: include `await Promise.resolve()` inside async act    blocks to satisfy @typescript-eslint/require-await and reliably flush
-    effects/store updates under happy-dom/React 19. Fixes the remaining
+  - useRRStack.test.ts: include `await Promise.resolve()` inside async act    blocks to satisfy @typescript-eslint/require-await and reliably flush    effects/store updates under happy-dom/React 19. Fixes the remaining
     debounce test failure (expected count '4').
 
 - Dev: configure React act() for tests
