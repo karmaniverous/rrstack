@@ -20,14 +20,12 @@
   "out": "./docs/",
   "plugin": ["typedoc-plugin-mdn-links", "typedoc-plugin-replace-text"],
   "projectDocuments": [
-    "./handbook/overview.md",
-    "./handbook/react.md",
+    "./handbook/index.md",
     "./CHANGELOG.md"
   ],
   "replaceText": {
     "replacements": [
-      {
-        "pattern": "<!-- TYPEDOC_EXCLUDE -->.*?<!-- /TYPEDOC_EXCLUDE -->",
+      {        "pattern": "<!-- TYPEDOC_EXCLUDE -->.*?<!-- /TYPEDOC_EXCLUDE -->",
         "flags": "gis",
         "replace": ""
       }

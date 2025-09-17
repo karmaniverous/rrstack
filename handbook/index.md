@@ -1,0 +1,38 @@
+---
+title: Handbook
+children:
+  - ./overview.md
+  - ./react.md
+---
+
+# RRStack Handbook
+
+Welcome to the RRStack handbook. This section contains practical, narrative
+documentation that complements the API reference and guides you through common
+workflows, patterns, and integration points.
+
+## Contents
+
+- Overview
+
+  See an end-to-end introduction to RRStack:
+
+  - Why this library and when to use it
+  - Key capabilities (point queries, streaming segments, range classification,
+    effective bounds, JSON round-tripping, human-readable rule descriptions)
+  - Time zone and DST behavior
+  - Quick Start and tips for long windows and performance
+
+  Read: [Overview](./overview.md)
+
+- React hooks
+
+  Integrate a live RRStack instance with React using tiny hooks that preserve
+  the library as the single source of truth:
+
+  - useRRStack(json, onChange?, { resetKey?, debounce?, logger? }) — live
+    instance with version and flush
+  - useRRStackSelector(rrstack, selector, isEqual?) — derived values with
+    minimal re-renders
+
+  Read: [React hooks](./react.md)

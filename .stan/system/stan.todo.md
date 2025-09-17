@@ -6,10 +6,16 @@ Last updated: 2025-09-17 (UTC)
 
 Completed (recent)
 
+- Docs(handbook): add external documentation index with TypeDoc front matter
+  - Created handbook/index.md with `title` and `children` (overview, react) to
+    control sidebar structure.
+  - Updated typedoc.json to include only the index page (and CHANGELOG), removing
+    the individual handbook pages from projectDocuments so they appear as
+    children of the index automatically.
+
 - Fix(react/useRRStack): resolve TS2554 and lint issues
   - Initialize cfgRef and debouncedRef with explicit initial values
-    (cfgRef from current debounce config; debouncedRef = null) to satisfy
-    React’s useRef signature and avoid “expected 1 argument” errors.
+    (cfgRef from current debounce config; debouncedRef = null) to satisfy    React’s useRef signature and avoid “expected 1 argument” errors.
   - Use a null check once and non-null assertions where the debounced
     wrapper is guaranteed to exist; remove unnecessary optional chaining.
   - Re-run scripts to confirm typecheck/lint/docs/build/tests are green.

@@ -1,3 +1,7 @@
+---
+title: React
+---
+
 # React hooks
 
 Subpath export: `@karmaniverous/rrstack/react`
@@ -78,4 +82,7 @@ useRRStackSelector<T>(
 - The hooks subscribe to RRStack notifications (fired post‑mutation). RRStack
   itself remains the single source of truth; call its methods directly.
 - For long windows, prefer chunking (day/week) or a Worker for heavy sweeps.
+
+```
+
 ```
