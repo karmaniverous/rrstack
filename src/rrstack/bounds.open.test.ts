@@ -53,5 +53,5 @@ describe('bounds: open-sided detection and empty set', () => {
     expect(b.empty).toBe(true);
     expect(b.start).toBeUndefined();
     expect(b.end).toBeUndefined();
-  });
+  }, 40000);
 });

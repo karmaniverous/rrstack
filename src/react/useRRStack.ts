@@ -114,23 +114,24 @@ export function useRRStack(
     };
 
     const flush = () => {
-      if (timer && pending) {
-        clearTimeout(timer);
-        timer = undefined;
-        const p = pending;
-        pending = undefined;
-        inWindow = false;
-        try {
-          onChange(p);
-        } catch {
-          /* noop */
-        }
+      // Emit any pending trailing call immediately. The presence of a pending
+      // value is authoritative; the timer handle may be absent when using fake
+      // timers or after clock adjustments.
+      if (!pending) return;
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      const p = pending;
+      pending = undefined;
+      inWindow = false;
+      try {
+        onChange(p);
+      } catch {
+        /* noop */
       }
     };
 
     return { call, flush };
   }, [debounceOpt, onChange]);
-
   // React external-store binding: one React-level subscriber per hook instance.
   // Use a monotonic counter for the snapshot; Date.now() can be frozen by fake timers.
   const versionRef = useRef(0);

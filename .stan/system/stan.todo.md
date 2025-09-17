@@ -20,10 +20,17 @@ Completed (recent)
     no-unused-vars error and makes re-renders deterministic under fake timers.
     Expect the debounce test to pass.
 
+- Fix(react): stabilize flush() under fake timers
+  - useRRStack: make flush() emit when a pending value exists (clear the timer
+    if present). This avoids edge cases where the timer handle is absent with
+    fake timers but a trailing call is still pending.
+
+- Tests: raise timeout for heavy bounds open-start case
+  - src/rrstack/bounds.open.test.ts: per-test timeout increased to 40s.
+
 - Tests(react): expand useRRStack coverage
   - Add leading-debounce test (fires immediately; no trailing).
-  - Add flush() test to trigger pending trailing onChange immediately.
-  - Both tests use fake timers and await async act() to flush effects,
+  - Add flush() test to trigger pending trailing onChange immediately.  - Both tests use fake timers and await async act() to flush effects,
     improving coverage and guarding hook behavior.
 
 - Tests/React: add awaited microtasks inside async act() callbacks
