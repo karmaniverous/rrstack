@@ -265,10 +265,44 @@ import { RRSTACK_CONFIG_SCHEMA } from '@karmaniverous/rrstack';
 console.log(RRSTACK_CONFIG_SCHEMA.$schema, 'RRStackOptions schema loaded');
 ```
 
+## React hooks
+
+RRStack ships a tiny React adapter at the subpath `@karmaniverous/rrstack/react`. The
+hooks observe a live RRStack instance without re‑wrapping its control surface:
+
+- `useRRStack(json, onChange?, { resetKey?, debounce?, logger? })` →
+  `{ rrstack, version, flush }`
+- `useRRStackSelector(rrstack, selector, isEqual?)` → derived value; re‑renders
+  only when the selection changes.
+
+Example
+
+```tsx
+import { useRRStack } from '@karmaniverous/rrstack/react';
+import type { RRStackOptions } from '@karmaniverous/rrstack';
+
+function Editor({ json }: { json: RRStackOptions }) {
+  const { rrstack, version, flush } = useRRStack(
+    json,
+    (s) => {
+      // autosave (debounced by the hook if configured)
+      void saveToServer(s.toJson());
+    },
+    { debounce: 500 },
+  );
+
+  // Use `version` to memoize heavy derived values (e.g. segments)
+
+  return <button onClick={() => { rrstack.addRule(/* ... */); flush(); }}>Save now</button>;
+}
+```
+
+See “Handbook → React” on the docs site for full details:
+https://docs.karmanivero.us/rrstack
+
 ## Rule description helpers
 
 Build a human-readable string describing a rule’s cadence using rrule’s toText(), augmented with effect and duration.
-
 - Instance method (describe compiled rule by index):
 
 ```ts

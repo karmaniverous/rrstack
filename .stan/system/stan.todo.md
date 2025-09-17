@@ -6,10 +6,14 @@ Last updated: 2025-09-17 (UTC)
 
 Completed (recent)
 
+- Docs(README/handbook): add brief React hooks description to README and expand
+  the “React” handbook page with structured signatures, parameter/return
+  details, behavior notes, and examples. Removed stray fences and ensured fence
+  hygiene in examples. No code changes; documentation only.
+
 - Docs(handbook): add external documentation index with TypeDoc front matter
   - Created handbook/index.md with `title` and `children` (overview, react) to
-    control sidebar structure.
-  - Updated typedoc.json to include only the index page (and CHANGELOG), removing
+    control sidebar structure.  - Updated typedoc.json to include only the index page (and CHANGELOG), removing
     the individual handbook pages from projectDocuments so they appear as
     children of the index automatically.
 
