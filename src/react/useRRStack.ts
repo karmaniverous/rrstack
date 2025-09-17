@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 
 import { RRStack } from '../rrstack/RRStack';
-import type { RRStackOptions } from '../rrstack/types';export type DebounceOption =
+import type { RRStackOptions } from '../rrstack/types';
+export type DebounceOption =
   | number
   | {
-      delay: number;
-      leading?: boolean;
+      delay: number;      leading?: boolean;
       trailing?: boolean;
     };
 
