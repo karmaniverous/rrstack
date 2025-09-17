@@ -9,10 +9,13 @@ Completed (recent)
 - Tests: add unit test for removeRule mutator (RRStack.removeRule removes
   the specified rule and preserves remaining order).
 
+- Tests: add error-case coverage for mutators — removeRule, swap, up,
+  down, top, bottom — asserting TypeError on non-integer indices and
+  RangeError on out-of-range indices.
+
 - Feat(RRStack): add removeRule(index) convenience mutator to remove a rule
   by index and recompile (delegates to the rules setter).
-- Docs (typedoc): add examples for getSegments limit usage and long-window
-  guidance; add open-ended bounds example to getEffectiveBounds; add
+- Docs (typedoc): add examples for getSegments limit usage and long-window  guidance; add open-ended bounds example to getEffectiveBounds; add
   includeBounds/timezone toggles to description helpers.
 - Docs (README): add “Open-ended bounds example” section and a short
   performance note under “Segment enumeration limit” encouraging window

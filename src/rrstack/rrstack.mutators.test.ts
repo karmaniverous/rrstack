@@ -62,4 +62,64 @@ describe('RRStack convenience mutators', () => {
     s.removeRule(1);
     expect(s.rules.map((r) => r.label)).toEqual(['A', 'C']);
   });
+
+  describe('error cases', () => {
+    it('removeRule throws on non-integer or out-of-range index', () => {
+      const s = new RRStack({ timezone: 'UTC', rules: [ruleAt(5, 'A')] });
+      expect(() => { s.removeRule(0.5 as unknown as number); }).toThrow(TypeError);
+      expect(() => { s.removeRule(-1); }).toThrow(RangeError);
+      expect(() => { s.removeRule(1); }).toThrow(RangeError);
+    });
+
+    it('swap throws on non-integer indices or out-of-range', () => {
+      const s = new RRStack({
+        timezone: 'UTC',
+        rules: [ruleAt(5, 'A'), ruleAt(6, 'B')],
+      });
+      expect(() => { s.swap(0.5 as unknown as number, 1); }).toThrow(TypeError);
+      expect(() => { s.swap(0, 1.2 as unknown as number); }).toThrow(TypeError);
+      expect(() => { s.swap(-1, 0); }).toThrow(RangeError);
+      expect(() => { s.swap(0, 2); }).toThrow(RangeError);
+    });
+
+    it('up throws on non-integer or out-of-range index', () => {
+      const s = new RRStack({
+        timezone: 'UTC',
+        rules: [ruleAt(5, 'A'), ruleAt(6, 'B')],
+      });
+      expect(() => { s.up(0.1 as unknown as number); }).toThrow(TypeError);
+      expect(() => { s.up(-1); }).toThrow(RangeError);
+      expect(() => { s.up(2); }).toThrow(RangeError);
+    });
+
+    it('down throws on non-integer or out-of-range index', () => {
+      const s = new RRStack({
+        timezone: 'UTC',
+        rules: [ruleAt(5, 'A'), ruleAt(6, 'B')],
+      });
+      expect(() => { s.down(1.1 as unknown as number); }).toThrow(TypeError);
+      expect(() => { s.down(-1); }).toThrow(RangeError);
+      expect(() => { s.down(2); }).toThrow(RangeError);
+    });
+
+    it('top throws on non-integer or out-of-range index', () => {
+      const s = new RRStack({
+        timezone: 'UTC',
+        rules: [ruleAt(5, 'A'), ruleAt(6, 'B')],
+      });
+      expect(() => { s.top(1.5 as unknown as number); }).toThrow(TypeError);
+      expect(() => { s.top(-1); }).toThrow(RangeError);
+      expect(() => { s.top(2); }).toThrow(RangeError);
+    });
+
+    it('bottom throws on non-integer or out-of-range index', () => {
+      const s = new RRStack({
+        timezone: 'UTC',
+        rules: [ruleAt(5, 'A'), ruleAt(6, 'B')],
+      });
+      expect(() => { s.bottom(2.2 as unknown as number); }).toThrow(TypeError);
+      expect(() => { s.bottom(-1); }).toThrow(RangeError);
+      expect(() => { s.bottom(2); }).toThrow(RangeError);
+    });
+  });
 });
