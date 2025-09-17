@@ -6,10 +6,12 @@ Last updated: 2025-09-16 (UTC)
 
 Completed (recent)
 
+- Feat(RRStack): add removeRule(index) convenience mutator to remove a rule
+  by index and recompile (delegates to the rules setter).
+
 - Docs (typedoc): add examples for getSegments limit usage and long-window
   guidance; add open-ended bounds example to getEffectiveBounds; add
   includeBounds/timezone toggles to description helpers.
-
 - Docs (README): add “Open-ended bounds example” section and a short
   performance note under “Segment enumeration limit” encouraging window
   chunking and the per-call `limit` for very long windows.

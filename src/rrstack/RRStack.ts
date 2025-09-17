@@ -331,10 +331,26 @@ export class RRStack {
   }
 
   /**
+   * Remove the rule at the specified index.
+   * Delegates to the {@link rules} setter (single recompile).
+   *
+   * @param i - Zero-based index of the rule to remove.
+   * @throws TypeError if `i` is not an integer; RangeError if out of range.
+   */
+  removeRule(i: number): void {
+    if (!Number.isInteger(i)) throw new TypeError('index must be an integer');
+    const n = this.options.rules.length;
+    if (i < 0 || i >= n) throw new RangeError('index out of range');
+
+    const next = [...(this.options.rules as RuleJson[])];
+    next.splice(i, 1);
+    this.rules = next;
+  }
+
+  /**
    * Swap two rules by index (no-op if indices are equal).
    */
-  swap(i: number, j: number): void {
-    if (!Number.isInteger(i) || !Number.isInteger(j)) {
+  swap(i: number, j: number): void {    if (!Number.isInteger(i) || !Number.isInteger(j)) {
       throw new TypeError('indices must be integers');
     }
     const n = this.options.rules.length;
