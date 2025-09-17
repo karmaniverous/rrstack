@@ -140,17 +140,16 @@ export function useRRStack(
       (reactCb) => {
         log('init');
         const unsub = rrstack.subscribe(() => {
-          // bump snapshot first so React sees a changed value
-          versionRef.current++;
-          // notify React
-          try {
-            reactCb();
-          } catch {
-            /* noop */
-          }
           // call debounced onChange & log
           try {
             debounced.call(rrstack);
+          } catch {
+            /* noop */
+          }
+          // bump snapshot and then notify React
+          versionRef.current++;
+          try {
+            reactCb();
           } catch {
             /* noop */
           }
@@ -158,8 +157,7 @@ export function useRRStack(
         });
         return () => {
           unsub();
-        };
-      },
+        };      },
       [rrstack, debounced, log],
     ),
     () => versionRef.current,

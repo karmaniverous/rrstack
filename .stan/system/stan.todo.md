@@ -30,11 +30,16 @@ Completed (recent)
 
 - Tests(react): expand useRRStack coverage
   - Add leading-debounce test (fires immediately; no trailing).
-  - Add flush() test to trigger pending trailing onChange immediately.  - Both tests use fake timers and await async act() to flush effects,
+  - Add flush() test to trigger pending trailing onChange immediately. - Both tests use fake timers and await async act() to flush effects,
     improving coverage and guarding hook behavior.
 
+- Fix(react): schedule debounced before React notify on mutation
+  - useRRStack: in the subscribe callback, call debounced.call(rrstack)
+    before bumping the snapshot and notifying React. Ensures a pending
+    trailing call exists before flush() is invoked by tests or UI.
+
 - Tests/React: add awaited microtasks inside async act() callbacks
-  - useRRStack.test.ts: include `await Promise.resolve()` inside async act    blocks to satisfy @typescript-eslint/require-await and reliably flush    effects/store updates under happy-dom/React 19. Fixes the remaining
+  - useRRStack.test.ts: include `await Promise.resolve()` inside async act blocks to satisfy @typescript-eslint/require-await and reliably flush effects/store updates under happy-dom/React 19. Fixes the remaining
     debounce test failure (expected count '4').
 - Dev: configure React act() for tests
   - Add test/setup.ts setting globalThis.IS_REACT_ACT_ENVIRONMENT = true.
