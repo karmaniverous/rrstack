@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import { act } from 'react';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -119,8 +120,7 @@ describe('useRRStack (react)', () => {
     app.unmount();
   });
 
-  it('debounces onChange and supports flush()', async () => {
-    vi.useFakeTimers();
+  it('debounces onChange and supports flush()', async () => {    vi.useFakeTimers();
     const events: number[] = [];
 
     function DebouncedView(props: { json: RRStackOptions }) {
@@ -166,6 +166,112 @@ describe('useRRStack (react)', () => {
 
     // One trailing onChange fire, with final rule count (4)
     expect(events).toEqual([4]);
+    app.unmount();
+    vi.useRealTimers();
+  });
+
+  it('supports leading debounce (fires immediately, no trailing)', async () => {
+    vi.useFakeTimers();
+    const events: number[] = [];
+
+    const DebouncedLeadingView: FC<{ json: RRStackOptions }> = ({ json }) => {
+      const calls = useRef(0);
+      const onChange = (s: RRStack) => {
+        events.push(s.rules.length);
+      };
+      const { rrstack } = useRRStack(json, onChange, {
+        debounce: { delay: 50, leading: true, trailing: false },
+      });
+      useEffect(() => {
+        rrstack.addRule(newRuleAt(1, 'L1'));
+        rrstack.addRule(newRuleAt(2, 'L2'));
+        rrstack.addRule(newRuleAt(3, 'L3'));
+      }, [rrstack]);
+      const count = rrstack.rules.length;
+      const renderCount = useMemo(() => ++calls.current, [count, rrstack]);
+      return React.createElement('div', {
+        'data-count': String(count),
+        'data-renders': String(renderCount),
+      });
+    };
+
+    const app = mount(React.createElement(DebouncedLeadingView, { json: EXAMPLE_A }));
+    const div = app.container.querySelector('div')!;
+
+    // Let effects flush
+    await act(async () => { await Promise.resolve(); });
+    // Leading fired once immediately on first mutation; EXAMPLE_A had 1 rule,
+    // so the immediate count is 2.
+    expect(events).toEqual([2]);
+    // DOM has applied all 3 adds already
+    expect(div.getAttribute('data-count')).toBe('4');
+
+    // Advance time — trailing is disabled, so no further calls
+    await act(async () => {
+      vi.advanceTimersByTime(60);
+      await Promise.resolve();
+    });
+    expect(events).toEqual([2]);
+
+    app.unmount();
+    vi.useRealTimers();
+  });
+
+  it('flush() triggers pending trailing onChange immediately', async () => {
+    vi.useFakeTimers();
+    const events: number[] = [];
+    let FLUSH: (() => void) | undefined;
+
+    const DebouncedTrailingWithFlush: FC<{ json: RRStackOptions }> = ({ json }) => {
+      const calls = useRef(0);
+      const onChange = (s: RRStack) => {
+        events.push(s.rules.length);
+      };
+      const { rrstack, flush } = useRRStack(json, onChange, {
+        debounce: { delay: 50, trailing: true },
+      });
+      // Expose flush to the test
+      useEffect(() => {
+        FLUSH = flush;
+      }, [flush]);
+      // Kick a few mutations quickly
+      useEffect(() => {
+        rrstack.addRule(newRuleAt(1, 't1'));
+        rrstack.addRule(newRuleAt(2, 't2'));
+        rrstack.addRule(newRuleAt(3, 't3'));
+      }, [rrstack]);
+      const count = rrstack.rules.length;
+      const renderCount = useMemo(() => ++calls.current, [count, rrstack]);
+      return React.createElement('div', {
+        'data-count': String(count),
+        'data-renders': String(renderCount),
+      });
+    };
+
+    const app = mount(
+      React.createElement(DebouncedTrailingWithFlush, { json: EXAMPLE_A }),
+    );
+    const div = app.container.querySelector('div')!;
+
+    // Effects flushed; no trailing call yet
+    await act(async () => { await Promise.resolve(); });
+    expect(div.getAttribute('data-count')).toBe('4');
+    expect(events.length).toBe(0);
+
+    // Invoke flush to fire pending trailing onChange immediately
+    await act(async () => {
+      FLUSH?.();
+      await Promise.resolve();
+    });
+    expect(events).toEqual([4]);
+
+    // Advancing time should not add more events (already flushed)
+    await act(async () => {
+      vi.advanceTimersByTime(60);
+      await Promise.resolve();
+    });
+    expect(events).toEqual([4]);
+
     app.unmount();
     vi.useRealTimers();
   });
