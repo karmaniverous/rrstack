@@ -145,4 +145,11 @@ describe('bounds: additional scenarios', () => {
       },
       'UTC' as unknown as TimeZoneId,
       'ms',
+    );
 
+    const b = getEffectiveBounds([active, blackoutEarly]);
+    expect(b.empty).toBe(false);
+    expect(b.start).toBe(Date.UTC(2024, 0, 10, 5, 0, 0));
+    expect(b.end).toBe(Date.UTC(2024, 0, 11, 6, 0, 0));
+  });
+});

@@ -6,10 +6,14 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Fix(tests): complete bounds.more.test.ts final case
+  - Close the blackoutEarly compileRule call and finish assertions for the
+    “pre-pass ambiguous” scenario. Resolves TS1005/Unexpected EOF and restores
+    green build/docs/lint/typecheck/test.
+
 - Tests(bounds): broaden getEffectiveBounds coverage
   - blackout-only rules → empty=true, no bounds,
-  - 's' timeUnit with closed clamps → integer second start/end,
-  - overlapping actives → earliest across actives; latest end is max across actives,
+  - 's' timeUnit with closed clamps → integer second start/end,  - overlapping actives → earliest across actives; latest end is max across actives,
   - pre-pass ambiguity (earliest blackout before active) resolved by forward sweep to the first active start.
 
 - Fix(bounds): step to strictly earlier prevEnd during backward reset
