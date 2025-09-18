@@ -14,11 +14,10 @@ import {
   floatingDateToZonedEpoch,
 } from './coverage/time';
 import type { UnixTimeUnit } from './types';
-import { maxBoundary, minBoundary } from './util/heap';
+import { maxBoundary } from './util/heap';
 
 const cascadedStatus = (covering: boolean[], rules: CompiledRule[]) => {
-  for (let i = covering.length - 1; i >= 0; i--) {
-    if (covering[i]) return rules[i].effect;
+  for (let i = covering.length - 1; i >= 0; i--) {    if (covering[i]) return rules[i].effect;
   }
   return 'blackout' as const;
 };
@@ -124,8 +123,7 @@ export const getEffectiveBounds = (
       covering: boolean[];
       nextStart: Array<number | undefined>;
       nextEnd: Array<number | undefined>;
-    } => {
-      const covering = new Array<boolean>(n).fill(false);
+    } => {      const covering = new Array<boolean>(n).fill(false);
       const nextStart = new Array<number | undefined>(n).fill(undefined);
       const nextEnd = new Array<number | undefined>(n).fill(undefined);
       for (let i = 0; i < n; i++) {
@@ -153,62 +151,55 @@ export const getEffectiveBounds = (
 
     // Initialize at domainMin.
     let { covering, nextStart, nextEnd } = resetStateAt(min);
-    let prevStatus = cascadedStatus(covering, rules);
+    let cursor = min;
     let guard = 0;
     while (guard++ < 100000) {
-      // If blackout, only consider:
+      // Status at current cursor.
+      const statusNow = cascadedStatus(covering, rules);
+      // If already active at cursor, earliest bound is here (with open-left check).
+      if (statusNow === 'active') {
+        const startUndefined =
+          cursor === min &&
+          rules.some((r, i) => r.effect === 'active' && r.isOpenStart && covering[i]);
+        earliestStart = startUndefined ? undefined : cursor;
+        break;
+      }
+
+      // Blackout: only consider:
       // - end of the top covering blackout,
       // - starts of higher-priority active rules.
       // If no one covers, consider starts of all active rules.
       let candidate: number | undefined = undefined;
-      if (prevStatus === 'blackout') {
-        const top = topCoveringIndex(covering);
-        if (typeof top === 'number') {
-          // End of the top blackout interval.
-          if (rules[top].effect === 'blackout' && typeof nextEnd[top] === 'number') {
-            candidate = nextEnd[top];
-          }
-          // Starts of higher-priority active rules.
-          for (let j = top + 1; j < n; j++) {
-            if (rules[j].effect === 'active' && typeof nextStart[j] === 'number') {
-              const v = nextStart[j]!;
-              if (candidate === undefined || v < candidate) candidate = v;
-            }
-          }
-        } else {
-          // Baseline blackout: consider all active starts.
-          for (let j = 0; j < n; j++) {
-            if (rules[j].effect === 'active' && typeof nextStart[j] === 'number') {
-              const v = nextStart[j]!;
-              if (candidate === undefined || v < candidate) candidate = v;
-            }
+      const top = topCoveringIndex(covering);
+      if (typeof top === 'number') {
+        // End of the top interval (must be blackout since overall status is blackout).
+        if (typeof nextEnd[top] === 'number') candidate = nextEnd[top];
+        // Starts of higher-priority active rules.
+        for (let j = top + 1; j < n; j++) {
+          if (rules[j].effect === 'active' && typeof nextStart[j] === 'number') {
+            const v = nextStart[j]!;
+            if (candidate === undefined || v < candidate) candidate = v;
           }
         }
       } else {
-        // If we are already active, earliest bound is at or before current cursor.
-        // Safety break: should not happen since we stop on the first activation.
-        break;
+        // Baseline blackout: consider all active starts.
+        for (let j = 0; j < n; j++) {
+          if (rules[j].effect === 'active' && typeof nextStart[j] === 'number') {
+            const v = nextStart[j]!;
+            if (candidate === undefined || v < candidate) candidate = v;
+          }
+        }
       }
       if (candidate === undefined || candidate > probe) break;
 
       // Jump to candidate and recompute complete state at that instant (ends before starts).
-      const t = candidate;
-      ({ covering, nextStart, nextEnd } = resetStateAt(t));
-      const status = cascadedStatus(covering, rules);
-      if (prevStatus === 'blackout' && status === 'active') {
-        // open-left check when jump lands at domainMin.
-        const startUndefined =
-          t === min &&
-          rules.some((r, i) => r.effect === 'active' && r.isOpenStart && covering[i]);
-        earliestStart = startUndefined ? undefined : t;
-        break;
-      }
-      prevStatus = status;
+      cursor = candidate;
+      ({ covering, nextStart, nextEnd } = resetStateAt(cursor));
+      // Loop will evaluate status at new cursor at the top.
     }
   }
 
-  // Open-ended end detection (early):
-  // Consider coverage beyond the probe by checking whether any open-ended
+  // Open-ended end detection (early):  // Consider coverage beyond the probe by checking whether any open-ended
   // active rule produces an occurrence strictly after the probe.
   const wallProbePerRule = rules.map((r) =>
     epochToWallDate(probe, r.tz, r.unit),

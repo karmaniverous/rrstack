@@ -6,10 +6,15 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Fix(bounds): lint clean-up for candidate-jump sweep
+  - Remove unused minBoundary import.
+  - Replace prevStatus guard with per-iteration status check at the
+    current cursor; jump target recompute remains. Eliminates an
+    “always-true” conditional flagged by ESLint. No behavior change;
+    tests remain green.
 - Perf(bounds): add candidate-filtered jump sweep for earliest bound.
   While status is blackout, only the controlling blackout’s end and
-  higher‑priority active starts are considered; state is recomputed at
-  the jump target (ends-before-starts). This skips dense low‑priority
+  higher‑priority active starts are considered; state is recomputed at  the jump target (ends-before-starts). This skips dense low‑priority
   occurrences masked by long higher‑priority blackouts. Public behavior
   unchanged; tests remain green.
 - Perf(bounds): add single-rule pre-pass for earliest/latest and early
