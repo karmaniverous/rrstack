@@ -5,13 +5,11 @@
  */
 
 import type { CompiledRule } from './compile';
-import { ruleCoversInstant } from './coverage';
 import {
   computeOccurrenceEnd,
   domainMax,
   domainMin,
-  epochToWallDate,
-  floatingDateToZonedEpoch,
+  epochToWallDate,  floatingDateToZonedEpoch,
 } from './coverage/time';
 import type { UnixTimeUnit } from './types';
 import { maxBoundary } from './util/heap';
@@ -22,10 +20,17 @@ const cascadedStatus = (covering: boolean[], rules: CompiledRule[]) => {
   return 'blackout' as const;
 };
 
+// Covered-at test via lastStartBefore + computed end (unit/timezone aware).
+const coversAt = (rule: CompiledRule, t: number): boolean => {
+  const s = lastStartBefore(rule, t);
+  if (typeof s !== 'number') return false;
+  const e = computeOccurrenceEnd(rule, s);
+  return s <= t && t < e;
+};
+
 // Index of highest-priority covering rule, or undefined when none cover.
 const topCoveringIndex = (covering: boolean[]): number | undefined => {
-  for (let i = covering.length - 1; i >= 0; i--) if (covering[i]) return i;
-  return undefined;
+  for (let i = covering.length - 1; i >= 0; i--) if (covering[i]) return i;  return undefined;
 };
 
 // Find last start <= cursor; returns its epoch in unit or undefined.
@@ -64,13 +69,12 @@ export const getEffectiveBounds = (
   const max = domainMax(unit);
   const probe = probeCandidate > max ? max : probeCandidate;
 
-  // Determine cascade status at the probe to aid empty detection.
-  const coveringAtProbe = rules.map((r) => ruleCoversInstant(r, probe));
+  // Determine cascade status at the probe (cheap check) to aid empty detection.
+  const coveringAtProbe = rules.map((r) => coversAt(r, probe));
   const statusAtProbe = cascadedStatus(coveringAtProbe, rules);
 
   let earliestStart: number | undefined = undefined;
   let latestEnd: number | undefined = undefined;
-
   // Fast-path pre-pass (earliest):
   // A0 = earliest start across active rules; B0 = earliest start across blackout rules.
   // If A0 exists and (B0 missing or A0 < B0), then A0 is the earliest global activation.

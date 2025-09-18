@@ -6,10 +6,14 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Perf(bounds): cheaper probe status
+  - Replace ruleCoversInstant(probe) with lastStartBefore + computed end
+    comparison per rule. Same semantics; avoids the heavier multi-strategy
+    coverage check and reduces rrule calls in getEffectiveBounds.
+
 - Fix(bounds): lint clean-up for candidate-jump sweep
   - Remove unused minBoundary import.
-  - Replace prevStatus guard with per-iteration status check at the
-    current cursor; jump target recompute remains. Eliminates an
+  - Replace prevStatus guard with per-iteration status check at the    current cursor; jump target recompute remains. Eliminates an
     “always-true” conditional flagged by ESLint. No behavior change;
     tests remain green.
 - Perf(bounds): add candidate-filtered jump sweep for earliest bound.
