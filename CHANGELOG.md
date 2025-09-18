@@ -2,11 +2,31 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.8.1](https://github.com/karmaniverous/rrstack/compare/0.8.0...0.8.1)
+
+- updated docs [`5524cd6`](https://github.com/karmaniverous/rrstack/commit/5524cd6b557f80be03d2f8bda3d19fb1d53fcba1)
+- perf(bounds): add pre-pass for earliest/latest [`bc616e1`](https://github.com/karmaniverous/rrstack/commit/bc616e1f2e76998e1d38dc1049b225665e060d69)
+- perf(bounds): candidate-filtered backward sweep for latest [`d6fb825`](https://github.com/karmaniverous/rrstack/commit/d6fb82574a4fd5bc10216db0515e356e39f30613)
+- docs(react): README blurb + detailed hooks page [`e9ff7a1`](https://github.com/karmaniverous/rrstack/commit/e9ff7a1816051d6452eba773adeae893c49c7452)
+- test(bounds): add additional scenarios for getEffectiveBounds [`3936eee`](https://github.com/karmaniverous/rrstack/commit/3936eeec375fedc278fbc7d32248bcc929d2ac6e)
+- perf(bounds): candidate-filtered jump sweep for earliest [`149153d`](https://github.com/karmaniverous/rrstack/commit/149153dce350f091bfd06bf0682f2a6dcdc0f554)
+- fix(bounds): make backward reset strictly-before cursor to ensure progress [`a37a3b7`](https://github.com/karmaniverous/rrstack/commit/a37a3b77ab8bce147431eb566fc8cf3ad801abb8)
+- chore(bounds): lint fixes for candidate-jump sweep [`e6966e2`](https://github.com/karmaniverous/rrstack/commit/e6966e2d5a5f9d321ee5668f3adb70300338bbbf)
+- fix(bounds): step prevEnd to prior occurrence when &gt;= cursor in backward reset [`6e3fe28`](https://github.com/karmaniverous/rrstack/commit/6e3fe28c51b5334c26b272425a42afc36a8abdc8)
+- perf(bounds): cheaper probe status via lastStartBefore+end [`742540b`](https://github.com/karmaniverous/rrstack/commit/742540b645340631daa078c991e9713ff4ceb75d)
+- test(bounds): complete bounds.more final case; fix TS1005 [`4216306`](https://github.com/karmaniverous/rrstack/commit/4216306bcba879f74731560f55e09097ae1b0408)
+- fix(bounds): track status in backward fallback to remove TS2367 [`78bc0fd`](https://github.com/karmaniverous/rrstack/commit/78bc0fded725a8e45907147e3648f9f66734048e)
+- test(bounds): fix seconds-mode clamps in bounds.more (use sec()) [`8df0027`](https://github.com/karmaniverous/rrstack/commit/8df0027fb8815a5dffb1e5cc71e74238e3d9f796)
+- updated stan [`981eb4f`](https://github.com/karmaniverous/rrstack/commit/981eb4fb1df09cbaab5c08f8579699f7cb495f75)
+
 #### [0.8.0](https://github.com/karmaniverous/rrstack/compare/0.7.1...0.8.0)
+
+> 17 September 2025
 
 - feat: RRStack subscribe/unsubscribe + React hooks and subpath export [`2c38f3b`](https://github.com/karmaniverous/rrstack/commit/2c38f3b9fca0875b92d2d6b9a8f9b619147627e8)
 - updated docs [`3bd81de`](https://github.com/karmaniverous/rrstack/commit/3bd81deee0cdbab9d77a8c8e0dc5714902834bfb)
 - updated docs [`acb60b6`](https://github.com/karmaniverous/rrstack/commit/acb60b675961b54ee08e83def7bfb5dc2bd2977e)
+- chore: release v0.8.0 [`8f8872e`](https://github.com/karmaniverous/rrstack/commit/8f8872ec6bb6e7c0d92f91389f5d41f31f1c716a)
 - test(react): add leading debounce and flush() cases [`310e014`](https://github.com/karmaniverous/rrstack/commit/310e01404a17d8bffb9a38690dfb351c320fcf69)
 - fix(react): make useRRStack debounce/flush stable across renders [`8154593`](https://github.com/karmaniverous/rrstack/commit/815459371a3e7c72071e86c800b7a3fa9e2f12d4)
 - test(react): await microtask inside async act callbacks [`983cc17`](https://github.com/karmaniverous/rrstack/commit/983cc17cc0ddfbcc451e4a0565954bb2f6e9101e)
