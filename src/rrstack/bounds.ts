@@ -336,10 +336,10 @@ export const getEffectiveBounds = (
         }
       } else {
         // Fallback: original reverse event-by-event sweep (robust on rare non-blackout starts).
+        let status = statusNow;
         while (guard++ < 100000) {
           const t = maxBoundary(prevStart, prevEnd);
           if (t === undefined || t < domainMin()) break;
-
           // Crossing an end at t: entering the interval (backward).
           for (let i = 0; i < n; i++) {
             if (prevEnd[i] === t) {
@@ -388,15 +388,15 @@ export const getEffectiveBounds = (
 
           const newStatus = cascadedStatus(covering, rules);
           // Backward: blackout -> active indicates the latest forward end at t.
-          if (statusNow === 'blackout' && newStatus === 'active') {
+          if (status === 'blackout' && newStatus === 'active') {
             latestEnd = t;
             break;
           }
+          status = newStatus;
         }
       }
     }
   }
-
   const empty =
     earliestStart === undefined &&
     latestEnd === undefined &&

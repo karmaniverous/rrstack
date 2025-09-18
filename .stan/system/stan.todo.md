@@ -6,10 +6,15 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Fix(bounds): TS/lint in backward fallback sweep
+  - Track evolving `status` across iterations and compare
+    (status === 'blackout' && newStatus === 'active') instead of using
+    a fixed `statusNow`. Removes TS2367/no-unnecessary-condition and
+    restores intended transition detection.
+
 - Perf(bounds): mirror candidate-filtered sweep for latest bound.
   While scanning backward and the cascade is blackout near the probe,
-  jump only to the previous start of the top blackout and previous ends
-  of higher-priority actives; evaluate status just before the jump to
+  jump only to the previous start of the top blackout and previous ends  of higher-priority actives; evaluate status just before the jump to
   detect the blackout→active transition (latest forward end). Fall back
   to fine-grained reverse sweep when needed. Behavior unchanged.
 - Perf(bounds): cheaper probe status
