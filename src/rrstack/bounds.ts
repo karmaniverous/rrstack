@@ -280,17 +280,30 @@ export const getEffectiveBounds = (
           // Seed strictly before the cursor to ensure progress when landing
           // exactly on a boundary (candidate == cursor).
           const prevCursor = cursor > domainMin() ? cursor - 1 : cursor;
-          const s = lastStartBefore(rules[i], prevCursor);
-          if (typeof s === 'number') {
-            const e = computeOccurrenceEnd(rules[i], s);
+          const s0 = lastStartBefore(rules[i], prevCursor);
+          if (typeof s0 === 'number') {
+            // Step back if the computed end is at/after the cursor so that
+            // prevEnd < cursor holds, guaranteeing a strictly earlier candidate.
+            let s = s0;
+            let e = computeOccurrenceEnd(rules[i], s);
+            while (e >= cursor) {
+              const wallS = epochToWallDate(s, rules[i].tz, rules[i].unit);
+              const sPrev = rules[i].rrule.before(wallS, false);
+              if (!sPrev) break;
+              s = floatingDateToZonedEpoch(
+                sPrev,
+                rules[i].tz,
+                rules[i].unit,
+              );
+              e = computeOccurrenceEnd(rules[i], s);
+            }
             prevStart[i] = s;
             prevEnd[i] = e;
             if (e > cursor) covering[i] = true;
           }
         }
         return { covering, prevStart, prevEnd };
-      };
-      let { covering, prevStart, prevEnd } = resetBackward(probe);
+      };      let { covering, prevStart, prevEnd } = resetBackward(probe);
       let cursor = probe;
       let guard = 0;
 

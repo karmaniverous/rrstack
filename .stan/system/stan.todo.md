@@ -6,10 +6,17 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Fix(bounds): step to strictly earlier prevEnd during backward reset
+  - After a jump that lands exactly on a boundary (candidate == cursor),
+    prevEnd equaled the cursor for some rules, and candidate selection
+    (which requires v < cursor) stalled. In resetBackward, when the
+    computed end is at/after the cursor, step to the previous occurrence
+    (rrule.before on the current start) and recompute until prevEnd < cursor.
+    This guarantees progress and restores the expected latest active end
+    under blackout overrides (e.g., 2024-01-10 06:00).
 - Fix(bounds): ensure backward sweep progresses past boundary equality
   - When the backward candidate-jump landed exactly on a boundary
-    (candidate == cursor), reset state seeded inclusively at the cursor,
-    leaving prevEnd >= cursor and no strictly earlier candidate. The
+    (candidate == cursor), reset state seeded inclusively at the cursor,    leaving prevEnd >= cursor and no strictly earlier candidate. The
     loop broke without finding the latest active end under blackout
     overrides. Seed resetBackward with cursor - 1 (bounded by domainMin)
     to compute the last start strictly before the cursor and continue scanning.
