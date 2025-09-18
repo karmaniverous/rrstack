@@ -6,10 +6,15 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Fix(tests): seconds-mode clamps in bounds.more
+  - The "'s' timeUnit" case used Date.UTC (ms) for starts/ends while the rule
+    compiles in 's' mode. Switch clamps to the sec() helper so getEffectiveBounds
+    sees seconds throughout. Resolves the unit mismatch and assertion failure
+    on b.start/b.end.
+
 - Fix(tests): complete bounds.more.test.ts final case
   - Close the blackoutEarly compileRule call and finish assertions for the
-    “pre-pass ambiguous” scenario. Resolves TS1005/Unexpected EOF and restores
-    green build/docs/lint/typecheck/test.
+    “pre-pass ambiguous” scenario. Resolves TS1005/Unexpected EOF and restores    green build/docs/lint/typecheck/test.
 
 - Tests(bounds): broaden getEffectiveBounds coverage
   - blackout-only rules → empty=true, no bounds,

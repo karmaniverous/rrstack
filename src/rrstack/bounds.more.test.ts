@@ -37,8 +37,8 @@ describe('bounds: additional scenarios', () => {
   });
 
   it("'s' timeUnit: closed day with seconds duration (integer boundaries)", () => {
-    const starts = Date.UTC(2024, 0, 10, 0, 0, 0); // 2024-01-10
-    const ends = Date.UTC(2024, 0, 11, 0, 0, 0); // stop before 2024-01-11
+    const starts = sec('2024-01-10T00:00:00Z'); // seconds clamp
+    const ends = sec('2024-01-11T00:00:00Z'); // seconds clamp
 
     const active = compileRule(
       {
