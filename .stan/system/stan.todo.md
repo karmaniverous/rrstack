@@ -6,10 +6,15 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Tests(bounds): broaden getEffectiveBounds coverage
+  - blackout-only rules → empty=true, no bounds,
+  - 's' timeUnit with closed clamps → integer second start/end,
+  - overlapping actives → earliest across actives; latest end is max across actives,
+  - pre-pass ambiguity (earliest blackout before active) resolved by forward sweep to the first active start.
+
 - Fix(bounds): step to strictly earlier prevEnd during backward reset
   - After a jump that lands exactly on a boundary (candidate == cursor),
-    prevEnd equaled the cursor for some rules, and candidate selection
-    (which requires v < cursor) stalled. In resetBackward, when the
+    prevEnd equaled the cursor for some rules, and candidate selection    (which requires v < cursor) stalled. In resetBackward, when the
     computed end is at/after the cursor, step to the previous occurrence
     (rrule.before on the current start) and recompute until prevEnd < cursor.
     This guarantees progress and restores the expected latest active end
