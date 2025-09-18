@@ -6,10 +6,15 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Perf(bounds): mirror candidate-filtered sweep for latest bound.
+  While scanning backward and the cascade is blackout near the probe,
+  jump only to the previous start of the top blackout and previous ends
+  of higher-priority actives; evaluate status just before the jump to
+  detect the blackout→active transition (latest forward end). Fall back
+  to fine-grained reverse sweep when needed. Behavior unchanged.
 - Perf(bounds): cheaper probe status
   - Replace ruleCoversInstant(probe) with lastStartBefore + computed end
-    comparison per rule. Same semantics; avoids the heavier multi-strategy
-    coverage check and reduces rrule calls in getEffectiveBounds.
+    comparison per rule. Same semantics; avoids the heavier multi-strategy    coverage check and reduces rrule calls in getEffectiveBounds.
 
 - Fix(bounds): lint clean-up for candidate-jump sweep
   - Remove unused minBoundary import.
