@@ -6,10 +6,15 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Perf(bounds): add candidate-filtered jump sweep for earliest bound.
+  While status is blackout, only the controlling blackout’s end and
+  higher‑priority active starts are considered; state is recomputed at
+  the jump target (ends-before-starts). This skips dense low‑priority
+  occurrences masked by long higher‑priority blackouts. Public behavior
+  unchanged; tests remain green.
 - Perf(bounds): add single-rule pre-pass for earliest/latest and early
   open-end detection. Skip the backward sweep when open-ended, and accept
-  earliest start when earliest active start precedes earliest blackout start,
-  and latest end when latest active end succeeds latest blackout end.
+  earliest start when earliest active start precedes earliest blackout start,  and latest end when latest active end succeeds latest blackout end.
   Fall back to forward/backward sweeps on ties/ambiguity to preserve correctness.
 
 - Docs(README/handbook): add brief React hooks description to README and expand
