@@ -1,15 +1,20 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-09-17 (UTC)
+Last updated: 2025-09-18 (UTC)
 
 ## This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
 Completed (recent)
 
+- Perf(bounds): add single-rule pre-pass for earliest/latest and early
+  open-end detection. Skip the backward sweep when open-ended, and accept
+  earliest start when earliest active start precedes earliest blackout start,
+  and latest end when latest active end succeeds latest blackout end.
+  Fall back to forward/backward sweeps on ties/ambiguity to preserve correctness.
+
 - Docs(README/handbook): add brief React hooks description to README and expand
   the “React” handbook page with structured signatures, parameter/return
-  details, behavior notes, and examples. Removed stray fences and ensured fence
-  hygiene in examples. No code changes; documentation only.
+  details, behavior notes, and examples. Removed stray fences and ensured fence  hygiene in examples. No code changes; documentation only.
 
 - Docs(handbook): add external documentation index with TypeDoc front matter
   - Created handbook/index.md with `title` and `children` (overview, react) to

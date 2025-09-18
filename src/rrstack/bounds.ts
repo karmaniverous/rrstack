@@ -59,14 +59,57 @@ export const getEffectiveBounds = (
   const max = domainMax(unit);
   const probe = probeCandidate > max ? max : probeCandidate;
 
-  // Determine cascade status at the probe to aid open-ended detection.
+  // Determine cascade status at the probe to aid empty detection.
   const coveringAtProbe = rules.map((r) => ruleCoversInstant(r, probe));
   const statusAtProbe = cascadedStatus(coveringAtProbe, rules);
 
   let earliestStart: number | undefined = undefined;
   let latestEnd: number | undefined = undefined;
-  // Earliest: scan forward from domainMin, stop at first blackout→active.
+
+  // Fast-path pre-pass (earliest):
+  // A0 = earliest start across active rules; B0 = earliest start across blackout rules.
+  // If A0 exists and (B0 missing or A0 < B0), then A0 is the earliest global activation.
   {
+    const n = rules.length;
+    const wallMinPerRule = rules.map((r) => epochToWallDate(min, r.tz, r.unit));
+    let earliestActiveCandidate: number | undefined = undefined;
+    let earliestBlackoutCandidate: number | undefined = undefined;
+
+    for (let i = 0; i < n; i++) {
+      const d = rules[i].rrule.after(wallMinPerRule[i], true);
+      if (!d) continue;
+      const t = floatingDateToZonedEpoch(d, rules[i].tz, rules[i].unit);
+      if (rules[i].effect === 'active') {
+        if (
+          earliestActiveCandidate === undefined ||
+          t < earliestActiveCandidate
+        ) {
+          earliestActiveCandidate = t;
+        }
+      } else {
+        if (
+          earliestBlackoutCandidate === undefined ||
+          t < earliestBlackoutCandidate
+        ) {
+          earliestBlackoutCandidate = t;
+        }
+      }
+    }
+
+    if (
+      typeof earliestActiveCandidate === 'number' &&
+      (typeof earliestBlackoutCandidate !== 'number' ||
+        earliestActiveCandidate < earliestBlackoutCandidate)
+    ) {
+      const startUndefined =
+        earliestActiveCandidate === min &&
+        rules.some((r) => r.effect === 'active' && r.isOpenStart);
+      earliestStart = startUndefined ? undefined : earliestActiveCandidate;
+    }
+  }
+
+  // Earliest: scan forward from domainMin, stop at first blackout→active, when pre-pass didn't decide.
+  if (earliestStart === undefined) {
     const n = rules.length;
     const covering = new Array<boolean>(n).fill(false);
     const nextStart = new Array<number | undefined>(n).fill(undefined);
@@ -118,99 +161,133 @@ export const getEffectiveBounds = (
     }
   }
 
-  // Latest: scan backward from a safe far-future probe; capture first blackout→active (reverse).
-  {
-    const n = rules.length;
-    const covering = new Array<boolean>(n).fill(false);
-    const prevStart = new Array<number | undefined>(n).fill(undefined);
-    const prevEnd = new Array<number | undefined>(n).fill(undefined);
+  // Open-ended end detection (early):
+  // Consider coverage beyond the probe by checking whether any open-ended
+  // active rule produces an occurrence strictly after the probe.
+  const wallProbePerRule = rules.map((r) =>
+    epochToWallDate(probe, r.tz, r.unit),
+  );
+  const openEndDetected = rules.some((r, i) => {
+    if (!(r.effect === 'active' && r.isOpenEnd)) return false;
+    const next = r.rrule.after(wallProbePerRule[i], false);
+    return !!next;
+  });
 
-    for (let i = 0; i < n; i++) {
+  // Fast-path pre-pass (latest):
+  // A1 = latest active end among rules with last start <= probe.
+  // B1 = latest blackout end among rules with last start <= probe.
+  // If A1 exists and (B1 missing or A1 > B1), then A1 is the latest global active end.
+  if (!openEndDetected) {
+    let latestActiveEndCandidate: number | undefined = undefined;
+    let latestBlackoutEndCandidate: number | undefined = undefined;
+
+    for (let i = 0; i < rules.length; i++) {
       const last = lastStartBefore(rules[i], probe);
-      prevStart[i] = last;
-      if (typeof last === 'number') {
-        const e = computeOccurrenceEnd(rules[i], last);
-        // initialize to enter this occurrence at its end when scanning backward
-        prevEnd[i] = e;
+      if (typeof last !== 'number') continue;
+      const e = computeOccurrenceEnd(rules[i], last);
+      if (rules[i].effect === 'active') {
+        if (
+          latestActiveEndCandidate === undefined ||
+          e > latestActiveEndCandidate
+        ) {
+          latestActiveEndCandidate = e;
+        }
+      } else {
+        if (
+          latestBlackoutEndCandidate === undefined ||
+          e > latestBlackoutEndCandidate
+        ) {
+          latestBlackoutEndCandidate = e;
+        }
       }
     }
 
-    let status = cascadedStatus(covering, rules);
-    let guard = 0;
+    if (
+      typeof latestActiveEndCandidate === 'number' &&
+      (typeof latestBlackoutEndCandidate !== 'number' ||
+        latestActiveEndCandidate > latestBlackoutEndCandidate)
+    ) {
+      latestEnd = latestActiveEndCandidate;
+    } else {
+      // Latest: scan backward from a safe far-future probe; capture first blackout→active (reverse).
+      const n = rules.length;
+      const covering = new Array<boolean>(n).fill(false);
+      const prevStart = new Array<number | undefined>(n).fill(undefined);
+      const prevEnd = new Array<number | undefined>(n).fill(undefined);
 
-    while (guard++ < 100000) {
-      const t = maxBoundary(prevStart, prevEnd);
-      if (t === undefined || t < domainMin()) break;
-
-      // Crossing an end at t: entering the interval (backward).
       for (let i = 0; i < n; i++) {
-        if (prevEnd[i] === t) {
-          covering[i] = true;
-          const s2 = prevStart[i]; // current interval start
-          if (typeof s2 === 'number') {
-            // keep current start to exit later; preload previous window's end.
-            prevStart[i] = s2;
-            const wallS2 = epochToWallDate(s2, rules[i].tz, rules[i].unit);
-            const sPrev = rules[i].rrule.before(wallS2, false);
+        const last = lastStartBefore(rules[i], probe);
+        prevStart[i] = last;
+        if (typeof last === 'number') {
+          const e = computeOccurrenceEnd(rules[i], last);
+          // initialize to enter this occurrence at its end when scanning backward
+          prevEnd[i] = e;
+        }
+      }
+
+      let status = cascadedStatus(covering, rules);
+      let guard = 0;
+
+      while (guard++ < 100000) {
+        const t = maxBoundary(prevStart, prevEnd);
+        if (t === undefined || t < domainMin()) break;
+
+        // Crossing an end at t: entering the interval (backward).
+        for (let i = 0; i < n; i++) {
+          if (prevEnd[i] === t) {
+            covering[i] = true;
+            const s2 = prevStart[i]; // current interval start
+            if (typeof s2 === 'number') {
+              // keep current start to exit later; preload previous window's end.
+              prevStart[i] = s2;
+              const wallS2 = epochToWallDate(s2, rules[i].tz, rules[i].unit);
+              const sPrev = rules[i].rrule.before(wallS2, false);
+              if (sPrev) {
+                const sPrevEpoch = floatingDateToZonedEpoch(
+                  sPrev,
+                  rules[i].tz,
+                  rules[i].unit,
+                );
+                prevEnd[i] = computeOccurrenceEnd(rules[i], sPrevEpoch);
+              } else {
+                prevEnd[i] = undefined;
+              }
+            } else {
+              prevEnd[i] = undefined;
+            }
+          }
+        }
+
+        // Crossing a start at t: exiting the interval (backward).
+        for (let i = 0; i < n; i++) {
+          if (prevStart[i] === t) {
+            covering[i] = false;
+            const wallS = epochToWallDate(t, rules[i].tz, rules[i].unit);
+            const sPrev = rules[i].rrule.before(wallS, false);
             if (sPrev) {
               const sPrevEpoch = floatingDateToZonedEpoch(
                 sPrev,
                 rules[i].tz,
                 rules[i].unit,
               );
+              prevStart[i] = sPrevEpoch;
               prevEnd[i] = computeOccurrenceEnd(rules[i], sPrevEpoch);
             } else {
-              prevEnd[i] = undefined;
+              prevStart[i] = undefined;
             }
-          } else {
-            prevEnd[i] = undefined;
           }
         }
-      }
 
-      // Crossing a start at t: exiting the interval (backward).
-      for (let i = 0; i < n; i++) {
-        if (prevStart[i] === t) {
-          covering[i] = false;
-          const wallS = epochToWallDate(t, rules[i].tz, rules[i].unit);
-          const sPrev = rules[i].rrule.before(wallS, false);
-          if (sPrev) {
-            const sPrevEpoch = floatingDateToZonedEpoch(
-              sPrev,
-              rules[i].tz,
-              rules[i].unit,
-            );
-            prevStart[i] = sPrevEpoch;
-            prevEnd[i] = computeOccurrenceEnd(rules[i], sPrevEpoch);
-          } else {
-            prevStart[i] = undefined;
-          }
+        const newStatus = cascadedStatus(covering, rules);
+        // Backward: blackout -> active indicates the latest forward end at t.
+        if (status === 'blackout' && newStatus === 'active') {
+          latestEnd = t;
+          break;
         }
+        status = newStatus;
       }
-
-      const newStatus = cascadedStatus(covering, rules);
-      // Backward: blackout -> active indicates the latest forward end at t.
-      if (status === 'blackout' && newStatus === 'active') {
-        latestEnd = t;
-        break;
-      }
-      status = newStatus;
     }
   }
-
-  // Open-ended end detection:
-  // Consider coverage beyond the probe by checking whether any open-ended
-  // active rule produces an occurrence strictly after the probe.
-  const wallProbePerRule = rules.map((r) =>
-    epochToWallDate(probe, r.tz, r.unit),
-  );
-  const anyFutureOpenRule = rules.some((r, i) => {
-    if (!(r.effect === 'active' && r.isOpenEnd)) return false;
-    const next = r.rrule.after(wallProbePerRule[i], false);
-    return !!next;
-  });
-
-  const openEndDetected = anyFutureOpenRule;
 
   const empty =
     earliestStart === undefined &&
