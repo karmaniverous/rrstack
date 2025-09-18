@@ -23,7 +23,8 @@ const cascadedStatus = (covering: boolean[], rules: CompiledRule[]) => {
 };
 
 // Covered-at test via lastStartBefore + computed end (unit/timezone aware).
-const coversAt = (rule: CompiledRule, t: number): boolean => {  const s = lastStartBefore(rule, t);
+const coversAt = (rule: CompiledRule, t: number): boolean => {
+  const s = lastStartBefore(rule, t);
   if (typeof s !== 'number') return false;
   const e = computeOccurrenceEnd(rule, s);
   return s <= t && t < e;
@@ -40,7 +41,8 @@ const lastStartBefore = (
   rule: CompiledRule,
   cursor: number,
 ): number | undefined => {
-  const wall = epochToWallDate(cursor, rule.tz, rule.unit);  const d = rule.rrule.before(wall, true);
+  const wall = epochToWallDate(cursor, rule.tz, rule.unit);
+  const d = rule.rrule.before(wall, true);
   if (!d) return undefined;
   return floatingDateToZonedEpoch(d, rule.tz, rule.unit);
 };
@@ -76,7 +78,8 @@ export const getEffectiveBounds = (
 
   let earliestStart: number | undefined = undefined;
   let latestEnd: number | undefined = undefined;
-  // Fast-path pre-pass (earliest):  // A0 = earliest start across active rules; B0 = earliest start across blackout rules.
+  // Fast-path pre-pass (earliest):
+  // A0 = earliest start across active rules; B0 = earliest start across blackout rules.
   // If A0 exists and (B0 missing or A0 < B0), then A0 is the earliest global activation.
   {
     const n = rules.length;
@@ -138,7 +141,8 @@ export const getEffectiveBounds = (
           const e = computeOccurrenceEnd(rules[i], s);
           if (e > cursor) {
             covering[i] = true;
-            nextEnd[i] = e;          }
+            nextEnd[i] = e;
+          }
           const dAfter = rules[i].rrule.after(wallT, false);
           nextStart[i] = dAfter
             ? floatingDateToZonedEpoch(dAfter, rules[i].tz, rules[i].unit)
@@ -164,7 +168,9 @@ export const getEffectiveBounds = (
       if (statusNow === 'active') {
         const startUndefined =
           cursor === min &&
-          rules.some((r, i) => r.effect === 'active' && r.isOpenStart && covering[i]);
+          rules.some(
+            (r, i) => r.effect === 'active' && r.isOpenStart && covering[i],
+          );
         earliestStart = startUndefined ? undefined : cursor;
         break;
       }
@@ -180,7 +186,10 @@ export const getEffectiveBounds = (
         if (typeof nextEnd[top] === 'number') candidate = nextEnd[top];
         // Starts of higher-priority active rules.
         for (let j = top + 1; j < n; j++) {
-          if (rules[j].effect === 'active' && typeof nextStart[j] === 'number') {
+          if (
+            rules[j].effect === 'active' &&
+            typeof nextStart[j] === 'number'
+          ) {
             const v = nextStart[j]!;
             if (candidate === undefined || v < candidate) candidate = v;
           }
@@ -188,7 +197,10 @@ export const getEffectiveBounds = (
       } else {
         // Baseline blackout: consider all active starts.
         for (let j = 0; j < n; j++) {
-          if (rules[j].effect === 'active' && typeof nextStart[j] === 'number') {
+          if (
+            rules[j].effect === 'active' &&
+            typeof nextStart[j] === 'number'
+          ) {
             const v = nextStart[j]!;
             if (candidate === undefined || v < candidate) candidate = v;
           }
@@ -209,7 +221,8 @@ export const getEffectiveBounds = (
   const wallProbePerRule = rules.map((r) =>
     epochToWallDate(probe, r.tz, r.unit),
   );
-  const openEndDetected = rules.some((r, i) => {    if (!(r.effect === 'active' && r.isOpenEnd)) return false;
+  const openEndDetected = rules.some((r, i) => {
+    if (!(r.effect === 'active' && r.isOpenEnd)) return false;
     const next = r.rrule.after(wallProbePerRule[i], false);
     return !!next;
   });
@@ -264,7 +277,10 @@ export const getEffectiveBounds = (
         const prevStart = new Array<number | undefined>(n).fill(undefined);
         const prevEnd = new Array<number | undefined>(n).fill(undefined);
         for (let i = 0; i < n; i++) {
-          const s = lastStartBefore(rules[i], cursor);
+          // Seed strictly before the cursor to ensure progress when landing
+          // exactly on a boundary (candidate == cursor).
+          const prevCursor = cursor > domainMin() ? cursor - 1 : cursor;
+          const s = lastStartBefore(rules[i], prevCursor);
           if (typeof s === 'number') {
             const e = computeOccurrenceEnd(rules[i], s);
             prevStart[i] = s;
@@ -274,7 +290,6 @@ export const getEffectiveBounds = (
         }
         return { covering, prevStart, prevEnd };
       };
-
       let { covering, prevStart, prevEnd } = resetBackward(probe);
       let cursor = probe;
       let guard = 0;
@@ -300,19 +315,39 @@ export const getEffectiveBounds = (
           const top = topCoveringIndex(covering);
           if (typeof top === 'number') {
             // top must be blackout under overall blackout status
-            if (typeof prevStart[top] === 'number') candidate = prevStart[top]!;
+            if (
+              typeof prevStart[top] === 'number' &&
+              prevStart[top] < cursor            ) {
+              candidate = prevStart[top]!;
+            }
             for (let j = top + 1; j < n; j++) {
-              if (rules[j].effect === 'active' && typeof prevEnd[j] === 'number') {
+              if (
+                rules[j].effect === 'active' &&
+                typeof prevEnd[j] === 'number'
+              ) {
                 const v = prevEnd[j]!;
-                if (typeof candidate !== 'number' || v > candidate) candidate = v;
+                if (
+                  v < cursor &&
+                  (typeof candidate !== 'number' || v > candidate)
+                ) {
+                  candidate = v;
+                }
               }
             }
           } else {
             // baseline blackout: any active's previous end could enter active
             for (let j = 0; j < n; j++) {
-              if (rules[j].effect === 'active' && typeof prevEnd[j] === 'number') {
+              if (
+                rules[j].effect === 'active' &&
+                typeof prevEnd[j] === 'number'
+              ) {
                 const v = prevEnd[j]!;
-                if (typeof candidate !== 'number' || v > candidate) candidate = v;
+                if (
+                  v < cursor &&
+                  (typeof candidate !== 'number' || v > candidate)
+                ) {
+                  candidate = v;
+                }
               }
             }
           }
@@ -336,10 +371,12 @@ export const getEffectiveBounds = (
         }
       } else {
         // Fallback: original reverse event-by-event sweep (robust on rare non-blackout starts).
-        let status = statusNow;
+        // Use a fresh evolving status to avoid TypeScript narrowing to a literal.
+        let wasBlackout = cascadedStatus(covering, rules) === 'blackout';
         while (guard++ < 100000) {
           const t = maxBoundary(prevStart, prevEnd);
           if (t === undefined || t < domainMin()) break;
+
           // Crossing an end at t: entering the interval (backward).
           for (let i = 0; i < n; i++) {
             if (prevEnd[i] === t) {
@@ -386,17 +423,18 @@ export const getEffectiveBounds = (
             }
           }
 
-          const newStatus = cascadedStatus(covering, rules);
+          const isActiveNow = cascadedStatus(covering, rules) === 'active';
           // Backward: blackout -> active indicates the latest forward end at t.
-          if (status === 'blackout' && newStatus === 'active') {
+          if (wasBlackout && isActiveNow) {
             latestEnd = t;
             break;
           }
-          status = newStatus;
+          wasBlackout = !isActiveNow;
         }
       }
     }
   }
+
   const empty =
     earliestStart === undefined &&
     latestEnd === undefined &&

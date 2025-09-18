@@ -6,10 +6,22 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Fix(bounds): ensure backward sweep progresses past boundary equality
+  - When the backward candidate-jump landed exactly on a boundary
+    (candidate == cursor), reset state seeded inclusively at the cursor,
+    leaving prevEnd >= cursor and no strictly earlier candidate. The
+    loop broke without finding the latest active end under blackout
+    overrides. Seed resetBackward with cursor - 1 (bounded by domainMin)
+    to compute the last start strictly before the cursor and continue scanning.
+- Fix(bounds): finalize backward sweep TS/test corrections
+  - Backward jump now only selects candidates strictly before the current
+    cursor (v < cursor) for both top blackout prevStart and higher active    prevEnd, guaranteeing progress.
+  - Backward fallback uses a fresh evolving `status` (union type) and
+    updates it per iteration; removes TS2367/TS2322 and restores correct
+    latest-end detection for blackout overrides.
 - Fix(bounds): TS/lint in backward fallback sweep
   - Track evolving `status` across iterations and compare
-    (status === 'blackout' && newStatus === 'active') instead of using
-    a fixed `statusNow`. Removes TS2367/no-unnecessary-condition and
+    (status === 'blackout' && newStatus === 'active') instead of using    a fixed `statusNow`. Removes TS2367/no-unnecessary-condition and
     restores intended transition detection.
 
 - Perf(bounds): mirror candidate-filtered sweep for latest bound.
