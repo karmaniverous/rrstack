@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.8.2](https://github.com/karmaniverous/rrstack/compare/0.8.1...0.8.2)
+
+- test(bounds): add comprehensive getEffectiveBounds scenarios [`7945daf`](https://github.com/karmaniverous/rrstack/commit/7945daf50fac1c38d657da4b8bad1d0b4846f9e9)
+- docs: clarify bounds & clamp semantics; inclusive ‘until’; DST and ’s’ mode [`5047a08`](https://github.com/karmaniverous/rrstack/commit/5047a08745b8f66d1ad16f534528ea0861bbd6ec)
+- test(bounds): align expectations with implemented reverse-sweep and DST behavior [`5548b20`](https://github.com/karmaniverous/rrstack/commit/5548b20a86ac1197506c95cb37a18c14427add21)
+- fix(release): rebuild after bump so dist embeds the new version [`1237d45`](https://github.com/karmaniverous/rrstack/commit/1237d45926180f66ff4e8badae4cdb20af6cbd36)
+
 #### [0.8.1](https://github.com/karmaniverous/rrstack/compare/0.8.0...0.8.1)
+
+> 19 September 2025
 
 - updated docs [`5524cd6`](https://github.com/karmaniverous/rrstack/commit/5524cd6b557f80be03d2f8bda3d19fb1d53fcba1)
 - perf(bounds): add pre-pass for earliest/latest [`bc616e1`](https://github.com/karmaniverous/rrstack/commit/bc616e1f2e76998e1d38dc1049b225665e060d69)
 - perf(bounds): candidate-filtered backward sweep for latest [`d6fb825`](https://github.com/karmaniverous/rrstack/commit/d6fb82574a4fd5bc10216db0515e356e39f30613)
+- chore: release v0.8.1 [`b93841c`](https://github.com/karmaniverous/rrstack/commit/b93841c3c8b05d166a53db6651fec638045f9d8c)
 - docs(react): README blurb + detailed hooks page [`e9ff7a1`](https://github.com/karmaniverous/rrstack/commit/e9ff7a1816051d6452eba773adeae893c49c7452)
 - test(bounds): add additional scenarios for getEffectiveBounds [`3936eee`](https://github.com/karmaniverous/rrstack/commit/3936eeec375fedc278fbc7d32248bcc929d2ac6e)
 - perf(bounds): candidate-filtered jump sweep for earliest [`149153d`](https://github.com/karmaniverous/rrstack/commit/149153dce350f091bfd06bf0682f2a6dcdc0f554)
