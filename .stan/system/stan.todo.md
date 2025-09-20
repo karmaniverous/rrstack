@@ -6,11 +6,20 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Tests(bounds): expand getEffectiveBounds coverage (tie/fallback/DST/open)
+  - Same‑instant tie on first day (blackout overrides; next day active).
+  - Backward fallback path: status at probe active with pre‑pass ambiguity,
+    forcing event‑by‑event reverse sweep; latest end matches active end.
+  - Multiple blackouts around last active end: confirm latest end reduces to
+    prior day.
+  - Open‑start active with early blackout: start remains open (undefined);
+    finite latest end.
+  - DST (America/Chicago) in 's' mode: spring forward (01:30+1h => 03:30)
+    and fall back (01:30+1h => 01:30) via getEffectiveBounds.
 - Fix(tests): seconds-mode clamps in bounds.more
   - The "'s' timeUnit" case used Date.UTC (ms) for starts/ends while the rule
     compiles in 's' mode. Switch clamps to the sec() helper so getEffectiveBounds
-    sees seconds throughout. Resolves the unit mismatch and assertion failure
-    on b.start/b.end.
+    sees seconds throughout. Resolves the unit mismatch and assertion failure    on b.start/b.end.
 
 - Fix(tests): complete bounds.more.test.ts final case
   - Close the blackoutEarly compileRule call and finish assertions for the
