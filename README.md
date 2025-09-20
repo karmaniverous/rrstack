@@ -428,10 +428,39 @@ const b = stack.getEffectiveBounds(); // { start: 2024-01-10T05:00Z, end: undefi
   - IANA TZDB: https://www.iana.org/time-zones
   - Wikipedia list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 
+## Bounds and clamp semantics
+
+- Cascade and ties
+  - Later rules override earlier rules at covered instants. If a blackout and
+    an active rule both start at the same instant, the later rule in the list
+    wins for that instant (and its duration).
+
+- Domain clamps (starts/ends)
+  - RRStack maps `options.starts` to RRULE `dtstart` and `options.ends` to
+    RRULE `until`. RRULE’s `until` is inclusive of the last start; i.e., a
+    start that is exactly equal to `until` may still occur. Plan clamps with
+    this inclusive behavior in mind.
+  - Intervals produced by RRStack are evaluated as half‑open `[start, end)`.
+    In `'s'` timeUnit mode, RRStack rounds computed ends up to the next integer
+    second to avoid boundary false negatives.
+
+- getEffectiveBounds
+  - `start` is the first instant the cascade is active (omitted when the
+    cascade is open‑start and already active from the domain minimum).
+  - `end` is the last instant after which the cascade is not active anymore.
+    For open‑ended coverage, `end` is omitted (`undefined`).
+  - Internally, the latest bound is determined relative to a far‑future probe:
+    for closed schedules, this yields the last finite active end; for truly
+    open‑ended actives, `end` remains `undefined`.
+
+- Time zones and DST
+  - All coverage (including end arithmetic) is computed in the rule’s IANA time
+    zone. In `'s'` mode, duration spans remain exact integer seconds across DST
+    transitions (e.g., 3600 seconds for a 1‑hour rule).
+
 ## Version handling
 
-- toJson writes the current package version via a build-time injected constant (`__RRSTACK_VERSION__`) so no package.json import is needed at runtime.
-- The constructor accepts RRStackOptions with an optional version key and ignores it. Version-based transforms may be added in the future without changing the public shape.
+- toJson writes the current package version via a build-time injected constant (`__RRSTACK_VERSION__`) so no package.json import is needed at runtime.- The constructor accepts RRStackOptions with an optional version key and ignores it. Version-based transforms may be added in the future without changing the public shape.
 
 ## Common Patterns
 

@@ -67,7 +67,25 @@ Tips
   false negatives (still half‑open intervals).
 - For UI: prefer chunking long windows (day/week) or a Worker for heavy sweeps.
 
-Next steps
+## Bounds & clamps semantics
+
+- Cascade and ties: later rules override earlier rules at covered instants.
+  If two rules begin at the same instant, the later rule in the list wins for
+  that span (active vs blackout).
+- Clamps: `options.starts` → RRULE `dtstart`; `options.ends` → RRULE `until`
+  (inclusive of the last start at that instant). Keep this in mind when
+  clamping a schedule boundary.
+- getEffectiveBounds:
+  - `start` is the first active instant (omitted for open‑start coverage that
+    is already active at the domain minimum).
+  - `end` is the last active instant (omitted for open‑ended coverage).
+  - Internally, the latest bound is selected relative to a safe far‑future
+    probe; for closed schedules this yields the last finite active end.
+- DST and 's' mode: coverage is computed in the rule’s timezone; in `'s'`
+  mode, computed ends are rounded to the next integer second to preserve
+  half‑open comparisons without boundary regressions.
+
+## Next steps
 
 - React hooks: see “React hooks” page.
 - JSON shapes & type helpers: see API pages.

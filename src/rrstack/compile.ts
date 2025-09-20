@@ -66,13 +66,16 @@ const toWall = (epoch: number, tz: string, unit: UnixTimeUnit): Date => {
  * @remarks
  * - `dtstart` and `until` are synthesized from `starts`/`ends` or domain bounds.
  * - `tzid` is set to the provided timezone.
+ * - RRULE `until` is inclusive of the last start at that instant. When you pass
+ *   a JSON `ends`, RRStack maps it to RRULE `until` with this inclusive behavior.
+ *   Intervals computed by RRStack remain half‑open `[start, end)` and in `'s'`
+ *   mode ends are rounded up to the next integer second.
  */
 export const toRRuleOptions = (
   options: RuleOptionsJson,
   timezone: string,
   unit: UnixTimeUnit,
-): RRuleOptions => {
-  const rrLikeRaw: Record<string, unknown> = {
+): RRuleOptions => {  const rrLikeRaw: Record<string, unknown> = {
     ...(options as Record<string, unknown>),
   };
   delete rrLikeRaw.starts;

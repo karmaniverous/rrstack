@@ -6,10 +6,17 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Docs: clarify bounds & clamps semantics
+  - Document that JSON `ends` maps to RRULE `until` (inclusive), and that
+    intervals remain half‑open with `'s'` mode rounding of ends.
+  - Note cascade tie behavior at the same instant (later rule wins).
+  - Add getEffectiveBounds notes (open‑sided detection; latest finite end vs
+    open‑ended `undefined`) and DST behavior in `'s'` mode.
+  - Updated: README.md, handbook/overview.md, and toRRuleOptions JSDoc.
+
 - Fix(tests): align bounds.more expectations with implemented behavior
   - Reverse-sweep latest end is strictly before the probe (2098-01-01 06:00).
-  - RRULE 'until' is inclusive → open-start case latest end is 1970-01-02 00:30.
-  - DST ('s' mode, America/Chicago): assert 1-hour span and local calendar day
+  - RRULE 'until' is inclusive → open-start case latest end is 1970-01-02 00:30.  - DST ('s' mode, America/Chicago): assert 1-hour span and local calendar day
     instead of exact absolute instants to avoid environment-sensitive drift.
   - Result: bounds.more now matches the semantics of getEffectiveBounds across
     reverse-sweep and DST handling.
