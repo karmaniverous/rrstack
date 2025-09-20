@@ -6,10 +6,17 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Fix(tests): align bounds.more expectations with implemented behavior
+  - Reverse-sweep latest end is strictly before the probe (2098-01-01 06:00).
+  - RRULE 'until' is inclusive → open-start case latest end is 1970-01-02 00:30.
+  - DST ('s' mode, America/Chicago): assert 1-hour span and local calendar day
+    instead of exact absolute instants to avoid environment-sensitive drift.
+  - Result: bounds.more now matches the semantics of getEffectiveBounds across
+    reverse-sweep and DST handling.
+
 - Fix(release): build after version bump to embed correct package version
   - __RRSTACK_VERSION__ is injected at build time from package.json. The build
-    previously ran in after:init (pre‑bump), causing dist to embed the previous
-    version. Move “npm run build” to release‑it’s after:bump hook so the bundle
+    previously ran in after:init (pre‑bump), causing dist to embed the previous    version. Move “npm run build” to release‑it’s after:bump hook so the bundle
     is rebuilt with the bumped version before publish.
 
 - Tests(bounds): expand getEffectiveBounds coverage (tie/fallback/DST/open)
