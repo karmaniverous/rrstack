@@ -6,10 +6,15 @@ Last updated: 2025-09-18 (UTC)
 
 Completed (recent)
 
+- Fix(release): build after version bump to embed correct package version
+  - __RRSTACK_VERSION__ is injected at build time from package.json. The build
+    previously ran in after:init (pre‑bump), causing dist to embed the previous
+    version. Move “npm run build” to release‑it’s after:bump hook so the bundle
+    is rebuilt with the bumped version before publish.
+
 - Tests(bounds): expand getEffectiveBounds coverage (tie/fallback/DST/open)
   - Same‑instant tie on first day (blackout overrides; next day active).
-  - Backward fallback path: status at probe active with pre‑pass ambiguity,
-    forcing event‑by‑event reverse sweep; latest end matches active end.
+  - Backward fallback path: status at probe active with pre‑pass ambiguity,    forcing event‑by‑event reverse sweep; latest end matches active end.
   - Multiple blackouts around last active end: confirm latest end reduces to
     prior day.
   - Open‑start active with early blackout: start remains open (undefined);
