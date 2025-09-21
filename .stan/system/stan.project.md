@@ -34,15 +34,14 @@ Continuous (span) rules
   - Either side may be open (start/end undefined).
   - Spans participate in the cascade identically to recurring rules; later rules
     override earlier coverage at covered instants.
-  - Legacy alias: if incoming configs contain `freq: 'continuous'`, normalize to
-    “no freq” on load (treated as span).
+  - No legacy alias: `freq` must be omitted for spans. The value `'continuous'`
+    is not accepted.
   - Validation:
     - if freq present ⇒ duration is required and strictly > 0,
     - if freq absent ⇒ duration must be omitted.
   - Compiler/runtime:
     - compileRule emits `CompiledRule` union: `{ kind: 'recur' | 'span', ... }`
-    - span rules carry `start?`, `end?` in configured unit; no RRULE instance.
-  - Queries:
+    - span rules carry `start?`, `end?` in configured unit; no RRULE instance.  - Queries:
     - coverage, segments, bounds, and describe paths treat spans as first-class.
     - describe: “Active/Blackout continuously [from …; until …] (timezone …)”.
 

@@ -6,10 +6,17 @@ Last updated: 2025-09-21 (UTC)
 
 Completed (recent)
 
+- BREAKING: drop 'continuous' alias for span rules
+  - Users must omit options.freq to declare a span; 'continuous' is no longer
+    accepted or normalized.
+  - Code: removed tolerance in compile.ts; removed legacy allowance and
+    normalization in RRStack.options.ts.
+  - Schema: assets/rrstackconfig.schema.json updated; generator now deletes any
+    leftover "anyOf" on freq to ensure a clean string enum.
+
 - Refactor(bounds): decompose src/rrstack/bounds.ts into focused modules
   - bounds/common.ts: shared helpers (cascadedStatus, coversAt, lastStartBefore).
-  - bounds/earliest.ts, bounds/latest.ts, bounds/openEnd.ts: split passes.
-  - bounds.ts now orchestrates and re-exports getEffectiveBounds; public API unchanged.
+  - bounds/earliest.ts, bounds/latest.ts, bounds/openEnd.ts: split passes.  - bounds.ts now orchestrates and re-exports getEffectiveBounds; public API unchanged.
   - Follow-up: fix lints (unused imports, TSDoc hyphens) in new modules and
     remove unnecessary optional chains/conditionals in options/compile code.
   - Narrow tests to recurring rules where helpers require recurrence-only data.

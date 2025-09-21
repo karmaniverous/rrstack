@@ -150,12 +150,6 @@
   "scripts": {
     "build": "rimraf dist && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "changelog": "auto-changelog",
-    "context": "concurrently -n archive,typecheck,lint,test,build -c auto \"npm:context:archive\" \"npm:context:typecheck\" \"npm:context:lint\" \"npm:context:test\" \"npm:context:build\"",
-    "context:archive": "tsx archive.ts",
-    "context:build": "npm run build > context/build.txt 2>&1",
-    "context:lint": "npm run lint > context/lint.txt 2>&1",
-    "context:test": "npm run test > context/test.txt 2>&1",
-    "context:typecheck": "npm run typecheck > context/typecheck.txt 2>&1",
     "docs": "npm run schema && typedoc",
     "knip": "knip",
     "lint": "eslint .",

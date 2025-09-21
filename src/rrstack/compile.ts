@@ -132,15 +132,13 @@ export const compileRule = (
   timezone: TimeZoneId,
   unit: UnixTimeUnit,
 ): CompiledRule => {
-  // Legacy tolerance: freq === 'continuous' → span (no freq)
   const freqRaw = (rule.options as unknown as { freq?: unknown }).freq;
-  const isSpan = !freqRaw || freqRaw === 'continuous';
+  const isSpan = freqRaw === undefined;
 
   if (!isSpan) {    // Recurring rule path
     if (!rule.duration) {
       throw new Error('Recurring rules require a positive duration');
-    }
-    const duration = Duration.fromObject(rule.duration);
+    }    const duration = Duration.fromObject(rule.duration);
     const q =
       unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
     if (!Number.isFinite(q) || q <= 0) {
@@ -167,12 +165,10 @@ export const compileRule = (
     };
   }
 
-  // Span rule path (continuous coverage across [starts, ends))
   if (rule.duration) {
     throw new Error('Span rules must omit duration');
   }
-  const start =
-    typeof rule.options.starts === 'number'
+  const start =    typeof rule.options.starts === 'number'
       ? (rule.options.starts)
       : undefined;
   const end =

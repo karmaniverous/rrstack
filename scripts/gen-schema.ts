@@ -148,10 +148,12 @@ const ensureFreqStringEnum = (root: JSONSchema7): void => {
   const freq = asSchema(optProps.freq);
   if (!freq) return;
 
+  // Remove any zod-to-json-schema "anyOf" wrappers so only the string enum remains.
+  delete (freq as unknown as { anyOf?: unknown }).anyOf;
+
   freq.type = 'string';
   (freq as unknown as { enum?: readonly string[] }).enum = [...FREQ_VALUES];
 };
-
 async function main(): Promise<void> {
   // Build a strengthened Options schema for JSON Schema generation.
   const RRStackOptionsZod = OptionsSchema.extend({

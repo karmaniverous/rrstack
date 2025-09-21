@@ -142,38 +142,6 @@
                 "type": "object",
                 "properties": {
                   "freq": {
-                    "anyOf": [
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "type": "string",
-                            "enum": [
-                              "yearly",
-                              "monthly",
-                              "weekly",
-                              "daily",
-                              "hourly",
-                              "minutely",
-                              "secondly"
-                            ]
-                          }
-                        ]
-                      },
-                      {
-                        "anyOf": [
-                          {
-                            "not": {}
-                          },
-                          {
-                            "type": "string",
-                            "const": "continuous"
-                          }
-                        ]
-                      }
-                    ],
                     "type": "string",
                     "enum": [
                       "yearly",

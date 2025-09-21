@@ -59,7 +59,6 @@ export const OptionsSchema = z.object({
   timeUnit: z.enum(['ms', 's']).default('ms'),
   rules: z.array(z.any()).default([]),
 });
-
 // String literal-union for RRULE frequency (lower-case human-readable).
 const FreqSchema = z.enum([
   'yearly',
@@ -75,28 +74,24 @@ export const RuleLiteSchema = z
   .object({
     effect: z.enum(['active', 'blackout']),
     duration: DurationPartsSchema.optional(),
-    options: z
-      .object({
-        // freq optional; tolerate legacy 'continuous' (normalized later)
-        freq: FreqSchema.optional().or(z.literal('continuous').optional()),
+    options: z.object({
+        // freq optional (when omitted ⇒ span rule)
+        freq: FreqSchema.optional(),
         starts: z.number().finite().optional(),
         ends: z.number().finite().optional(),
       })
       .passthrough(),
-    label: z.string().optional(),
-  })
+    label: z.string().optional(),  })
   .superRefine((val, ctx) => {
     const rawFreq = (val as unknown as { options: { freq?: unknown } }).options
       .freq;
-    const hasFreq =
-      typeof rawFreq === 'string' && rawFreq !== '' && rawFreq !== 'continuous';
+    const hasFreq = typeof rawFreq === 'string';
     if (hasFreq) {
       // Recurring rule must provide a duration.
       if (!val.duration) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Recurring rules require a positive duration.',
-          path: ['duration'],
+          message: 'Recurring rules require a positive duration.',          path: ['duration'],
         });
       }
     } else {
@@ -120,21 +115,14 @@ export const normalizeOptions = (
   const parsed = OptionsSchema.parse({
     version: opts.version,
     timezone: opts.timezone,
-    timeUnit: opts.timeUnit ?? ('ms' as UnixTimeUnit),
-    rules: opts.rules ?? ([] as RuleJson[]),
+    timeUnit: opts.timeUnit,
+    rules: opts.rules,
   });
-  // Normalize legacy freq: 'continuous' → undefined
-  const rules = ((parsed.rules as RuleJson[]) ?? []).map((r) => {
-    const o = { ...(r.options as Record<string, unknown>) };
-    if (o && o.freq === 'continuous') {
-      delete (o as { freq?: unknown }).freq;
-    }
-    return { ...r, options: o as unknown } as RuleJson;
-  });
+
   const normalized: RRStackOptionsNormalized = Object.freeze({
     timezone: parsed.timezone as unknown as TimeZoneId,
     timeUnit: parsed.timeUnit,
-    rules: Object.freeze([...rules]),
+    rules: Object.freeze([...(parsed.rules as RuleJson[])]),
   });
   return normalized;
 };
