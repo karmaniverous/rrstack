@@ -6,10 +6,14 @@ Last updated: 2025-09-21 (UTC)
 
 Completed (recent)
 
+- Refactor(bounds): decompose src/rrstack/bounds.ts into focused modules
+  - bounds/common.ts: shared helpers (cascadedStatus, coversAt, lastStartBefore).
+  - bounds/earliest.ts, bounds/latest.ts, bounds/openEnd.ts: split passes.
+  - bounds.ts now orchestrates and re-exports getEffectiveBounds; public API unchanged.
+
 - Feat: Continuous (span) rules (no freq ⇒ duration omitted ⇒ continuous coverage)
   - Types: RuleOptionsJson.freq optional; RuleJson.duration optional.
-  - Zod: refinement enforces (freq ⇒ duration required), (no freq ⇒ duration omitted). Legacy 'continuous' normalized.
-  - Compiler/runtime: CompiledRule union (recur|span); span carries start/end clamps; no RRULE instance.
+  - Zod: refinement enforces (freq ⇒ duration required), (no freq ⇒ duration omitted). Legacy 'continuous' normalized.  - Compiler/runtime: CompiledRule union (recur|span); span carries start/end clamps; no RRULE instance.
   - Coverage/Segments/Bounds/Describe: span support integrated; open-sided detection in bounds includes spans.
   - Tests: span.basic (coverage/segments), bounds.span, describe span.
   - Docs: README adds “Continuous (span) rules” section.
