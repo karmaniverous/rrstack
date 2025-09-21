@@ -1,6 +1,5 @@
 import js from '@eslint/js';
 import vitest from '@vitest/eslint-plugin';
-import type { Linter } from 'eslint';
 import prettierConfig from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
@@ -11,7 +10,7 @@ import { fileURLToPath } from 'url';
 
 const tsconfigRootDir = dirname(fileURLToPath(import.meta.url));
 
-export default tseslint.config(
+export default [
   {
     ignores: [
       '.rollup.cache/**/*',
@@ -30,18 +29,15 @@ export default tseslint.config(
   (() => {
     // Use recommended rules when available from @vitest/eslint-plugin.
     // Fall back to just enabling the plugin if configs aren’t exposed.
-    const recommendedRules: Linter.RulesRecord =
-      (
-        vitest as unknown as {
-          configs?: { recommended?: { rules?: Linter.RulesRecord } };
-        }
-      ).configs?.recommended?.rules ?? {};
+    const recommendedRules: Record<string, unknown> | undefined = (
+      vitest as unknown as {
+        configs?: { recommended?: { rules?: Record<string, unknown> } };
+      }
+    ).configs?.recommended?.rules;
     return {
       files: ['**/*.test.ts'],
-      plugins: {
-        vitest: vitest as unknown as Linter.Plugin,
-      },
-      rules: { ...recommendedRules },
+      plugins: { vitest },
+      rules: recommendedRules ?? {},
     };
   })(),
   {
@@ -52,9 +48,9 @@ export default tseslint.config(
       },
     },
     plugins: {
-      prettier: prettierPlugin as unknown as Linter.Plugin,
-      'simple-import-sort': simpleImportSortPlugin as unknown as Linter.Plugin,
-      tsdoc: tsDocPlugin as unknown as Linter.Plugin,
+      prettier: prettierPlugin,
+      'simple-import-sort': simpleImportSortPlugin,
+      tsdoc: tsDocPlugin,
     },
     rules: {
       '@typescript-eslint/consistent-type-imports': 'error',
@@ -68,4 +64,4 @@ export default tseslint.config(
       'tsdoc/syntax': 'warn',
     },
   },
-);
+];

@@ -6,10 +6,17 @@ Last updated: 2025-09-21 (UTC)
 
 Completed (recent)
 
+- Fix(eslint config/types): remove deprecated tseslint.config usage and
+  eliminate incorrect Linter.Plugin casts. Export a plain flat-config
+  array while retaining strictTypeChecked + stylisticTypeChecked +
+  prettier layering and Vitest test-file rules. This resolves:
+  - TS2694 (“Linter has no exported member 'Plugin'”) during typecheck/build/docs
+  - @typescript-eslint/no-deprecated on tseslint.config
+  - @typescript-eslint/no-unsafe-assignment on plugin casts.
+
 - Fix(types/eslint): switch config construction to tseslint.config; cast
   plugins via unknown to Linter.Plugin (no any) and narrow Vitest
-  recommended rules to Linter.RulesRecord. Resolves TS2322 errors in
-  eslint.config.ts during build/docs/typecheck.
+  recommended rules to Linter.RulesRecord. Resolves TS2322 errors in  eslint.config.ts during build/docs/typecheck.
 - Style(lint): replace simple index loops with for-of in
   src/rrstack/RRStack.queries.ts, src/rrstack/util/heap.ts, and the
   pre-pass loop in src/rrstack/bounds/latest.ts. Fix TSDoc '<=' parsing
