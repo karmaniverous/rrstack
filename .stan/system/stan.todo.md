@@ -1,15 +1,22 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-09-18 (UTC)
+Last updated: 2025-09-21 (UTC)
 
 ## This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
 Completed (recent)
 
+- Feat: Continuous (span) rules (no freq ⇒ duration omitted ⇒ continuous coverage)
+  - Types: RuleOptionsJson.freq optional; RuleJson.duration optional.
+  - Zod: refinement enforces (freq ⇒ duration required), (no freq ⇒ duration omitted). Legacy 'continuous' normalized.
+  - Compiler/runtime: CompiledRule union (recur|span); span carries start/end clamps; no RRULE instance.
+  - Coverage/Segments/Bounds/Describe: span support integrated; open-sided detection in bounds includes spans.
+  - Tests: span.basic (coverage/segments), bounds.span, describe span.
+  - Docs: README adds “Continuous (span) rules” section.
+
 - Docs: clarify bounds & clamps semantics
   - Document that JSON `ends` maps to RRULE `until` (inclusive), and that
-    intervals remain half‑open with `'s'` mode rounding of ends.
-  - Note cascade tie behavior at the same instant (later rule wins).
+    intervals remain half‑open with `'s'` mode rounding of ends.  - Note cascade tie behavior at the same instant (later rule wins).
   - Add getEffectiveBounds notes (open‑sided detection; latest finite end vs
     open‑ended `undefined`) and DST behavior in `'s'` mode.
   - Updated: README.md, handbook/overview.md, and toRRuleOptions JSDoc.
@@ -326,4 +333,5 @@ Completed (recent)
 
 9. Next steps (implementation plan)
 
-- None at this time.
+- Optional: expand docs/handbook with a spans subsection and JSON examples.
+- Optional: post-bump guard in release-it to verify embedded __RRSTACK_VERSION__ equals package.json.version.

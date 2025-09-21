@@ -7,7 +7,7 @@
 
 import { DateTime } from 'luxon';
 
-import type { CompiledRule } from './compile';
+import type { CompiledRecurRule,CompiledRule } from './compile';
 import { enumerationHorizon } from './coverage/enumerate';
 import {
   localDayMatchesCommonPatterns,
@@ -15,6 +15,8 @@ import {
 } from './coverage/patterns';
 import {
   computeOccurrenceEnd,
+  domainMax,
+  domainMin,
   epochToWallDate,
   floatingDateToZonedEpoch,
 } from './coverage/time';
@@ -22,7 +24,6 @@ import { datetime } from './rrule.runtime';
 
 export { enumerateStarts } from './coverage/enumerate';
 export { computeOccurrenceEnd } from './coverage/time';
-
 /**
  * Test whether a compiled rule covers a timestamp `t`.
  *
@@ -38,12 +39,21 @@ export { computeOccurrenceEnd } from './coverage/time';
  * @returns True if `t` lies within a covered occurrence.
  */
 export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
+  // Span: simple half-open range check with open sides
+  if (rule.kind === 'span') {
+    const s = typeof rule.start === 'number' ? rule.start : domainMin();
+    const e =
+      typeof rule.end === 'number' ? rule.end : domainMax(rule.unit);
+    return s <= t && t < e;
+  }
+  const recur = rule;
+
   // 0) Day-window enumeration: all starts occurring on local calendar day of t.
   {
     const local =
-      rule.unit === 'ms'
-        ? DateTime.fromMillis(t, { zone: rule.tz })
-        : DateTime.fromSeconds(t, { zone: rule.tz });
+      recur.unit === 'ms'
+        ? DateTime.fromMillis(t, { zone: recur.tz })
+        : DateTime.fromSeconds(t, { zone: recur.tz });
     const dayStartWall = datetime(local.year, local.month, local.day, 0, 0, 0);
     const nextDay = local.plus({ days: 1 });
     const dayEndWallExclusive = datetime(
@@ -55,7 +65,7 @@ export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
       0,
     );
 
-    const dayStarts = rule.rrule.between(
+    const dayStarts = recur.rrule.between(
       dayStartWall,
       dayEndWallExclusive,
       true,
@@ -63,47 +73,47 @@ export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
     for (const sd of dayStarts) {
       const candidates = [
         sd.getTime(),
-        floatingDateToZonedEpoch(sd, rule.tz, rule.unit),
+        floatingDateToZonedEpoch(sd, recur.tz, recur.unit),
       ];
       for (const start of candidates) {
-        const end = computeOccurrenceEnd(rule, start);
+        const end = computeOccurrenceEnd(recur, start);
         if (start <= t && t < end) return true;
       }
     }
 
-    if (localDayMatchesDailyTimes(rule, t)) return true;
-    if (localDayMatchesCommonPatterns(rule, t)) return true;
+    if (localDayMatchesDailyTimes(recur, t)) return true;
+    if (localDayMatchesCommonPatterns(recur, t)) return true;
   }
 
   // 1) Robust coverage via rrule.before at wall-clock t.
-  const wallT = epochToWallDate(t, rule.tz, rule.unit);
-  const d = rule.rrule.before(wallT, true);
+  const wallT = epochToWallDate(t, recur.tz, recur.unit);
+  const d = recur.rrule.before(wallT, true);
   if (d) {
     const startEpoch = d.getTime();
-    const endEpoch = computeOccurrenceEnd(rule, startEpoch);
+    const endEpoch = computeOccurrenceEnd(recur, startEpoch);
     if (startEpoch <= t && t < endEpoch) return true;
 
-    const startFloat = floatingDateToZonedEpoch(d, rule.tz, rule.unit);
-    const endFloat = computeOccurrenceEnd(rule, startFloat);
+    const startFloat = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
+    const endFloat = computeOccurrenceEnd(recur, startFloat);
     if (startFloat <= t && t < endFloat) return true;
   }
 
   // 2) Fallback enumeration: frequency/interval-aware window [t - horizon, t]
-  const horizon = enumerationHorizon(rule);
+  const horizon = enumerationHorizon(recur);
   const windowStart = epochToWallDate(
     Math.max(0, t - horizon),
-    rule.tz,
-    rule.unit,
+    recur.tz,
+    recur.unit,
   );
-  const starts = rule.rrule.between(windowStart, wallT, true);
+  const starts = recur.rrule.between(windowStart, wallT, true);
 
   for (const sd of starts) {
     const candidates = [
       sd.getTime(),
-      floatingDateToZonedEpoch(sd, rule.tz, rule.unit),
+      floatingDateToZonedEpoch(sd, recur.tz, recur.unit),
     ];
     for (const start of candidates) {
-      const end = computeOccurrenceEnd(rule, start);
+      const end = computeOccurrenceEnd(recur, start);
       if (start <= t && t < end) return true;
     }
   }

@@ -4,7 +4,7 @@
  * - Supports open-ended detection.
  */
 
-import type { CompiledRule } from './compile';
+import type { CompiledRecurRule,CompiledRule } from './compile';
 import {
   computeOccurrenceEnd,
   domainMax,
@@ -24,9 +24,15 @@ const cascadedStatus = (covering: boolean[], rules: CompiledRule[]) => {
 
 // Covered-at test via lastStartBefore + computed end (unit/timezone aware).
 const coversAt = (rule: CompiledRule, t: number): boolean => {
-  const s = lastStartBefore(rule, t);
+  if (rule.kind === 'span') {
+    const s = typeof rule.start === 'number' ? rule.start : domainMin();
+    const e = typeof rule.end === 'number' ? rule.end : domainMax(rule.unit);
+    return s <= t && t < e;
+  }
+  const recur = rule;
+  const s = lastStartBefore(recur, t);
   if (typeof s !== 'number') return false;
-  const e = computeOccurrenceEnd(rule, s);
+  const e = computeOccurrenceEnd(recur, s);
   return s <= t && t < e;
 };
 
@@ -41,10 +47,15 @@ const lastStartBefore = (
   rule: CompiledRule,
   cursor: number,
 ): number | undefined => {
-  const wall = epochToWallDate(cursor, rule.tz, rule.unit);
-  const d = rule.rrule.before(wall, true);
+  if (rule.kind === 'span') {
+    const s = typeof rule.start === 'number' ? rule.start : domainMin();
+    return s <= cursor ? s : undefined;
+  }
+  const recur = rule;
+  const wall = epochToWallDate(cursor, recur.tz, recur.unit);
+  const d = recur.rrule.before(wall, true);
   if (!d) return undefined;
-  return floatingDateToZonedEpoch(d, rule.tz, rule.unit);
+  return floatingDateToZonedEpoch(d, recur.tz, recur.unit);
 };
 /**
  * Compute effective active bounds across the entire rule set.
@@ -83,15 +94,31 @@ export const getEffectiveBounds = (
   // If A0 exists and (B0 missing or A0 < B0), then A0 is the earliest global activation.
   {
     const n = rules.length;
-    const wallMinPerRule = rules.map((r) => epochToWallDate(min, r.tz, r.unit));
+    const wallMinPerRule = rules.map((r) =>
+      r.kind === 'recur' ? epochToWallDate(min, r.tz, r.unit) : null,
+    );
     let earliestActiveCandidate: number | undefined = undefined;
     let earliestBlackoutCandidate: number | undefined = undefined;
 
     for (let i = 0; i < n; i++) {
-      const d = rules[i].rrule.after(wallMinPerRule[i], true);
-      if (!d) continue;
-      const t = floatingDateToZonedEpoch(d, rules[i].tz, rules[i].unit);
-      if (rules[i].effect === 'active') {
+      const r = rules[i];
+      let t: number | undefined;
+      if (r.kind === 'recur') {
+        const d = (r).rrule.after(
+          wallMinPerRule[i] as Date,
+          true,
+        );
+        if (!d) continue;
+        t = floatingDateToZonedEpoch(d, r.tz, r.unit);
+      } else {
+        // span: earliest candidate is the (possibly open) start clamp
+        t = typeof r.start === 'number' ? r.start : min;
+        // If the span ends before min, ignore
+        const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
+        if (e <= min) t = undefined;
+      }
+      if (typeof t !== 'number') continue;
+      if (r.effect === 'active') {
         if (
           earliestActiveCandidate === undefined ||
           t < earliestActiveCandidate
@@ -135,22 +162,36 @@ export const getEffectiveBounds = (
       const nextStart = new Array<number | undefined>(n).fill(undefined);
       const nextEnd = new Array<number | undefined>(n).fill(undefined);
       for (let i = 0; i < n; i++) {
-        const s = lastStartBefore(rules[i], cursor);
-        const wallT = epochToWallDate(cursor, rules[i].tz, rules[i].unit);
+        const r = rules[i];
+        if (r.kind === 'span') {
+          const s = typeof r.start === 'number' ? r.start : domainMin();
+          const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
+          if (s <= cursor && e > cursor) {
+            covering[i] = true;
+            nextEnd[i] = e;
+          } else {
+            nextEnd[i] = undefined;
+            nextStart[i] = s >= cursor ? s : undefined;
+          }
+          continue;
+        }
+        const recur = r;
+        const s = lastStartBefore(recur, cursor);
+        const wallT = epochToWallDate(cursor, recur.tz, recur.unit);
         if (typeof s === 'number') {
-          const e = computeOccurrenceEnd(rules[i], s);
+          const e = computeOccurrenceEnd(recur, s);
           if (e > cursor) {
             covering[i] = true;
             nextEnd[i] = e;
           }
-          const dAfter = rules[i].rrule.after(wallT, false);
+          const dAfter = recur.rrule.after(wallT, false);
           nextStart[i] = dAfter
-            ? floatingDateToZonedEpoch(dAfter, rules[i].tz, rules[i].unit)
+            ? floatingDateToZonedEpoch(dAfter, recur.tz, recur.unit)
             : undefined;
         } else {
-          const d0 = rules[i].rrule.after(wallT, true);
+          const d0 = recur.rrule.after(wallT, true);
           nextStart[i] = d0
-            ? floatingDateToZonedEpoch(d0, rules[i].tz, rules[i].unit)
+            ? floatingDateToZonedEpoch(d0, recur.tz, recur.unit)
             : undefined;
         }
       }
@@ -219,11 +260,16 @@ export const getEffectiveBounds = (
   // Consider coverage beyond the probe by checking whether any open-ended
   // active rule produces an occurrence strictly after the probe.
   const wallProbePerRule = rules.map((r) =>
-    epochToWallDate(probe, r.tz, r.unit),
+    r.kind === 'recur' ? epochToWallDate(probe, r.tz, r.unit) : null,
   );
   const openEndDetected = rules.some((r, i) => {
     if (!(r.effect === 'active' && r.isOpenEnd)) return false;
-    const next = r.rrule.after(wallProbePerRule[i], false);
+    if (r.kind === 'span') {
+      const s = typeof r.start === 'number' ? r.start : domainMin();
+      return s <= probe; // open end extends beyond probe
+    }
+    const recur = r;
+    const next = recur.rrule.after(wallProbePerRule[i] as Date, false);
     return !!next;
   });
 
@@ -236,10 +282,16 @@ export const getEffectiveBounds = (
     let latestBlackoutEndCandidate: number | undefined = undefined;
 
     for (let i = 0; i < rules.length; i++) {
-      const last = lastStartBefore(rules[i], probe);
+      const r = rules[i];
+      const last = lastStartBefore(r, probe);
       if (typeof last !== 'number') continue;
-      const e = computeOccurrenceEnd(rules[i], last);
-      if (rules[i].effect === 'active') {
+      const e =
+        r.kind === 'span'
+          ? typeof r.end === 'number'
+            ? r.end
+            : domainMax(r.unit)
+          : computeOccurrenceEnd(r, last);
+      if (r.effect === 'active') {
         if (
           latestActiveEndCandidate === undefined ||
           e > latestActiveEndCandidate
@@ -280,22 +332,28 @@ export const getEffectiveBounds = (
           // Seed strictly before the cursor to ensure progress when landing
           // exactly on a boundary (candidate == cursor).
           const prevCursor = cursor > domainMin() ? cursor - 1 : cursor;
-          const s0 = lastStartBefore(rules[i], prevCursor);
+          const r = rules[i];
+          if (r.kind === 'span') {
+            const s = typeof r.start === 'number' ? r.start : domainMin();
+            const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
+            if (s < cursor) prevStart[i] = s;
+            if (e < cursor) prevEnd[i] = e;
+            if (e > cursor && s <= cursor) covering[i] = true;
+            continue;
+          }
+          const recur = r;
+          const s0 = lastStartBefore(recur, prevCursor);
           if (typeof s0 === 'number') {
             // Step back if the computed end is at/after the cursor so that
             // prevEnd < cursor holds, guaranteeing a strictly earlier candidate.
             let s = s0;
-            let e = computeOccurrenceEnd(rules[i], s);
+            let e = computeOccurrenceEnd(recur, s);
             while (e >= cursor) {
-              const wallS = epochToWallDate(s, rules[i].tz, rules[i].unit);
-              const sPrev = rules[i].rrule.before(wallS, false);
+              const wallS = epochToWallDate(s, recur.tz, recur.unit);
+              const sPrev = recur.rrule.before(wallS, false);
               if (!sPrev) break;
-              s = floatingDateToZonedEpoch(
-                sPrev,
-                rules[i].tz,
-                rules[i].unit,
-              );
-              e = computeOccurrenceEnd(rules[i], s);
+              s = floatingDateToZonedEpoch(sPrev, recur.tz, recur.unit);
+              e = computeOccurrenceEnd(recur, s);
             }
             prevStart[i] = s;
             prevEnd[i] = e;
@@ -303,7 +361,8 @@ export const getEffectiveBounds = (
           }
         }
         return { covering, prevStart, prevEnd };
-      };      let { covering, prevStart, prevEnd } = resetBackward(probe);
+      };
+      let { covering, prevStart, prevEnd } = resetBackward(probe);
       let cursor = probe;
       let guard = 0;
 
@@ -328,9 +387,7 @@ export const getEffectiveBounds = (
           const top = topCoveringIndex(covering);
           if (typeof top === 'number') {
             // top must be blackout under overall blackout status
-            if (
-              typeof prevStart[top] === 'number' &&
-              prevStart[top] < cursor            ) {
+            if (typeof prevStart[top] === 'number' && prevStart[top] < cursor) {
               candidate = prevStart[top]!;
             }
             for (let j = top + 1; j < n; j++) {
@@ -394,24 +451,29 @@ export const getEffectiveBounds = (
           for (let i = 0; i < n; i++) {
             if (prevEnd[i] === t) {
               covering[i] = true;
-              const s2 = prevStart[i]; // current interval start
-              if (typeof s2 === 'number') {
-                // keep current start to exit later; preload previous window's end.
-                prevStart[i] = s2;
-                const wallS2 = epochToWallDate(s2, rules[i].tz, rules[i].unit);
-                const sPrev = rules[i].rrule.before(wallS2, false);
-                if (sPrev) {
-                  const sPrevEpoch = floatingDateToZonedEpoch(
-                    sPrev,
-                    rules[i].tz,
-                    rules[i].unit,
-                  );
-                  prevEnd[i] = computeOccurrenceEnd(rules[i], sPrevEpoch);
+              if (rules[i].kind === 'span') {
+                prevEnd[i] = undefined;
+              } else {
+                const recur = rules[i] as CompiledRecurRule;
+                const s2 = prevStart[i]; // current interval start
+                if (typeof s2 === 'number') {
+                  // keep current start to exit later; preload previous window's end.
+                  prevStart[i] = s2;
+                  const wallS2 = epochToWallDate(s2, recur.tz, recur.unit);
+                  const sPrev = recur.rrule.before(wallS2, false);
+                  if (sPrev) {
+                    const sPrevEpoch = floatingDateToZonedEpoch(
+                      sPrev,
+                      recur.tz,
+                      recur.unit,
+                    );
+                    prevEnd[i] = computeOccurrenceEnd(recur, sPrevEpoch);
+                  } else {
+                    prevEnd[i] = undefined;
+                  }
                 } else {
                   prevEnd[i] = undefined;
                 }
-              } else {
-                prevEnd[i] = undefined;
               }
             }
           }
@@ -420,18 +482,23 @@ export const getEffectiveBounds = (
           for (let i = 0; i < n; i++) {
             if (prevStart[i] === t) {
               covering[i] = false;
-              const wallS = epochToWallDate(t, rules[i].tz, rules[i].unit);
-              const sPrev = rules[i].rrule.before(wallS, false);
-              if (sPrev) {
-                const sPrevEpoch = floatingDateToZonedEpoch(
-                  sPrev,
-                  rules[i].tz,
-                  rules[i].unit,
-                );
-                prevStart[i] = sPrevEpoch;
-                prevEnd[i] = computeOccurrenceEnd(rules[i], sPrevEpoch);
-              } else {
+              if (rules[i].kind === 'span') {
                 prevStart[i] = undefined;
+              } else {
+                const recur = rules[i] as CompiledRecurRule;
+                const wallS = epochToWallDate(t, recur.tz, recur.unit);
+                const sPrev = recur.rrule.before(wallS, false);
+                if (sPrev) {
+                  const sPrevEpoch = floatingDateToZonedEpoch(
+                    sPrev,
+                    recur.tz,
+                    recur.unit,
+                  );
+                  prevStart[i] = sPrevEpoch;
+                  prevEnd[i] = computeOccurrenceEnd(recur, sPrevEpoch);
+                } else {
+                  prevStart[i] = undefined;
+                }
               }
             }
           }

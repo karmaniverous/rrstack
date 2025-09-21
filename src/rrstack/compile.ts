@@ -24,17 +24,32 @@ import {
   type TimeZoneId,
   type UnixTimeUnit,
 } from './types';
-export interface CompiledRule {
+
+export interface CompiledRuleBase {
   effect: instantStatus;
   label?: string;
-  duration: Duration;
-  options: RRuleOptions;
   tz: string;
   unit: UnixTimeUnit;
   isOpenStart: boolean;
   isOpenEnd: boolean;
+}
+
+export interface CompiledRecurRule extends CompiledRuleBase {
+  kind: 'recur';
+  duration: Duration;
+  options: RRuleOptions;
   rrule: RRuleClass;
 }
+
+export interface CompiledSpanRule extends CompiledRuleBase {
+  kind: 'span';
+  /** Start clamp in configured unit (inclusive) */
+  start?: number;
+  /** End clamp in configured unit (exclusive) */
+  end?: number;
+}
+
+export type CompiledRule = CompiledRecurRule | CompiledSpanRule;
 
 // Internal mapping from human-readable freq to rrule enum
 const FREQ_MAP: Record<FrequencyStr, RRuleFrequency> = {
@@ -45,7 +60,7 @@ const FREQ_MAP: Record<FrequencyStr, RRuleFrequency> = {
   hourly: Frequency.HOURLY,
   minutely: Frequency.MINUTELY,
   secondly: Frequency.SECONDLY,
-};
+} as const;
 
 /** @internal */
 const toWall = (epoch: number, tz: string, unit: UnixTimeUnit): Date => {
@@ -75,13 +90,14 @@ export const toRRuleOptions = (
   options: RuleOptionsJson,
   timezone: string,
   unit: UnixTimeUnit,
-): RRuleOptions => {  const rrLikeRaw: Record<string, unknown> = {
+): RRuleOptions => {
+  const rrLikeRaw: Record<string, unknown> = {
     ...(options as Record<string, unknown>),
   };
   delete rrLikeRaw.starts;
   delete rrLikeRaw.ends;
   // Map human-readable freq → rrule numeric enum
-  rrLikeRaw.freq = FREQ_MAP[options.freq];
+  rrLikeRaw.freq = FREQ_MAP[options.freq as FrequencyStr];
 
   const partial: Partial<RRuleOptions> = {
     ...(rrLikeRaw as Partial<RRuleOptions>),
@@ -109,35 +125,75 @@ export const toRRuleOptions = (
  * @param timezone - IANA timezone id for coverage computation.
  * @param unit - Time unit ('ms' | 's'). Affects duration arithmetic and
  *               rounding behavior of occurrence ends.
- * @throws If the duration total is non-positive.
+ * @throws If the rule violates recurrence/span constraints.
  */
 export const compileRule = (
   rule: RuleJson,
   timezone: TimeZoneId,
   unit: UnixTimeUnit,
 ): CompiledRule => {
-  const duration = Duration.fromObject(rule.duration);
-  const q =
-    unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
-  if (!Number.isFinite(q) || q <= 0) {
-    throw new Error('Duration must be strictly positive');
+  // Legacy tolerance: freq === 'continuous' → span (no freq)
+  const freqRaw = (rule.options as unknown as { freq?: unknown })?.freq;
+  const isSpan = !freqRaw || freqRaw === 'continuous';
+
+  if (!isSpan) {
+    // Recurring rule path
+    if (!rule.duration) {
+      throw new Error('Recurring rules require a positive duration');
+    }
+    const duration = Duration.fromObject(rule.duration);
+    const q =
+      unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
+    if (!Number.isFinite(q) || q <= 0) {
+      throw new Error('Duration must be strictly positive');
+    }
+
+    const isOpenStart = rule.options.starts === undefined;
+    const isOpenEnd = rule.options.ends === undefined;
+
+    const options = toRRuleOptions(rule.options, timezone, unit);
+    const r = new RRule(options);
+
+    return {
+      kind: 'recur',
+      effect: rule.effect,
+      label: rule.label,
+      duration,
+      options,
+      tz: timezone,
+      unit,
+      isOpenStart,
+      isOpenEnd,
+      rrule: r,
+    };
   }
 
-  const isOpenStart = rule.options.starts === undefined;
-  const isOpenEnd = rule.options.ends === undefined;
+  // Span rule path (continuous coverage across [starts, ends))
+  if (rule.duration) {
+    throw new Error('Span rules must omit duration');
+  }
+  const start =
+    typeof rule.options.starts === 'number'
+      ? (rule.options.starts)
+      : undefined;
+  const end =
+    typeof rule.options.ends === 'number'
+      ? (rule.options.ends)
+      : undefined;
 
-  const options = toRRuleOptions(rule.options, timezone, unit);
-  const r = new RRule(options);
+  const isOpenStart = start === undefined;
+  const isOpenEnd = end === undefined;
 
-  return {
+  const span: CompiledSpanRule = {
+    kind: 'span',
     effect: rule.effect,
     label: rule.label,
-    duration,
-    options,
     tz: timezone,
     unit,
     isOpenStart,
     isOpenEnd,
-    rrule: r,
+    start,
+    end,
   };
+  return span;
 };

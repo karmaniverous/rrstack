@@ -7,7 +7,7 @@
 import { DateTime } from 'luxon';
 import type { Weekday as WeekdayType } from 'rrule';
 
-import type { CompiledRule } from '../compile';
+import type { CompiledRecurRule } from '../compile';
 import { Frequency, Weekday } from '../rrule.runtime';
 import { computeOccurrenceEnd, floatingDateToZonedEpoch } from './time';
 
@@ -24,11 +24,10 @@ const normalizeByweekday = (v: unknown): WeekdayLike[] => {
 };
 
 export const localDayMatchesDailyTimes = (
-  rule: CompiledRule,
+  rule: CompiledRecurRule,
   t: number,
 ): boolean => {
   if (rule.options.freq !== Frequency.DAILY) return false;
-
   const tz = rule.tz;
   const local =
     rule.unit === 'ms'
@@ -107,13 +106,12 @@ export const localDayMatchesDailyTimes = (
 };
 
 export const localDayMatchesCommonPatterns = (
-  rule: CompiledRule,
+  rule: CompiledRecurRule,
   t: number,
 ): boolean => {
   const { options } = rule;
   const tz = rule.tz;
-  const local =
-    rule.unit === 'ms'
+  const local =    rule.unit === 'ms'
       ? DateTime.fromMillis(t, { zone: tz })
       : DateTime.fromSeconds(t, { zone: tz });
 

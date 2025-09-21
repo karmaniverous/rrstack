@@ -6,14 +6,21 @@
 
 import { DateTime } from 'luxon';
 
-import type { CompiledRule } from './compile';
+import type { CompiledRecurRule,CompiledRule } from './compile';
 import { compileRule } from './compile';
-import type { DurationParts, RuleJson, TimeZoneId, UnixTimeUnit } from './types';
+import type {
+  DurationParts,
+  RuleJson,
+  TimeZoneId,
+  UnixTimeUnit,
+} from './types';
 
-const plural = (n: number, unit: string) => String(n) + ' ' + unit + (n === 1 ? '' : 's');
+const plural = (n: number, unit: string) =>
+  String(n) + ' ' + unit + (n === 1 ? '' : 's');
 
 const durationToTextFromParts = (parts: DurationParts): string => {
-  const order: Array<keyof DurationParts> = [    'years',
+  const order: Array<keyof DurationParts> = [
+    'years',
     'months',
     'weeks',
     'days',
@@ -38,7 +45,7 @@ const durationToTextFromParts = (parts: DurationParts): string => {
   return chunks.join(' ');
 };
 
-const durationToTextFromCompiled = (compiled: CompiledRule): string => {
+const durationToTextFromCompiled = (compiled: CompiledRecurRule): string => {
   const o = compiled.duration.toObject();
   // Our DurationParts are integers by validation; coerce to integers defensively.
   const asInt = (n?: number) =>
@@ -71,11 +78,35 @@ export const describeCompiledRule = (
 ): string => {
   const { includeTimeZone = true, includeBounds = false } = opts;
   const effect = compiled.effect === 'active' ? 'Active' : 'Blackout';
-  const durText = durationToTextFromCompiled(compiled);
-  let s = `${effect} for ${durText}: ${compiled.rrule.toText()}`;
-  if (includeTimeZone) {
-    s += ` (timezone ${compiled.tz})`;
+  if (compiled.kind === 'span') {
+    // Continuous coverage between clamps (open sides allowed)
+    let s = `${effect} continuously`;
+    if (includeTimeZone) s += ` (timezone ${compiled.tz})`;
+    if (includeBounds) {
+      const tz = compiled.tz;
+      const fmt = (v?: number) =>
+        typeof v === 'number'
+          ? (compiled.unit === 'ms'
+              ? DateTime.fromMillis(v, { zone: tz })
+              : DateTime.fromSeconds(v, { zone: tz })
+            ).toISO({ suppressMilliseconds: true })
+          : undefined;
+      const from = fmt(compiled.start);
+      const until = fmt(compiled.end);
+      if (from || until) {
+        s += ' [';
+        if (from) s += `from ${from}`;
+        if (from && until) s += '; ';
+        if (until) s += `until ${until}`;
+        s += ']';
+      }
+    }
+    return s;
   }
+  const recur = compiled;
+  const durText = durationToTextFromCompiled(recur);
+  let s = `${effect} for ${durText}: ${recur.rrule.toText()}`;
+  if (includeTimeZone) s += ` (timezone ${recur.tz})`;
 
   if (includeBounds) {
     // Example:
@@ -84,12 +115,15 @@ export const describeCompiledRule = (
     // (bounds appear only if the rule options include clamps that compiled
     //  to dtstart/until)
 
-    const tz = compiled.tz;
+    const tz = recur.tz;
     const fmt = (d: Date | null | undefined) =>
-      d        ? DateTime.fromJSDate(d, { zone: tz }).toISO({ suppressMilliseconds: true })
+      d
+        ? DateTime.fromJSDate(d, { zone: tz }).toISO({
+            suppressMilliseconds: true,
+          })
         : undefined;
-    const from = fmt((compiled.options as { dtstart?: Date | null }).dtstart);
-    const until = fmt((compiled.options as { until?: Date | null }).until);
+    const from = fmt((recur.options as { dtstart?: Date | null }).dtstart);
+    const until = fmt((recur.options as { until?: Date | null }).until);
     if (from || until) {
       s += ' [';
       if (from) s += `from ${from}`;

@@ -16,10 +16,30 @@ RRStack lets you compose a prioritized stack of time-based rules (using the batt
 - JSON persistence and round-tripping
 - Tested against realistic scenarios (nth-weekday monthly patterns, daylight saving transitions, etc.)
 
+## Continuous (span) rules
+
+Not every schedule needs a recurrence. RRStack supports “span” rules for
+continuous coverage bounded by optional clamps:
+
+- Omit `options.freq` to declare a span rule.
+- Omit `duration` (required for spans).
+- Coverage is continuous across `[starts, ends)`; either side may be open.
+- Spans participate in the cascade just like recurring rules; later rules still
+  override earlier ones.
+
+Example (active span; Jan 10 05:00–07:00 UTC):
+```ts
+const rules = [
+  { effect: 'active' as const,
+    // duration omitted
+    options: { starts: Date.UTC(2024,0,10,5,0,0), ends: Date.UTC(2024,0,10,7,0,0) } },
+];
+```
+UI tip: this maps naturally to a “Does not repeat” option that disables RRULE inputs.
+
 ## Installation
 
-```bash
-npm install @karmaniverous/rrstack
+```bashnpm install @karmaniverous/rrstack
 # or
 yarn add @karmaniverous/rrstack
 # or
@@ -196,12 +216,14 @@ export interface DurationParts {
  * JSON shape for rule options:
  * - Derived from RRuleOptions with dtstart/until/tzid removed (set internally),
  * - Adds starts/ends (in configured unit) for domain clamping,
- * - freq is a lower-case string ('yearly'|'monthly'|'weekly'|'daily'|'hourly'|'minutely'|'secondly').
+ * - freq is optional. When present, it is a lower-case string
+ *   ('yearly'|'monthly'|'weekly'|'daily'|'hourly'|'minutely'|'secondly').
+ *   When absent, the rule is a continuous span; duration must be omitted.
  */
 export type RuleOptionsJson = Partial<
   Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>
 > & {
-  freq:
+  freq?:
     | 'yearly'
     | 'monthly'
     | 'weekly'
@@ -215,11 +237,10 @@ export type RuleOptionsJson = Partial<
 
 export interface RuleJson {
   effect: instantStatus; // 'active' | 'blackout'
-  duration: DurationParts; // structured, positive total
+  duration?: DurationParts; // recurring only; spans must omit
   options: RuleOptionsJson;
   label?: string;
 }
-
 /**
  * Unified, round-trippable options shape.
  * - version is optional on input and ignored by the constructor,

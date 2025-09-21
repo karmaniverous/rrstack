@@ -24,7 +24,7 @@ export type UnixTimeUnit = 'ms' | 's';
 export type TimeZoneId = string & { __brand: 'TimeZoneId' };
 
 /**
- * Human-readable RRULE frequency (lower-case).
+ * Human-readable RRULE frequency (lower-case) for recurring rules.
  * Mapped internally to rrule's numeric Frequency enum during compilation.
  */
 export type FrequencyStr =
@@ -35,7 +35,6 @@ export type FrequencyStr =
   | 'hourly'
   | 'minutely'
   | 'secondly';
-
 /**
  * Structured duration parts for UI-friendly, lossless round-tripping.
  * - All fields are non-negative integers.
@@ -57,14 +56,20 @@ export interface DurationParts {
 /**
  * JSON shape for rule options:
  * - Derived from rrule Options with `dtstart`/`until`/`tzid` removed.
- * - All properties optional except `freq` (required).
+ * - `freq` is optional:
+ *   • present → recurring rule (RRULE-based),
+ *   • absent  → continuous span rule (no recurrence).
  * - Adds `starts`/`ends` in the configured {@link UnixTimeUnit} for domain clamping.
- * - `freq` is a lower-case string (e.g., 'daily'); RRStack maps it to rrule's numeric enum internally.
+ * - When `freq` is present, RRStack maps it to rrule's numeric enum internally.
  */
 export type RuleOptionsJson = Partial<
   Omit<RRuleOptions, 'dtstart' | 'until' | 'tzid' | 'freq'>
 > & {
-  freq: FrequencyStr;
+  /**
+   * Optional frequency. When omitted, the rule is a continuous span and must
+   * omit `duration`.
+   */
+  freq?: FrequencyStr;
   // timestamps in the configured unit ('ms' or 's')
   starts?: number;
   ends?: number;
@@ -74,14 +79,13 @@ export type RuleOptionsJson = Partial<
 export interface RuleJson {
   /** `'active' | 'blackout'` — effect applied at covered instants. */
   effect: instantStatus;
-  /** Structured duration (non-negative integer parts; at least one \> 0). */
-  duration: DurationParts;
+  /** Structured duration for recurring rules; must be omitted for span rules. */
+  duration?: DurationParts;
   /** Subset of rrule options (see {@link RuleOptionsJson}). */
   options: RuleOptionsJson;
   /** Optional label for diagnostics/UI. */
   label?: string;
 }
-
 /**
  * Constructor input and serialized output (round-trippable).
  * - `version` is optional on input and ignored by the constructor.

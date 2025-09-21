@@ -17,7 +17,6 @@ describe('rule description helpers', () => {
       bysecond: [0],
     },
   };
-
   it('describeCompiledRule includes effect, duration, and recurrence text', () => {
     const compiled = compileRule(rule, tz, 'ms');
     const text = describeCompiledRule(compiled);
@@ -34,5 +33,21 @@ describe('rule description helpers', () => {
     const lower = text.toLowerCase();
     expect(lower).toContain('active');
     expect(lower).toContain('every day');
+  });
+
+  it('describes span rules as continuous with optional bounds', () => {
+    const span: RuleJson = {
+      effect: 'active',
+      // duration omitted
+      options: {
+        starts: Date.UTC(2024, 0, 10, 5, 0, 0),
+        ends: Date.UTC(2024, 0, 12, 7, 0, 0),
+      },
+    };
+    const text = describeRule(span, tz, 'ms', { includeTimeZone: true, includeBounds: true });
+    const lower = text.toLowerCase();
+    expect(lower).toContain('active');
+    expect(lower).toContain('continuously');
+    expect(lower).toContain('from 2024-01-10');
   });
 });

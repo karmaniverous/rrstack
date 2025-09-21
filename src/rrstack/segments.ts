@@ -4,9 +4,11 @@
  * - classifyRange: 'active' | 'blackout' | 'partial' by scanning segments.
  */
 
-import type { CompiledRule } from './compile';
+import type { CompiledRecurRule,CompiledRule } from './compile';
 import {
   computeOccurrenceEnd,
+  domainMax,
+  domainMin,
   epochToWallDate,
   floatingDateToZonedEpoch,
 } from './coverage/time';
@@ -28,10 +30,15 @@ const lastStartBefore = (
   rule: CompiledRule,
   cursor: number,
 ): number | undefined => {
-  const wall = epochToWallDate(cursor, rule.tz, rule.unit);
-  const d = rule.rrule.before(wall, true);
+  if (rule.kind === 'span') {
+    const s = typeof rule.start === 'number' ? rule.start : domainMin();
+    return s <= cursor ? s : undefined;
+  }
+  const recur = rule;
+  const wall = epochToWallDate(cursor, recur.tz, recur.unit);
+  const d = recur.rrule.before(wall, true);
   if (!d) return undefined;
-  return floatingDateToZonedEpoch(d, rule.tz, rule.unit);
+  return floatingDateToZonedEpoch(d, recur.tz, recur.unit);
 };
 
 /**
@@ -60,22 +67,43 @@ export function* getSegments(
   const covering = new Array<boolean>(n).fill(false);
   const nextStart = new Array<number | undefined>(n).fill(undefined);
   const nextEnd = new Array<number | undefined>(n).fill(undefined);
+  // For span rules, carry their (clipped) end to set upon start boundary.
+  const spanEnd = new Array<number | undefined>(n).fill(undefined);
 
   // Initialize per-rule state at "from"
   for (let i = 0; i < n; i++) {
     const r = rules[i];
-    const last = lastStartBefore(r, from);
+    if (r.kind === 'span') {
+      const s = typeof r.start === 'number' ? r.start : domainMin();
+      const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
+      // clip to window
+      const sc = Math.max(s, from);
+      const ec = Math.min(e, to);
+      if (sc < ec) {
+        spanEnd[i] = ec;
+        if (sc <= from) {
+          covering[i] = true;
+          nextEnd[i] = ec;
+        } else {
+          nextStart[i] = sc;
+        }
+      }
+      continue;
+    }
+    // recurring
+    const recur = r;
+    const last = lastStartBefore(recur, from);
     if (typeof last === 'number') {
-      const e = computeOccurrenceEnd(r, last);
+      const e = computeOccurrenceEnd(recur, last);
       if (e > from) {
         covering[i] = true;
         nextEnd[i] = e;
       }
     }
     // next start at/after from
-    const wallFrom = epochToWallDate(from, r.tz, r.unit);
-    const d = r.rrule.after(wallFrom, true);
-    if (d) nextStart[i] = floatingDateToZonedEpoch(d, r.tz, r.unit);
+    const wallFrom = epochToWallDate(from, recur.tz, recur.unit);
+    const d = recur.rrule.after(wallFrom, true);
+    if (d) nextStart[i] = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
   }
 
   let prevT = from;
@@ -104,14 +132,20 @@ export function* getSegments(
     for (let i = 0; i < n; i++) {
       if (nextStart[i] === t) {
         covering[i] = true;
-        const e = computeOccurrenceEnd(rules[i], t);
-        nextEnd[i] = e;
-        // advance nextStart for this rule
-        const wallT = epochToWallDate(t, rules[i].tz, rules[i].unit);
-        const d2 = rules[i].rrule.after(wallT, false);
-        nextStart[i] = d2
-          ? floatingDateToZonedEpoch(d2, rules[i].tz, rules[i].unit)
-          : undefined;
+        if (rules[i].kind === 'span') {
+          nextEnd[i] = spanEnd[i];
+          nextStart[i] = undefined;
+        } else {
+          const recur = rules[i] as CompiledRecurRule;
+          const e = computeOccurrenceEnd(recur, t);
+          nextEnd[i] = e;
+          // advance nextStart for this rule
+          const wallT = epochToWallDate(t, recur.tz, recur.unit);
+          const d2 = recur.rrule.after(wallT, false);
+          nextStart[i] = d2
+            ? floatingDateToZonedEpoch(d2, recur.tz, recur.unit)
+            : undefined;
+        }
       }
     }
 

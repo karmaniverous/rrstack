@@ -6,7 +6,7 @@
 
 import { DateTime, type Duration, IANAZone } from 'luxon';
 
-import type { CompiledRule } from '../compile';
+import type { CompiledRecurRule } from '../compile';
 import { datetime } from '../rrule.runtime';
 import type { UnixTimeUnit } from '../types';
 export const isValidTimeZone = (tz: string): boolean => IANAZone.isValidZone(tz);
@@ -21,8 +21,7 @@ export const dayLength = (unit: UnixTimeUnit): number =>
  * Convert epoch value in the given unit to an rrule "floating" Date
  * representing the same local wall-clock timestamp in the given timezone.
  */
-export const epochToWallDate = (value: number, tz: string, unit: UnixTimeUnit): Date => {
-  const d =
+export const epochToWallDate = (value: number, tz: string, unit: UnixTimeUnit): Date => {  const d =
     unit === 'ms'
       ? DateTime.fromMillis(value, { zone: tz })
       : DateTime.fromSeconds(value, { zone: tz });
@@ -54,7 +53,7 @@ export const floatingDateToZonedEpoch = (d: Date, tz: string, unit: UnixTimeUnit
  * - In 'ms' mode returns milliseconds.
  * - In 's' mode returns integer seconds and rounds up to honor [start,end).
  */
-export const computeOccurrenceEnd = (rule: CompiledRule, start: number): number => {
+export const computeOccurrenceEnd = (rule: Pick<CompiledRecurRule, 'unit' | 'tz' | 'duration'>, start: number): number => {
   const startZoned =
     rule.unit === 'ms'
       ? DateTime.fromMillis(start, { zone: rule.tz })
@@ -65,8 +64,7 @@ export const computeOccurrenceEnd = (rule: CompiledRule, start: number): number 
 };
 
 /**
- * Conservative horizon policy in the configured unit.
- * - If duration specifies calendar years: 366 days
+ * Conservative horizon policy in the configured unit. * - If duration specifies calendar years: 366 days
  * - If duration specifies calendar months: 32 days
  * - Otherwise: ceil(duration in unit)
  */
