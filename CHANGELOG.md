@@ -2,9 +2,24 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.9.0](https://github.com/karmaniverous/rrstack/compare/0.8.2...0.9.0)
+
+- chore: fix lint and knip; remove unused devDependency [`d55bec4`](https://github.com/karmaniverous/rrstack/commit/d55bec42b67a11cd15a4caab0c6449d48a8efb49)
+- refactor(bounds): split getEffectiveBounds into focused modules [`97c7674`](https://github.com/karmaniverous/rrstack/commit/97c767453d150255ca52c8e0403ba468df74794a)
+- feat: add continuous (span) rules (no freq → duration omitted) [`bc1ffda`](https://github.com/karmaniverous/rrstack/commit/bc1ffda9185bf44d6753a6e13b825e4652677b5a)
+- build!: migrate to Zod v4 JSON Schema + ESLint flat config [`8174047`](https://github.com/karmaniverous/rrstack/commit/817404726829d75ea9e757efa32409c610aed947)
+- chore: adopt @vitest/eslint-plugin; strict type-aware lint; Zod v4 JSON schema [`6dc797a`](https://github.com/karmaniverous/rrstack/commit/6dc797a2d4253d98e811532daa0921fa24381157)
+- chore: fix lint/typecheck; clean knip and deps [`e4c836c`](https://github.com/karmaniverous/rrstack/commit/e4c836c3a5291fcc5f020b749666cf10cda153c8)
+- feat!: drop 'continuous' alias; require undefined freq for spans [`7289fd8`](https://github.com/karmaniverous/rrstack/commit/7289fd89861df40877eeb8554c86551d409b73d6)
+- refactor(bounds): split into modules; fix lints and TS narrowings [`030defe`](https://github.com/karmaniverous/rrstack/commit/030defe7b904fa63b3ea373c97b2b25a095ae949)
+- chore(eslint): fix flat-config typing; drop deprecated helper/casts [`024f83c`](https://github.com/karmaniverous/rrstack/commit/024f83cebc368cd055c42313cd3e9ef7a34023a5)
+
 #### [0.8.2](https://github.com/karmaniverous/rrstack/compare/0.8.1...0.8.2)
 
+> 20 September 2025
+
 - test(bounds): add comprehensive getEffectiveBounds scenarios [`7945daf`](https://github.com/karmaniverous/rrstack/commit/7945daf50fac1c38d657da4b8bad1d0b4846f9e9)
+- chore: release v0.8.2 [`428d258`](https://github.com/karmaniverous/rrstack/commit/428d2584ccfcb22eef2e7de259bd89d4cdc1dd3b)
 - docs: clarify bounds & clamp semantics; inclusive ‘until’; DST and ’s’ mode [`5047a08`](https://github.com/karmaniverous/rrstack/commit/5047a08745b8f66d1ad16f534528ea0861bbd6ec)
 - test(bounds): align expectations with implemented reverse-sweep and DST behavior [`5548b20`](https://github.com/karmaniverous/rrstack/commit/5548b20a86ac1197506c95cb37a18c14427add21)
 - fix(release): rebuild after bump so dist embeds the new version [`1237d45`](https://github.com/karmaniverous/rrstack/commit/1237d45926180f66ff4e8badae4cdb20af6cbd36)
