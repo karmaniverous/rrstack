@@ -24,9 +24,9 @@ describe("'s' timeUnit: DST handling and rounded ends", () => {
     const cr = compileRule(rule, tzId, 's');
 
     const start = sec('2021-03-14T01:30:00', tz);
+    if (cr.kind !== 'recur') throw new Error('expected recurring rule');
     const end = computeOccurrenceEnd(cr, start);
     const endLocal = DateTime.fromSeconds(end, { zone: tz });
-
     expect(endLocal.hour).toBe(3);
     expect(endLocal.minute).toBe(30);
     expect(end - start).toBe(60 * 60);
@@ -45,9 +45,9 @@ describe("'s' timeUnit: DST handling and rounded ends", () => {
     const cr = compileRule(rule, tzId, 's');
 
     const start = sec('2021-11-07T01:30:00', tz);
+    if (cr.kind !== 'recur') throw new Error('expected recurring rule');
     const end = computeOccurrenceEnd(cr, start);
     const endLocal = DateTime.fromSeconds(end, { zone: tz });
-
     expect(endLocal.hour).toBe(1);
     expect(endLocal.minute).toBe(30);
     expect(end - start).toBe(60 * 60);

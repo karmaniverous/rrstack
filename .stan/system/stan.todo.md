@@ -10,10 +10,12 @@ Completed (recent)
   - bounds/common.ts: shared helpers (cascadedStatus, coversAt, lastStartBefore).
   - bounds/earliest.ts, bounds/latest.ts, bounds/openEnd.ts: split passes.
   - bounds.ts now orchestrates and re-exports getEffectiveBounds; public API unchanged.
+  - Follow-up: fix lints (unused imports, TSDoc hyphens) in new modules and
+    remove unnecessary optional chains/conditionals in options/compile code.
+  - Narrow tests to recurring rules where helpers require recurrence-only data.
 
 - Feat: Continuous (span) rules (no freq ⇒ duration omitted ⇒ continuous coverage)
-  - Types: RuleOptionsJson.freq optional; RuleJson.duration optional.
-  - Zod: refinement enforces (freq ⇒ duration required), (no freq ⇒ duration omitted). Legacy 'continuous' normalized.  - Compiler/runtime: CompiledRule union (recur|span); span carries start/end clamps; no RRULE instance.
+  - Types: RuleOptionsJson.freq optional; RuleJson.duration optional.  - Zod: refinement enforces (freq ⇒ duration required), (no freq ⇒ duration omitted). Legacy 'continuous' normalized.  - Compiler/runtime: CompiledRule union (recur|span); span carries start/end clamps; no RRULE instance.
   - Coverage/Segments/Bounds/Describe: span support integrated; open-sided detection in bounds includes spans.
   - Tests: span.basic (coverage/segments), bounds.span, describe span.
   - Docs: README adds “Continuous (span) rules” section.

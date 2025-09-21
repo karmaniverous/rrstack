@@ -19,8 +19,13 @@ describe('compileRule', () => {
       'UTC' as unknown as TimeZoneId,
       'ms',
     );
+    if (cr.kind !== 'recur') throw new Error('expected recurring rule');
     expect(cr.duration.isValid).toBe(true);
-    const starts = cr.rrule.between(new Date(Date.UTC(2024, 0, 1)), new Date(Date.UTC(2024, 0, 3)), true);
+    const starts = cr.rrule.between(
+      new Date(Date.UTC(2024, 0, 1)),
+      new Date(Date.UTC(2024, 0, 3)),
+      true,
+    );
     expect(starts.length).toBeGreaterThan(0);
   });
 });

@@ -7,11 +7,10 @@
 
 import { DateTime } from 'luxon';
 
-import type { CompiledRecurRule,CompiledRule } from './compile';
+import type { CompiledRule } from './compile';
 import { enumerationHorizon } from './coverage/enumerate';
 import {
-  localDayMatchesCommonPatterns,
-  localDayMatchesDailyTimes,
+  localDayMatchesCommonPatterns,  localDayMatchesDailyTimes,
 } from './coverage/patterns';
 import {
   computeOccurrenceEnd,

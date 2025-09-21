@@ -1,12 +1,11 @@
 /**
  * Earliest-bound computation.
  */
-import type { CompiledRecurRule, CompiledRule } from '../compile';
+import type { CompiledRule } from '../compile';
 import {
   computeOccurrenceEnd,
   domainMax,
-  domainMin,
-  epochToWallDate,
+  domainMin,  epochToWallDate,
   floatingDateToZonedEpoch,
 } from '../coverage/time';
 import {
@@ -17,16 +16,15 @@ import {
 
 /**
  * Compute earliest active start across the rule set.
- * @param rules Compiled rules (later override earlier).
- * @param min Domain minimum (unit-aware).
- * @param probe Far-future probe (unit-aware) to bound forward jumps.
+ * @param rules - Compiled rules (later override earlier).
+ * @param min - Domain minimum (unit-aware).
+ * @param probe - Far-future probe (unit-aware) to bound forward jumps.
  */
 export const computeEarliestStart = (
   rules: CompiledRule[],
   min: number,
   probe: number,
-): number | undefined => {
-  let earliestStart: number | undefined = undefined;
+): number | undefined => {  let earliestStart: number | undefined = undefined;
 
   // Fast-path pre-pass (earliest):
   // A0 = earliest start across active rules; B0 = earliest start across blackout rules.

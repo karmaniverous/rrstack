@@ -1,12 +1,11 @@
 /**
  * Open-end detection relative to a far-future probe.
  */
-import type { CompiledRecurRule, CompiledRule } from '../compile';
+import type { CompiledRule } from '../compile';
 import { domainMin, epochToWallDate } from '../coverage/time';
 
 export const detectOpenEnd = (
-  rules: CompiledRule[],
-  probe: number,
+  rules: CompiledRule[],  probe: number,
 ): boolean => {
   const wallProbePerRule = rules.map((r) =>
     r.kind === 'recur' ? epochToWallDate(probe, r.tz, r.unit) : null,

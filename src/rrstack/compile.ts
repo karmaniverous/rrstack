@@ -133,11 +133,10 @@ export const compileRule = (
   unit: UnixTimeUnit,
 ): CompiledRule => {
   // Legacy tolerance: freq === 'continuous' → span (no freq)
-  const freqRaw = (rule.options as unknown as { freq?: unknown })?.freq;
+  const freqRaw = (rule.options as unknown as { freq?: unknown }).freq;
   const isSpan = !freqRaw || freqRaw === 'continuous';
 
-  if (!isSpan) {
-    // Recurring rule path
+  if (!isSpan) {    // Recurring rule path
     if (!rule.duration) {
       throw new Error('Recurring rules require a positive duration');
     }

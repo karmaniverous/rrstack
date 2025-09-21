@@ -86,14 +86,10 @@ export const RuleLiteSchema = z
     label: z.string().optional(),
   })
   .superRefine((val, ctx) => {
-    const rawFreq = (val as unknown as { options?: { freq?: unknown } })
-      ?.options?.freq;
-    const isLegacyContinuous = rawFreq === 'continuous';
+    const rawFreq = (val as unknown as { options: { freq?: unknown } }).options
+      .freq;
     const hasFreq =
-      typeof rawFreq === 'string' &&
-      rawFreq !== '' &&
-      rawFreq !== 'continuous';
-
+      typeof rawFreq === 'string' && rawFreq !== '' && rawFreq !== 'continuous';
     if (hasFreq) {
       // Recurring rule must provide a duration.
       if (!val.duration) {
@@ -138,7 +134,7 @@ export const normalizeOptions = (
   const normalized: RRStackOptionsNormalized = Object.freeze({
     timezone: parsed.timezone as unknown as TimeZoneId,
     timeUnit: parsed.timeUnit,
-    rules: Object.freeze([...(rules)]),
+    rules: Object.freeze([...rules]),
   });
   return normalized;
 };

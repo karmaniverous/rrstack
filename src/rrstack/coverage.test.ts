@@ -29,6 +29,7 @@ describe('coverage', () => {
     expect(ruleCoversInstant(cr, six - 1)).toBe(true);
     expect(ruleCoversInstant(cr, six)).toBe(false);
 
+    if (cr.kind !== 'recur') throw new Error('expected recurring rule');
     const end = computeOccurrenceEnd(cr, five);
     expect(end).toBe(six);
   });

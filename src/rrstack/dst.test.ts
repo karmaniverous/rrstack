@@ -22,9 +22,9 @@ describe('DST handling (America/Chicago)', () => {
     const cr = compileRule(rule, tzId, 'ms');
 
     const start = ms('2021-03-14T01:30:00');
+    if (cr.kind !== 'recur') throw new Error('expected recurring rule');
     const end = computeOccurrenceEnd(cr, start);
     const endLocal = DateTime.fromMillis(end, { zone: tz });
-
     expect(endLocal.hour).toBe(3);
     expect(endLocal.minute).toBe(30);
     expect(end - start).toBe(60 * 60 * 1000);
@@ -43,9 +43,9 @@ describe('DST handling (America/Chicago)', () => {
     const cr = compileRule(rule, tzId, 'ms');
 
     const start = ms('2021-11-07T01:30:00');
+    if (cr.kind !== 'recur') throw new Error('expected recurring rule');
     const end = computeOccurrenceEnd(cr, start);
     const endLocal = DateTime.fromMillis(end, { zone: tz });
-
     expect(endLocal.hour).toBe(1);
     expect(endLocal.minute).toBe(30);
     expect(end - start).toBe(60 * 60 * 1000);
