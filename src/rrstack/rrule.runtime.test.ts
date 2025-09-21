@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { describe, expect, it } from 'vitest';
 
 import { __pickRRuleNamespace } from './rrule.runtime';
-
 describe('rrule.runtime shim', () => {
   it('uses default export when it contains rrule surface', () => {
     const fake: {

@@ -6,10 +6,22 @@ Last updated: 2025-09-21 (UTC)
 
 Completed (recent)
 
+- Fix(types/eslint): switch config construction to tseslint.config; cast
+  plugins via unknown to Linter.Plugin (no any) and narrow Vitest
+  recommended rules to Linter.RulesRecord. Resolves TS2322 errors in
+  eslint.config.ts during build/docs/typecheck.
+- Style(lint): replace simple index loops with for-of in
+  src/rrstack/RRStack.queries.ts, src/rrstack/util/heap.ts, and the
+  pre-pass loop in src/rrstack/bounds/latest.ts. Fix TSDoc '<=' parsing
+  by using '≤' in src/rrstack/bounds/common.ts. Silence
+  no-empty-function in src/rrstack/rrule.runtime.test.ts via file-level
+  disable. ESLint passes with no errors.
+- Chore(knip): remove non-existent archive.ts from knip entry; drop
+  unused devDependency tar to clear knip warnings.
+
 - Chore(eslint): remove deprecated eslint-plugin-vitest; adopt @vitest/eslint-plugin
   - Resolves peer warnings with ESLint 9.
-  - Applied plugin to **/*.test.ts only; rules pulled from recommended config when available.
-- Chore(eslint): ensure strict, type-aware linting
+  - Applied plugin to \*_/_.test.ts only; rules pulled from recommended config when available.- Chore(eslint): ensure strict, type-aware linting
   - Flat-config uses typescript-eslint strictTypeChecked + stylisticTypeChecked.
   - parserOptions.project enabled; tsconfigRootDir bound to repo root.
 - Chore(zod v4): use native JSON Schema converter
@@ -20,7 +32,7 @@ Completed (recent)
 
 - Chore(zod v4): migrate JSON Schema generation to Zod 4 native converter
   - Removed dev dependency on zod-to-json-schema (v3 peer-conflicted).
-  - scripts/gen-schema.ts now imports { zodToJsonSchema } from 'zod' and    preserves our post-processing (DurationParts anyOf positivity; freq enum).
+  - scripts/gen-schema.ts now imports { zodToJsonSchema } from 'zod' and preserves our post-processing (DurationParts anyOf positivity; freq enum).
   - Do not edit assets/rrstackconfig.schema.json manually; regenerate via
     npm run schema.
 
@@ -377,6 +389,3 @@ Completed (recent)
 ---
 
 9. Next steps (implementation plan)
-
-- Optional: expand docs/handbook with a spans subsection and JSON examples.
-- Optional: post-bump guard in release-it to verify embedded **RRSTACK_VERSION** equals package.json.version.

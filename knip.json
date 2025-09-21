@@ -1,11 +1,10 @@
 {
-  "entry": ["src/**/index.ts", "archive.ts", "stan.rollup.config.ts"],
+  "entry": ["src/**/index.ts", "stan.rollup.config.ts"],
   "project": ["**/*", "!docs/**", "!.stan/**"],
   "rules": {
     "exports": "off",
     "types": "off"
-  },
-  "vitest": {
+  },  "vitest": {
     "entry": ["*/**/*.test.!(*.*)"]
   }
 }

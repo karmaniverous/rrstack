@@ -13,8 +13,8 @@ export const minBoundary = (
     if (typeof v !== 'number') return;
     if (t === undefined || v < t) t = v;
   };
-  for (let i = 0; i < starts.length; i++) consider(starts[i]);
-  for (let i = 0; i < ends.length; i++) consider(ends[i]);
+  for (const v of starts) consider(v);
+  for (const v of ends) consider(v);
   return t;
 };
 
@@ -27,7 +27,7 @@ export const maxBoundary = (
     if (typeof v !== 'number') return;
     if (t === undefined || v > t) t = v;
   };
-  for (let i = 0; i < starts.length; i++) consider(starts[i]);
-  for (let i = 0; i < ends.length; i++) consider(ends[i]);
+  for (const v of starts) consider(v);
+  for (const v of ends) consider(v);
   return t;
 };

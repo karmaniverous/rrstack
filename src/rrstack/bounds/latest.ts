@@ -31,8 +31,7 @@ export const computeLatestEnd = (
   let latestActiveEndCandidate: number | undefined = undefined;
   let latestBlackoutEndCandidate: number | undefined = undefined;
 
-  for (let i = 0; i < rules.length; i++) {
-    const r = rules[i];
+  for (const r of rules) {
     const last = lastStartBefore(r, probe);
     if (typeof last !== 'number') continue;
     const e =
@@ -57,7 +56,6 @@ export const computeLatestEnd = (
       }
     }
   }
-
   if (
     typeof latestActiveEndCandidate === 'number' &&
     (typeof latestBlackoutEndCandidate !== 'number' ||

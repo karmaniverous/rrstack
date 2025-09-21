@@ -27,7 +27,7 @@ export const topCoveringIndex = (covering: boolean[]): number | undefined => {
 };
 
 /**
- * Find last start <= cursor; returns its epoch in unit or undefined.
+ * Find last start ≤ cursor; returns its epoch in unit or undefined.
  */
 export const lastStartBefore = (
   rule: CompiledRule,

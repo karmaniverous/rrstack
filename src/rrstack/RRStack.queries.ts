@@ -14,9 +14,9 @@ export const isActiveAtCompiled = (
   t: number,
 ): boolean => {
   let isActive = false;
-  for (let i = 0; i < compiled.length; i++) {
-    if (ruleCoversInstant(compiled[i], t)) {
-      isActive = compiled[i].effect === 'active';
+  for (const r of compiled) {
+    if (ruleCoversInstant(r, t)) {
+      isActive = r.effect === 'active';
     }
   }
   return isActive;
