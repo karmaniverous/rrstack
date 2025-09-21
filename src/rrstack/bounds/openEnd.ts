@@ -18,7 +18,7 @@ export const detectOpenEnd = (
       return s <= probe;
     }
     const recur = r;
-    const next = recur.rrule.after(wallProbePerRule[i] as Date, false);
+    const next = recur.rrule.after(wallProbePerRule[i]!, false);
     return !!next;
   });
 };

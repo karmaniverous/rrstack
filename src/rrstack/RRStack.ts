@@ -153,7 +153,7 @@ export class RRStack {
   /**
    * Get the rule list (frozen).
    */
-  get rules(): ReadonlyArray<RuleJson> {
+  get rules(): readonly RuleJson[] {
     return this.options.rules;
   }
 
@@ -162,7 +162,7 @@ export class RRStack {
    * @param next - New rule array. A lightweight runtime check is applied;
    *               full validation occurs during compilation.
    */
-  set rules(next: ReadonlyArray<RuleJson>) {
+  set rules(next: readonly RuleJson[]) {
     // Minimal rule-lite validation to fail fast; full validation in compile.
     next.forEach((r) => RuleLiteSchema.parse(r));
     const { timezone, timeUnit } = this.options;

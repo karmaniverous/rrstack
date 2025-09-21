@@ -73,8 +73,8 @@ export const computeLatestEnd = (
     cursor: number,
   ): {
     covering: boolean[];
-    prevStart: Array<number | undefined>;
-    prevEnd: Array<number | undefined>;
+    prevStart: (number | undefined)[];
+    prevEnd: (number | undefined)[];
   } => {
     const covering = new Array<boolean>(n).fill(false);
     const prevStart = new Array<number | undefined>(n).fill(undefined);

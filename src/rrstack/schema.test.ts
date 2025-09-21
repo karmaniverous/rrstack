@@ -75,8 +75,9 @@ describe('RRSTACK_CONFIG_SCHEMA export', () => {
     // Prefer definitions.DurationParts (or $defs.DurationParts)
     const defs = getDefs(root);
 
-    let duration: JSONSchema7 | undefined =
-      defs && defs.DurationParts ? asSchema(defs.DurationParts) : undefined;
+    let duration: JSONSchema7 | undefined = defs?.DurationParts
+      ? asSchema(defs.DurationParts)
+      : undefined;
 
     // Heuristic scan if the name differs
     if (!duration && defs) {

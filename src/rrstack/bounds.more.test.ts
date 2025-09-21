@@ -374,11 +374,11 @@ describe('bounds: additional scenarios', () => {
     const b = getEffectiveBounds([rule]);
     expect(b.empty).toBe(false);
     // Assert 1-hour span and local calendar day; avoid brittle absolute instants.
-    expect((b.end as number) - (b.start as number)).toBe(3600);
-    const sL = DateTime.fromSeconds(b.start as number, {
+    expect(b.end! - b.start!).toBe(3600);
+    const sL = DateTime.fromSeconds(b.start!, {
       zone: 'America/Chicago',
     });
-    const eL = DateTime.fromSeconds(b.end as number, {
+    const eL = DateTime.fromSeconds(b.end!, {
       zone: 'America/Chicago',
     });
     expect(sL.toISODate()).toBe('2021-03-14');
@@ -409,11 +409,11 @@ describe('bounds: additional scenarios', () => {
     const b = getEffectiveBounds([rule]);
     expect(b.empty).toBe(false);
     // Assert 1-hour span and local calendar day; avoid brittle absolute instants.
-    expect((b.end as number) - (b.start as number)).toBe(3600);
-    const sL = DateTime.fromSeconds(b.start as number, {
+    expect(b.end! - b.start!).toBe(3600);
+    const sL = DateTime.fromSeconds(b.start!, {
       zone: 'America/Chicago',
     });
-    const eL = DateTime.fromSeconds(b.end as number, {
+    const eL = DateTime.fromSeconds(b.end!, {
       zone: 'America/Chicago',
     });
     expect(sL.toISODate()).toBe('2021-11-07');

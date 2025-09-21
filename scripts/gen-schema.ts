@@ -1,6 +1,6 @@
 /**
  * Generate the package JSON Schema from the Zod source of truth.
- * - Uses zod-to-json-schema at build/docs time (dev-only dependency).
+ * - Uses Zod v4 native JSON Schema conversion at build/docs time.
  * - Post-processes DurationParts to require at least one non-zero component
  *   via an `anyOf` of required+minimum(1) constraints.
  * - Post-processes Rule.options.freq to ensure a string enum of lower-case
@@ -12,7 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
-import { z, zodToJsonSchema } from 'zod';
+import { z } from 'zod';
 
 import { OptionsSchema, RuleLiteSchema } from '../src/rrstack/RRStack.options';
 const __filename = fileURLToPath(import.meta.url);
@@ -111,7 +111,7 @@ const ensureFreqStringEnum = (root: JSONSchema7): void => {
   itemSchema = Array.isArray(itemsDef)
     ? asSchema(itemsDef[0])
     : asSchema(itemsDef);
-  if (itemSchema && itemSchema.$ref && typeof itemSchema.$ref === 'string') {
+  if (itemSchema?.$ref && typeof itemSchema.$ref === 'string') {
     const resolved = followRef(root, itemSchema.$ref);
     if (resolved) itemSchema = resolved;
   }
@@ -124,11 +124,7 @@ const ensureFreqStringEnum = (root: JSONSchema7): void => {
   if (!ruleProps) return;
 
   let optionsSchema = asSchema(ruleProps.options);
-  if (
-    optionsSchema &&
-    optionsSchema.$ref &&
-    typeof optionsSchema.$ref === 'string'
-  ) {
+  if (optionsSchema?.$ref && typeof optionsSchema.$ref === 'string') {
     const resolved = followRef(root, optionsSchema.$ref);
     if (resolved) optionsSchema = resolved;
   }
@@ -149,15 +145,27 @@ const ensureFreqStringEnum = (root: JSONSchema7): void => {
   freq.type = 'string';
   (freq as unknown as { enum?: readonly string[] }).enum = [...FREQ_VALUES];
 };
+
 async function main(): Promise<void> {
   // Build a strengthened Options schema for JSON Schema generation.
   const RRStackOptionsZod = OptionsSchema.extend({
     rules: z.array(RuleLiteSchema),
   });
 
-  // 1) Generate base JSON Schema (draft-07) for RRStackOptions (no version).
-  // Zod v4 ships native JSON Schema conversion.
-  const schema = zodToJsonSchema(RRStackOptionsZod, 'RRStackOptions', {
+  // 1) Generate base JSON Schema (draft-07) for RRStackOptions (no version) using Zod v4 native conversion.
+  // Provide a typed view of z with toJSONSchema to satisfy type-aware linting.
+  type ZodWithToJSON = typeof z & {
+    toJSONSchema: (
+      schema: unknown,
+      name?: string,
+      options?: {
+        $refStrategy?: 'none' | 'root' | 'path';
+        [k: string]: unknown;
+      },
+    ) => unknown;
+  };
+  const Z = z as unknown as ZodWithToJSON;
+  const schema = Z.toJSONSchema(RRStackOptionsZod, 'RRStackOptions', {
     $refStrategy: 'none',
   }) as JSONSchema7;
 

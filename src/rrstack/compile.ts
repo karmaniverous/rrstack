@@ -97,7 +97,7 @@ export const toRRuleOptions = (
   delete rrLikeRaw.starts;
   delete rrLikeRaw.ends;
   // Map human-readable freq → rrule numeric enum
-  rrLikeRaw.freq = FREQ_MAP[options.freq as FrequencyStr];
+  rrLikeRaw.freq = FREQ_MAP[options.freq!];
 
   const partial: Partial<RRuleOptions> = {
     ...(rrLikeRaw as Partial<RRuleOptions>),

@@ -1,10 +1,10 @@
 import js from '@eslint/js';
+import vitest from '@vitest/eslint-plugin';
 import { defineConfig } from 'eslint/config';
 import prettierConfig from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
 import tsDocPlugin from 'eslint-plugin-tsdoc';
-import vitestPlugin from 'eslint-plugin-vitest';
 import { dirname } from 'path';
 import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'url';
@@ -24,11 +24,24 @@ export default defineConfig([
   },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
+  ...tseslint.configs.stylisticTypeChecked,
   prettierConfig,
-  {
-    ...vitestPlugin.configs.recommended,
-    files: ['**/*.test.ts'],
-  },
+  // Vitest rules for test files
+  (() => {
+    // Use recommended rules when available from @vitest/eslint-plugin.
+    // Fall back to just enabling the plugin if configs aren’t exposed.
+    const recommended =
+      (
+        vitest as unknown as {
+          configs?: { recommended?: { rules?: Record<string, unknown> } };
+        }
+      ).configs?.recommended?.rules ?? {};
+    return {
+      files: ['**/*.test.ts'],
+      plugins: { vitest },
+      rules: { ...recommended },
+    };
+  })(),
   {
     languageOptions: {
       parserOptions: {

@@ -6,10 +6,21 @@ Last updated: 2025-09-21 (UTC)
 
 Completed (recent)
 
+- Chore(eslint): remove deprecated eslint-plugin-vitest; adopt @vitest/eslint-plugin
+  - Resolves peer warnings with ESLint 9.
+  - Applied plugin to **/*.test.ts only; rules pulled from recommended config when available.
+- Chore(eslint): ensure strict, type-aware linting
+  - Flat-config uses typescript-eslint strictTypeChecked + stylisticTypeChecked.
+  - parserOptions.project enabled; tsconfigRootDir bound to repo root.
+- Chore(zod v4): use native JSON Schema converter
+  - scripts/gen-schema.ts now calls z.toJSONSchema (Zod v4) with $refStrategy: 'none'.
+  - Strongly typed the dynamic access to avoid no-unsafe-call.
+  - Post-processing retained (DurationParts positivity anyOf; freq enum cleanup).
+  - Continue to regenerate assets/rrstackconfig.schema.json via “npm run schema” (do not hand-edit).
+
 - Chore(zod v4): migrate JSON Schema generation to Zod 4 native converter
   - Removed dev dependency on zod-to-json-schema (v3 peer-conflicted).
-  - scripts/gen-schema.ts now imports { zodToJsonSchema } from 'zod' and
-    preserves our post-processing (DurationParts anyOf positivity; freq enum).
+  - scripts/gen-schema.ts now imports { zodToJsonSchema } from 'zod' and    preserves our post-processing (DurationParts anyOf positivity; freq enum).
   - Do not edit assets/rrstackconfig.schema.json manually; regenerate via
     npm run schema.
 

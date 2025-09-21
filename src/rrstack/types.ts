@@ -111,7 +111,7 @@ export interface RRStackOptions {
 export interface RRStackOptionsNormalized
   extends Omit<RRStackOptions, 'timeUnit' | 'rules' | 'timezone'> {
   timeUnit: UnixTimeUnit;
-  rules: ReadonlyArray<RuleJson>;
+  rules: readonly RuleJson[];
   timezone: TimeZoneId;
 }
 

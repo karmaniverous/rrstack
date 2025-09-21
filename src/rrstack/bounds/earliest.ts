@@ -38,7 +38,7 @@ export const computeEarliestStart = (
       const r = rules[i];
       let t: number | undefined;
       if (r.kind === 'recur') {
-        const d = r.rrule.after(wallMinPerRule[i] as Date, true);
+        const d = r.rrule.after(wallMinPerRule[i]!, true);
         if (!d) continue;
         t = floatingDateToZonedEpoch(d, r.tz, r.unit);
       } else {
@@ -86,8 +86,8 @@ export const computeEarliestStart = (
     cursor: number,
   ): {
     covering: boolean[];
-    nextStart: Array<number | undefined>;
-    nextEnd: Array<number | undefined>;
+    nextStart: (number | undefined)[];
+    nextEnd: (number | undefined)[];
   } => {
     const covering = new Array<boolean>(n).fill(false);
     const nextStart = new Array<number | undefined>(n).fill(undefined);

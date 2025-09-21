@@ -5,8 +5,8 @@
  */
 
 export const minBoundary = (
-  starts: Array<number | undefined>,
-  ends: Array<number | undefined>,
+  starts: (number | undefined)[],
+  ends: (number | undefined)[],
 ): number | undefined => {
   let t: number | undefined = undefined;
   const consider = (v: number | undefined) => {
@@ -19,8 +19,8 @@ export const minBoundary = (
 };
 
 export const maxBoundary = (
-  starts: Array<number | undefined>,
-  ends: Array<number | undefined>,
+  starts: (number | undefined)[],
+  ends: (number | undefined)[],
 ): number | undefined => {
   let t: number | undefined = undefined;
   const consider = (v: number | undefined) => {

@@ -1,9 +1,194 @@
 {
-  "$ref": "#/definitions/RRStackOptions",
-  "definitions": {
-    "RRStackOptions": {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
       "type": "string"
+    },
+    "timezone": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timeUnit": {
+      "default": "ms",
+      "type": "string",
+      "enum": [
+        "ms",
+        "s"
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "effect": {
+            "type": "string",
+            "enum": [
+              "active",
+              "blackout"
+            ]
+          },
+          "duration": {
+            "type": "object",
+            "properties": {
+              "years": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "months": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "weeks": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "days": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hours": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "minutes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "seconds": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "additionalProperties": false,
+            "anyOf": [
+              {
+                "required": [
+                  "years"
+                ],
+                "properties": {
+                  "years": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "months"
+                ],
+                "properties": {
+                  "months": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "weeks"
+                ],
+                "properties": {
+                  "weeks": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "days"
+                ],
+                "properties": {
+                  "days": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "hours"
+                ],
+                "properties": {
+                  "hours": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "minutes"
+                ],
+                "properties": {
+                  "minutes": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "seconds"
+                ],
+                "properties": {
+                  "seconds": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            ]
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "freq": {
+                "type": "string",
+                "enum": [
+                  "yearly",
+                  "monthly",
+                  "weekly",
+                  "daily",
+                  "hourly",
+                  "minutely",
+                  "secondly"
+                ]
+              },
+              "starts": {
+                "type": "number"
+              },
+              "ends": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": {}
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "effect",
+          "options"
+        ],
+        "additionalProperties": false
+      }
     }
   },
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "required": [
+    "timezone",
+    "timeUnit",
+    "rules"
+  ],
+  "additionalProperties": false
 }

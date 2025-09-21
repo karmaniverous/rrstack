@@ -19,7 +19,7 @@ const plural = (n: number, unit: string) =>
   String(n) + ' ' + unit + (n === 1 ? '' : 's');
 
 const durationToTextFromParts = (parts: DurationParts): string => {
-  const order: Array<keyof DurationParts> = [
+  const order: (keyof DurationParts)[] = [
     'years',
     'months',
     'weeks',
