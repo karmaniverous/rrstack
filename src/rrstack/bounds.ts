@@ -36,24 +36,27 @@ export const getEffectiveBounds = (
   const max = domainMax(unit);
   const probe = probeCandidate > max ? max : probeCandidate;
 
-  const statusAtProbe =
-    ((): 'active' | 'blackout' => {
-      const coveringAtProbe = rules.map((r) => coversAt(r, probe));
-      for (let i = coveringAtProbe.length - 1; i >= 0; i--) {
-        if (coveringAtProbe[i]) return rules[i].effect;
-      }
-      return 'blackout';
-    })();
+  const statusAtProbe = ((): 'active' | 'blackout' => {
+    const coveringAtProbe = rules.map((r) => coversAt(r, probe));
+    for (let i = coveringAtProbe.length - 1; i >= 0; i--) {
+      if (coveringAtProbe[i]) return rules[i].effect;
+    }
+    return 'blackout';
+  })();
 
   const earliestStart = computeEarliestStart(rules, min, probe);
 
   // Open-ended detection
   const openEndDetected = detectOpenEnd(rules, probe);
 
-  const latestEnd = openEndDetected ? undefined : computeLatestEnd(rules, probe);
+  const latestEnd = openEndDetected
+    ? undefined
+    : computeLatestEnd(rules, probe);
 
   const empty =
-    earliestStart === undefined && latestEnd === undefined && statusAtProbe === 'blackout';
+    earliestStart === undefined &&
+    latestEnd === undefined &&
+    statusAtProbe === 'blackout';
   return {
     start: earliestStart,
     end: openEndDetected ? undefined : latestEnd,

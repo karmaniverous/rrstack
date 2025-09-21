@@ -18,7 +18,7 @@ type RRuleNS = typeof raw;
  * prefer it; otherwise use the namespace itself (ESM).
  */
 function pickRRuleNamespace(mod: unknown): RRuleNS {
-  if (mod && typeof mod === 'object' && 'default' in (mod)) {
+  if (mod && typeof mod === 'object' && 'default' in mod) {
     const d = (mod as { default: unknown }).default;
     if (d && typeof d === 'object') {
       return d as RRuleNS;

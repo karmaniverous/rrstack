@@ -8,7 +8,8 @@ describe('bounds: open-sided detection and empty set', () => {
   it('detects open start when coverage begins at domainMin with open start', () => {
     const rule = compileRule(
       {
-        effect: 'active',        duration: { seconds: 120 },
+        effect: 'active',
+        duration: { seconds: 120 },
         options: {
           freq: 'daily',
           byhour: [0],
@@ -26,7 +27,8 @@ describe('bounds: open-sided detection and empty set', () => {
   }, 40000);
   it('detects open end when coverage extends beyond the probe with open end', () => {
     // Active daily 05:00–06:00, starts clamped but no ends => open end.
-    const starts = Date.UTC(2024, 0, 10, 0, 0, 0);    const active = compileRule(
+    const starts = Date.UTC(2024, 0, 10, 0, 0, 0);
+    const active = compileRule(
       {
         effect: 'active',
         duration: { hours: 1 },

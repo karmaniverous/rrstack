@@ -120,7 +120,8 @@ describe('useRRStack (react)', () => {
     app.unmount();
   });
 
-  it('debounces onChange and supports flush()', async () => {    vi.useFakeTimers();
+  it('debounces onChange and supports flush()', async () => {
+    vi.useFakeTimers();
     const events: number[] = [];
 
     function DebouncedView(props: { json: RRStackOptions }) {
@@ -153,7 +154,9 @@ describe('useRRStack (react)', () => {
 
     // We queued 3 quick adds above: the rule count in DOM already reflects them
     // Ensure effects and store updates have flushed (await a microtask)
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
     expect(div.getAttribute('data-count')).toBe('4');
 
     // No onChange call yet (trailing debounce)
@@ -195,11 +198,15 @@ describe('useRRStack (react)', () => {
       });
     };
 
-    const app = mount(React.createElement(DebouncedLeadingView, { json: EXAMPLE_A }));
+    const app = mount(
+      React.createElement(DebouncedLeadingView, { json: EXAMPLE_A }),
+    );
     const div = app.container.querySelector('div')!;
 
     // Let effects flush
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
     // Leading fired once immediately on first mutation; EXAMPLE_A had 1 rule,
     // so the immediate count is 2.
     expect(events).toEqual([2]);
@@ -222,7 +229,9 @@ describe('useRRStack (react)', () => {
     const events: number[] = [];
     let FLUSH: (() => void) | undefined;
 
-    const DebouncedTrailingWithFlush: FC<{ json: RRStackOptions }> = ({ json }) => {
+    const DebouncedTrailingWithFlush: FC<{ json: RRStackOptions }> = ({
+      json,
+    }) => {
       const calls = useRef(0);
       const onChange = (s: RRStack) => {
         events.push(s.rules.length);
@@ -254,7 +263,9 @@ describe('useRRStack (react)', () => {
     const div = app.container.querySelector('div')!;
 
     // Effects flushed; no trailing call yet
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
     expect(div.getAttribute('data-count')).toBe('4');
     expect(events.length).toBe(0);
 

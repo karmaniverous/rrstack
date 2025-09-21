@@ -8,7 +8,8 @@ describe('Scenario (America/Chicago): 3-rule cascade (odd months)', () => {
   const tz = 'America/Chicago';
 
   // Helper to get epoch ms for a local zoned time string (ISO without zone)
-  const ms = (isoLocal: string) => DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
+  const ms = (isoLocal: string) =>
+    DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
 
   // Temporary: environment-sensitive due to Intl TZ handling; unskip after TZ validation
   // and CI Node/ICU consistency are in place (see dev plan).
@@ -39,7 +40,8 @@ describe('Scenario (America/Chicago): 3-rule cascade (odd months)', () => {
         byweekday: [RRule.TU.nth(3)],
         byhour: [5],
         byminute: [0],
-        bysecond: [0],        starts: ms('2021-01-01T00:00:00'),
+        bysecond: [0],
+        starts: ms('2021-01-01T00:00:00'),
       },
       label: 'blk-july-3rd-tue-05',
     };
@@ -54,7 +56,8 @@ describe('Scenario (America/Chicago): 3-rule cascade (odd months)', () => {
         bymonthday: [20],
         byhour: [5],
         byminute: [0],
-        bysecond: [0],        starts: ms('2021-01-01T00:00:00'),
+        bysecond: [0],
+        starts: ms('2021-01-01T00:00:00'),
       },
       label: 'react-july-20-05',
     };

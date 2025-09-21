@@ -135,10 +135,12 @@ export const compileRule = (
   const freqRaw = (rule.options as unknown as { freq?: unknown }).freq;
   const isSpan = freqRaw === undefined;
 
-  if (!isSpan) {    // Recurring rule path
+  if (!isSpan) {
+    // Recurring rule path
     if (!rule.duration) {
       throw new Error('Recurring rules require a positive duration');
-    }    const duration = Duration.fromObject(rule.duration);
+    }
+    const duration = Duration.fromObject(rule.duration);
     const q =
       unit === 'ms' ? duration.as('milliseconds') : duration.as('seconds');
     if (!Number.isFinite(q) || q <= 0) {
@@ -168,13 +170,10 @@ export const compileRule = (
   if (rule.duration) {
     throw new Error('Span rules must omit duration');
   }
-  const start =    typeof rule.options.starts === 'number'
-      ? (rule.options.starts)
-      : undefined;
+  const start =
+    typeof rule.options.starts === 'number' ? rule.options.starts : undefined;
   const end =
-    typeof rule.options.ends === 'number'
-      ? (rule.options.ends)
-      : undefined;
+    typeof rule.options.ends === 'number' ? rule.options.ends : undefined;
 
   const isOpenStart = start === undefined;
   const isOpenEnd = end === undefined;

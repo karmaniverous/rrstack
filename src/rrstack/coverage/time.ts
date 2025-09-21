@@ -9,7 +9,8 @@ import { DateTime, type Duration, IANAZone } from 'luxon';
 import type { CompiledRecurRule } from '../compile';
 import { datetime } from '../rrule.runtime';
 import type { UnixTimeUnit } from '../types';
-export const isValidTimeZone = (tz: string): boolean => IANAZone.isValidZone(tz);
+export const isValidTimeZone = (tz: string): boolean =>
+  IANAZone.isValidZone(tz);
 export const domainMin = (): number => 0;
 export const domainMax = (unit: UnixTimeUnit): number =>
   unit === 'ms' ? 8_640_000_000_000_000 : 8_640_000_000_000;
@@ -21,7 +22,12 @@ export const dayLength = (unit: UnixTimeUnit): number =>
  * Convert epoch value in the given unit to an rrule "floating" Date
  * representing the same local wall-clock timestamp in the given timezone.
  */
-export const epochToWallDate = (value: number, tz: string, unit: UnixTimeUnit): Date => {  const d =
+export const epochToWallDate = (
+  value: number,
+  tz: string,
+  unit: UnixTimeUnit,
+): Date => {
+  const d =
     unit === 'ms'
       ? DateTime.fromMillis(value, { zone: tz })
       : DateTime.fromSeconds(value, { zone: tz });
@@ -30,7 +36,11 @@ export const epochToWallDate = (value: number, tz: string, unit: UnixTimeUnit): 
 /**
  * Convert a "floating" Date from rrule to an epoch value in the given unit * in the given IANA timezone.
  */
-export const floatingDateToZonedEpoch = (d: Date, tz: string, unit: UnixTimeUnit): number => {
+export const floatingDateToZonedEpoch = (
+  d: Date,
+  tz: string,
+  unit: UnixTimeUnit,
+): number => {
   const zdt = DateTime.fromObject(
     {
       year: d.getUTCFullYear(),
@@ -53,7 +63,10 @@ export const floatingDateToZonedEpoch = (d: Date, tz: string, unit: UnixTimeUnit
  * - In 'ms' mode returns milliseconds.
  * - In 's' mode returns integer seconds and rounds up to honor [start,end).
  */
-export const computeOccurrenceEnd = (rule: Pick<CompiledRecurRule, 'unit' | 'tz' | 'duration'>, start: number): number => {
+export const computeOccurrenceEnd = (
+  rule: Pick<CompiledRecurRule, 'unit' | 'tz' | 'duration'>,
+  start: number,
+): number => {
   const startZoned =
     rule.unit === 'ms'
       ? DateTime.fromMillis(start, { zone: rule.tz })
@@ -68,7 +81,10 @@ export const computeOccurrenceEnd = (rule: Pick<CompiledRecurRule, 'unit' | 'tz'
  * - If duration specifies calendar months: 32 days
  * - Otherwise: ceil(duration in unit)
  */
-export const horizonForDuration = (dur: Duration, unit: UnixTimeUnit): number => {
+export const horizonForDuration = (
+  dur: Duration,
+  unit: UnixTimeUnit,
+): number => {
   const v = dur.toObject();
   if (typeof v.years === 'number' && v.years > 0) return 366 * dayLength(unit);
   if (typeof v.months === 'number' && v.months > 0) return 32 * dayLength(unit);

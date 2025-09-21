@@ -10,7 +10,8 @@ import { DateTime } from 'luxon';
 import type { CompiledRule } from './compile';
 import { enumerationHorizon } from './coverage/enumerate';
 import {
-  localDayMatchesCommonPatterns,  localDayMatchesDailyTimes,
+  localDayMatchesCommonPatterns,
+  localDayMatchesDailyTimes,
 } from './coverage/patterns';
 import {
   computeOccurrenceEnd,
@@ -41,8 +42,7 @@ export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
   // Span: simple half-open range check with open sides
   if (rule.kind === 'span') {
     const s = typeof rule.start === 'number' ? rule.start : domainMin();
-    const e =
-      typeof rule.end === 'number' ? rule.end : domainMax(rule.unit);
+    const e = typeof rule.end === 'number' ? rule.end : domainMax(rule.unit);
     return s <= t && t < e;
   }
   const recur = rule;

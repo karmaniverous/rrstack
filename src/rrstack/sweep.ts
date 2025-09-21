@@ -4,4 +4,4 @@
  */
 
 export { getEffectiveBounds } from './bounds';
-export { classifyRange,getSegments } from './segments';
+export { classifyRange, getSegments } from './segments';

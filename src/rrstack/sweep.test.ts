@@ -34,7 +34,11 @@ describe('sweep', () => {
     // Expect 05:00-05:30 active, 05:30-05:45 blackout, 05:45-06:00 active
     expect(segs).toEqual([
       { start: from, end: from + 30 * 60 * 1000, status: 'active' },
-      { start: from + 30 * 60 * 1000, end: from + 45 * 60 * 1000, status: 'blackout' },
+      {
+        start: from + 30 * 60 * 1000,
+        end: from + 45 * 60 * 1000,
+        status: 'blackout',
+      },
       { start: from + 45 * 60 * 1000, end: to, status: 'active' },
     ]);
 

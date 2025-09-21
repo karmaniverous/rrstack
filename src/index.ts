@@ -9,7 +9,9 @@ export type { DescribeOptions } from './rrstack/describe';
 export { describeRule } from './rrstack/describe';
 export { fromIsoDuration, toIsoDuration } from './rrstack/duration';
 export { RRSTACK_CONFIG_SCHEMA } from './rrstack/RRStack.schema';
-export type {  DurationParts,  FrequencyStr,
+export type {
+  DurationParts,
+  FrequencyStr,
   instantStatus,
   rangeStatus,
   RRStackOptions,

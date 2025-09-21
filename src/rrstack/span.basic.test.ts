@@ -27,7 +27,7 @@ describe('span rules (continuous coverage)', () => {
     expect(b.end).toBe(end);
   });
 
-  it("seconds mode: active span uses integer comparisons (no rounding needed)", () => {
+  it('seconds mode: active span uses integer comparisons (no rounding needed)', () => {
     const start = Math.trunc(Date.UTC(2024, 0, 10, 5, 0, 0) / 1000);
     const end = Math.trunc(Date.UTC(2024, 0, 10, 5, 1, 30) / 1000);
     const span: RuleJson = {

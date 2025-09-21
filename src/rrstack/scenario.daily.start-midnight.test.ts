@@ -5,7 +5,8 @@ import { RRStack } from './';
 import type { RuleJson } from './types';
 describe('Daily 09:00 starting at midnight (America/Chicago)', () => {
   const tz = 'America/Chicago';
-  const ms = (isoLocal: string) => DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
+  const ms = (isoLocal: string) =>
+    DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
 
   it('activates at 09:00 on/after the start date even if dtstart is 00:00', () => {
     const rule: RuleJson = {

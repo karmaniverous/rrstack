@@ -7,7 +7,8 @@ import {
   computeOccurrenceEnd,
   domainMax,
   domainMin,
-  epochToWallDate,  floatingDateToZonedEpoch,
+  epochToWallDate,
+  floatingDateToZonedEpoch,
 } from '../coverage/time';
 
 export const cascadedStatus = (
@@ -20,9 +21,7 @@ export const cascadedStatus = (
   return 'blackout';
 };
 
-export const topCoveringIndex = (
-  covering: boolean[],
-): number | undefined => {
+export const topCoveringIndex = (covering: boolean[]): number | undefined => {
   for (let i = covering.length - 1; i >= 0; i--) if (covering[i]) return i;
   return undefined;
 };

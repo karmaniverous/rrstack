@@ -6,7 +6,8 @@ import { RRStack } from './';
 import type { RuleJson } from './types';
 describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
   const tz = 'America/Chicago';
-  const ms = (isoLocal: string) => DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
+  const ms = (isoLocal: string) =>
+    DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
 
   // Keep present but skip until rrule TZ provider is wired robustly
   it('applies July blackout except when the day is the 20th (q2 months)', () => {
@@ -21,7 +22,7 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
         byweekday: [RRule.TU],
         byhour: [5],
         byminute: [0],
-        bysecond: [0],        // First actual occurrence in cadence (3rd Tuesday Jan 2021 at 05:00)
+        bysecond: [0], // First actual occurrence in cadence (3rd Tuesday Jan 2021 at 05:00)
         // Anchoring to an occurrence ensures interval stepping is aligned.
         starts: ms('2021-01-19T05:00:00'),
       },
@@ -54,7 +55,8 @@ describe('Scenario (America/Chicago): 3-rule cascade (every 2 months)', () => {
         bymonthday: [20],
         byhour: [5],
         byminute: [0],
-        bysecond: [0],        starts: ms('2021-01-01T00:00:00'),
+        bysecond: [0],
+        starts: ms('2021-01-01T00:00:00'),
       },
       label: 'react-july-20-05',
     };

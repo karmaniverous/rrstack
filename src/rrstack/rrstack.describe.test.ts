@@ -16,7 +16,10 @@ describe('RRStack.describeRule(index, opts)', () => {
       },
     };
     const stack = new RRStack({ timezone: 'UTC', rules: [rule] });
-    const text = stack.describeRule(0, { includeTimeZone: true, includeBounds: false });
+    const text = stack.describeRule(0, {
+      includeTimeZone: true,
+      includeBounds: false,
+    });
     const lower = text.toLowerCase();
     expect(lower).toContain('active');
     expect(lower).toContain('1 hour 30 minutes');

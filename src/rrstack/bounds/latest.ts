@@ -10,7 +10,12 @@ import {
   floatingDateToZonedEpoch,
 } from '../coverage/time';
 import { maxBoundary } from '../util/heap';
-import { cascadedStatus, coversAt, lastStartBefore, topCoveringIndex } from './common';
+import {
+  cascadedStatus,
+  coversAt,
+  lastStartBefore,
+  topCoveringIndex,
+} from './common';
 
 /**
  * Compute latest active end across the rule set (finite).
@@ -79,8 +84,7 @@ export const computeLatestEnd = (
       const r = rules[i];
       if (r.kind === 'span') {
         const s = typeof r.start === 'number' ? r.start : domainMin();
-        const e =
-          typeof r.end === 'number' ? r.end : domainMax(r.unit);
+        const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
         if (s < cursor) prevStart[i] = s;
         if (e < cursor) prevEnd[i] = e;
         if (e > cursor && s <= cursor) covering[i] = true;
@@ -129,7 +133,10 @@ export const computeLatestEnd = (
         for (let j = top + 1; j < n; j++) {
           if (rules[j].effect === 'active' && typeof prevEnd[j] === 'number') {
             const v = prevEnd[j]!;
-            if (v < cursor && (typeof candidate !== 'number' || v > candidate)) {
+            if (
+              v < cursor &&
+              (typeof candidate !== 'number' || v > candidate)
+            ) {
               candidate = v;
             }
           }
@@ -138,7 +145,10 @@ export const computeLatestEnd = (
         for (let j = 0; j < n; j++) {
           if (rules[j].effect === 'active' && typeof prevEnd[j] === 'number') {
             const v = prevEnd[j]!;
-            if (v < cursor && (typeof candidate !== 'number' || v > candidate)) {
+            if (
+              v < cursor &&
+              (typeof candidate !== 'number' || v > candidate)
+            ) {
               candidate = v;
             }
           }

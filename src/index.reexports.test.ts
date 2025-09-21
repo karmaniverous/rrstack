@@ -10,13 +10,19 @@ describe('package re-exports (src/index.ts)', () => {
     expect(typeof describeRule).toBe('function');
   });
 
-  it('constructs a working RRStack instance via root index', () => {    const stack = new RRStack({
+  it('constructs a working RRStack instance via root index', () => {
+    const stack = new RRStack({
       timezone: 'UTC',
       rules: [
         {
           effect: 'active' as const,
           duration: { minutes: 30 },
-          options: { freq: 'daily', byhour: [12], byminute: [0], bysecond: [0] },
+          options: {
+            freq: 'daily',
+            byhour: [12],
+            byminute: [0],
+            bysecond: [0],
+          },
         },
       ],
     });

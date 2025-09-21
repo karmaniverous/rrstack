@@ -20,7 +20,8 @@ import type {
 // DurationParts validation: non-negative integers, and total > 0.
 export const NonNegInt = z.number().int().min(0);
 
-export const DurationPartsSchema = z  .object({
+export const DurationPartsSchema = z
+  .object({
     years: NonNegInt.optional(),
     months: NonNegInt.optional(),
     weeks: NonNegInt.optional(),
@@ -72,14 +73,16 @@ export const RuleLiteSchema = z
   .object({
     effect: z.enum(['active', 'blackout']),
     duration: DurationPartsSchema.optional(),
-    options: z.object({
+    options: z
+      .object({
         // freq optional (when omitted ⇒ span rule)
         freq: FreqSchema.optional(),
-        starts: z.number().finite().optional(),
-        ends: z.number().finite().optional(),
+        starts: z.number().optional(),
+        ends: z.number().optional(),
       })
-      .passthrough(),
-    label: z.string().optional(),  })
+      .loose(),
+    label: z.string().optional(),
+  })
   .superRefine((val, ctx) => {
     const rawFreq = (val as unknown as { options: { freq?: unknown } }).options
       .freq;
@@ -88,15 +91,16 @@ export const RuleLiteSchema = z
       // Recurring rule must provide a duration.
       if (!val.duration) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Recurring rules require a positive duration.',          path: ['duration'],
+          code: 'custom',
+          message: 'Recurring rules require a positive duration.',
+          path: ['duration'],
         });
       }
     } else {
       // Span rule (no freq or legacy 'continuous') must omit duration.
       if (val.duration) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message: 'Span rules must omit duration.',
           path: ['duration'],
         });

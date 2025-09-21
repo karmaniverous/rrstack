@@ -12,14 +12,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
-import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { z, zodToJsonSchema } from 'zod';
 
-import {
-  OptionsSchema,
-  RuleLiteSchema,
-} from '../src/rrstack/RRStack.options';
-
+import { OptionsSchema, RuleLiteSchema } from '../src/rrstack/RRStack.options';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const durationKeys = [
@@ -148,7 +143,7 @@ const ensureFreqStringEnum = (root: JSONSchema7): void => {
   const freq = asSchema(optProps.freq);
   if (!freq) return;
 
-  // Remove any zod-to-json-schema "anyOf" wrappers so only the string enum remains.
+  // Remove any wrapper so only the string enum remains.
   delete (freq as unknown as { anyOf?: unknown }).anyOf;
 
   freq.type = 'string';
@@ -160,10 +155,10 @@ async function main(): Promise<void> {
     rules: z.array(RuleLiteSchema),
   });
 
-  // 1) Generate base schema (draft-07) for RRStackOptions (no version).
-  const schema = zodToJsonSchema(RRStackOptionsZod, {
-    name: 'RRStackOptions',
-    target: 'jsonSchema7',
+  // 1) Generate base JSON Schema (draft-07) for RRStackOptions (no version).
+  // Zod v4 ships native JSON Schema conversion.
+  const schema = zodToJsonSchema(RRStackOptionsZod, 'RRStackOptions', {
+    $refStrategy: 'none',
   }) as JSONSchema7;
 
   // 2) Locate DurationParts and enforce positivity via anyOf.

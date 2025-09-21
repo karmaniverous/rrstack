@@ -79,13 +79,15 @@ export function useRRStack(
     toDebounceCfg(debounceOpt),
   );
   cfgRef.current = toDebounceCfg(debounceOpt);
-  const debouncedRef = useRef<{ call: (s: RRStack) => void; flush: () => void } | null>(
-    null,
-  );
+  const debouncedRef = useRef<{
+    call: (s: RRStack) => void;
+    flush: () => void;
+  } | null>(null);
   if (debouncedRef.current === null) {
     let timer: ReturnType<typeof setTimeout> | undefined;
     let pending: RRStack | undefined;
-    let inWindow = false;    const call = (s: RRStack) => {
+    let inWindow = false;
+    const call = (s: RRStack) => {
       const cfg = cfgRef.current;
       const cb = onChangeRef.current;
       if (!cb || !cfg) {
@@ -156,7 +158,7 @@ export function useRRStack(
             debouncedRef.current!.call(rrstack);
           } catch {
             /* noop */
-          }          // bump snapshot and then notify React
+          } // bump snapshot and then notify React
           versionRef.current++;
           try {
             reactCb();
@@ -183,4 +185,5 @@ export function useRRStack(
     debouncedRef.current!.flush();
     log('flush');
   }, [log]);
-  return { rrstack, version, flush };}
+  return { rrstack, version, flush };
+}

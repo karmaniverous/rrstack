@@ -4,7 +4,12 @@
 
 import type { CompiledRecurRule } from '../compile';
 import { Frequency } from '../rrule.runtime';
-import { dayLength, epochToWallDate, floatingDateToZonedEpoch, horizonForDuration } from './time';
+import {
+  dayLength,
+  epochToWallDate,
+  floatingDateToZonedEpoch,
+  horizonForDuration,
+} from './time';
 
 export const enumerationHorizon = (rule: CompiledRecurRule): number => {
   const unit = rule.unit;
@@ -27,7 +32,8 @@ export const enumerateStarts = (
   to: number,
   horizon: number,
 ): number[] => {
-  const tz = rule.tz;  const unit = rule.unit;
+  const tz = rule.tz;
+  const unit = rule.unit;
   const windowStart = epochToWallDate(from - Math.max(0, horizon), tz, unit);
   const windowEnd = epochToWallDate(to, tz, unit);
   const starts = rule.rrule.between(windowStart, windowEnd, true);

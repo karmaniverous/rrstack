@@ -72,7 +72,8 @@ const nodeExternals = new Set([
 
 const makePlugins = (minify: boolean, extras: Plugin[] = []): Plugin[] => {
   const base: Plugin[] = [
-    alias,    nodeResolve({ exportConditions: ['node', 'module', 'default'] }),
+    alias,
+    nodeResolve({ exportConditions: ['node', 'module', 'default'] }),
     commonjsPlugin(),
     jsonPlugin(),
     replacePlugin({
@@ -107,7 +108,8 @@ const commonInputOptions = (
 
 const outCommon = (dest: string): OutputOptions[] => [
   { dir: `${dest}/mjs`, format: 'esm', sourcemap: false },
-  { dir: `${dest}/cjs`, format: 'cjs', sourcemap: false },];
+  { dir: `${dest}/cjs`, format: 'cjs', sourcemap: false },
+];
 
 export const buildLibrary = (dest: string): RollupOptions => ({
   input: {

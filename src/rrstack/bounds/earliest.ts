@@ -5,14 +5,11 @@ import type { CompiledRule } from '../compile';
 import {
   computeOccurrenceEnd,
   domainMax,
-  domainMin,  epochToWallDate,
+  domainMin,
+  epochToWallDate,
   floatingDateToZonedEpoch,
 } from '../coverage/time';
-import {
-  cascadedStatus,
-  lastStartBefore,
-  topCoveringIndex,
-} from './common';
+import { cascadedStatus, lastStartBefore, topCoveringIndex } from './common';
 
 /**
  * Compute earliest active start across the rule set.
@@ -24,7 +21,8 @@ export const computeEarliestStart = (
   rules: CompiledRule[],
   min: number,
   probe: number,
-): number | undefined => {  let earliestStart: number | undefined = undefined;
+): number | undefined => {
+  let earliestStart: number | undefined = undefined;
 
   // Fast-path pre-pass (earliest):
   // A0 = earliest start across active rules; B0 = earliest start across blackout rules.
@@ -40,10 +38,7 @@ export const computeEarliestStart = (
       const r = rules[i];
       let t: number | undefined;
       if (r.kind === 'recur') {
-        const d = (r).rrule.after(
-          wallMinPerRule[i] as Date,
-          true,
-        );
+        const d = r.rrule.after(wallMinPerRule[i] as Date, true);
         if (!d) continue;
         t = floatingDateToZonedEpoch(d, r.tz, r.unit);
       } else {

@@ -1,4 +1,4 @@
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { compileRule } from './compile';
 import { getSegments } from './segments';
@@ -15,7 +15,8 @@ describe('segments edge cases', () => {
       'UTC' as unknown as TimeZoneId,
       'ms',
     );
-    const t = Date.UTC(2024, 0, 2, 12, 0, 0);    const segs = [...getSegments([rule], t, t)];
+    const t = Date.UTC(2024, 0, 2, 12, 0, 0);
+    const segs = [...getSegments([rule], t, t)];
     expect(segs.length).toBe(0);
   });
 });

@@ -4,7 +4,7 @@
  * - classifyRange: 'active' | 'blackout' | 'partial' by scanning segments.
  */
 
-import type { CompiledRecurRule,CompiledRule } from './compile';
+import type { CompiledRecurRule, CompiledRule } from './compile';
 import {
   computeOccurrenceEnd,
   domainMax,

@@ -11,7 +11,8 @@ const secLocal = (isoLocal: string, tz: string) =>
   Math.trunc(DateTime.fromISO(isoLocal, { zone: tz }).toSeconds());
 
 describe('bounds: additional scenarios', () => {
-  it('blackout-only rules yield empty=true (no active coverage)', () => {    const starts = Date.UTC(2024, 0, 10, 0, 0, 0);
+  it('blackout-only rules yield empty=true (no active coverage)', () => {
+    const starts = Date.UTC(2024, 0, 10, 0, 0, 0);
     const ends = Date.UTC(2024, 0, 12, 0, 0, 0);
 
     const blackout = compileRule(
@@ -212,7 +213,8 @@ describe('bounds: additional scenarios', () => {
     expect(b.end).toBe(Date.UTC(2098, 0, 1, 6, 0, 0));
   });
 
-  it('multiple blackouts around the last active end', () => {    // Active Jan 10–13 daily 05:00–06:00; blackouts on 11 and 12 at 05:00.
+  it('multiple blackouts around the last active end', () => {
+    // Active Jan 10–13 daily 05:00–06:00; blackouts on 11 and 12 at 05:00.
     const starts = Date.UTC(2024, 0, 10, 0, 0, 0);
     const ends = Date.UTC(2024, 0, 13, 0, 0, 0);
 
@@ -348,7 +350,8 @@ describe('bounds: additional scenarios', () => {
     expect(b.end).toBe(Date.UTC(1970, 0, 2, 0, 30, 0));
   });
 
-  it("'s' timeUnit DST spring forward (America/Chicago): 01:30 + 1h => 03:30 local", () => {    const tz = 'America/Chicago' as unknown as TimeZoneId;
+  it("'s' timeUnit DST spring forward (America/Chicago): 01:30 + 1h => 03:30 local", () => {
+    const tz = 'America/Chicago' as unknown as TimeZoneId;
     const starts = secLocal('2021-03-14T00:00:00', 'America/Chicago');
     const ends = secLocal('2021-03-15T00:00:00', 'America/Chicago');
 
@@ -372,13 +375,18 @@ describe('bounds: additional scenarios', () => {
     expect(b.empty).toBe(false);
     // Assert 1-hour span and local calendar day; avoid brittle absolute instants.
     expect((b.end as number) - (b.start as number)).toBe(3600);
-    const sL = DateTime.fromSeconds(b.start as number, { zone: 'America/Chicago' });
-    const eL = DateTime.fromSeconds(b.end as number, { zone: 'America/Chicago' });
+    const sL = DateTime.fromSeconds(b.start as number, {
+      zone: 'America/Chicago',
+    });
+    const eL = DateTime.fromSeconds(b.end as number, {
+      zone: 'America/Chicago',
+    });
     expect(sL.toISODate()).toBe('2021-03-14');
     expect(eL.toISODate()).toBe('2021-03-14');
   });
 
-  it("'s' timeUnit DST fall back (America/Chicago): 01:30 + 1h => 01:30 local", () => {    const tz = 'America/Chicago' as unknown as TimeZoneId;
+  it("'s' timeUnit DST fall back (America/Chicago): 01:30 + 1h => 01:30 local", () => {
+    const tz = 'America/Chicago' as unknown as TimeZoneId;
     const starts = secLocal('2021-11-07T00:00:00', 'America/Chicago');
     const ends = secLocal('2021-11-08T00:00:00', 'America/Chicago');
 
@@ -402,8 +410,12 @@ describe('bounds: additional scenarios', () => {
     expect(b.empty).toBe(false);
     // Assert 1-hour span and local calendar day; avoid brittle absolute instants.
     expect((b.end as number) - (b.start as number)).toBe(3600);
-    const sL = DateTime.fromSeconds(b.start as number, { zone: 'America/Chicago' });
-    const eL = DateTime.fromSeconds(b.end as number, { zone: 'America/Chicago' });
+    const sL = DateTime.fromSeconds(b.start as number, {
+      zone: 'America/Chicago',
+    });
+    const eL = DateTime.fromSeconds(b.end as number, {
+      zone: 'America/Chicago',
+    });
     expect(sL.toISODate()).toBe('2021-11-07');
     expect(eL.toISODate()).toBe('2021-11-07');
   });

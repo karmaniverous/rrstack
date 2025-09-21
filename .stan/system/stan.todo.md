@@ -6,6 +6,21 @@ Last updated: 2025-09-21 (UTC)
 
 Completed (recent)
 
+- Chore(zod v4): migrate JSON Schema generation to Zod 4 native converter
+  - Removed dev dependency on zod-to-json-schema (v3 peer-conflicted).
+  - scripts/gen-schema.ts now imports { zodToJsonSchema } from 'zod' and
+    preserves our post-processing (DurationParts anyOf positivity; freq enum).
+  - Do not edit assets/rrstackconfig.schema.json manually; regenerate via
+    npm run schema.
+
+- Chore(eslint): move to flat-config TypeScript file
+  - Replaced eslint.config.js with eslint.config.ts using defineConfig.
+  - Addressed Zod v4 deprecations in RRStack.options.ts:
+    • removed .finite() (no-op in v4), • replaced .passthrough() with .loose(),
+    • use string literal 'custom' for addIssue code.
+
+- Chore(knip): add archive.ts and stan.rollup.config.ts to knip.entry to avoid false unused flags (tar, rollup config).
+
 - Chore(lint): remove unused import in RRStack.options.ts (UnixTimeUnit)
   to satisfy @typescript-eslint/no-unused-vars.
 - Chore(knip): include root-level files in knip “project” globs so archive.ts
@@ -15,46 +30,46 @@ Completed (recent)
 
 - BREAKING: drop 'continuous' alias for span rules
   - Users must omit options.freq to declare a span; 'continuous' is no longer
-    accepted or normalized.  - Code: removed tolerance in compile.ts; removed legacy allowance and
+    accepted or normalized. - Code: removed tolerance in compile.ts; removed legacy allowance and
     normalization in RRStack.options.ts.
   - Schema: assets/rrstackconfig.schema.json updated; generator now deletes any
     leftover "anyOf" on freq to ensure a clean string enum.
 
 - Refactor(bounds): decompose src/rrstack/bounds.ts into focused modules
   - bounds/common.ts: shared helpers (cascadedStatus, coversAt, lastStartBefore).
-  - bounds/earliest.ts, bounds/latest.ts, bounds/openEnd.ts: split passes.  - bounds.ts now orchestrates and re-exports getEffectiveBounds; public API unchanged.
+  - bounds/earliest.ts, bounds/latest.ts, bounds/openEnd.ts: split passes. - bounds.ts now orchestrates and re-exports getEffectiveBounds; public API unchanged.
   - Follow-up: fix lints (unused imports, TSDoc hyphens) in new modules and
     remove unnecessary optional chains/conditionals in options/compile code.
   - Narrow tests to recurring rules where helpers require recurrence-only data.
 
 - Feat: Continuous (span) rules (no freq ⇒ duration omitted ⇒ continuous coverage)
-  - Types: RuleOptionsJson.freq optional; RuleJson.duration optional.  - Zod: refinement enforces (freq ⇒ duration required), (no freq ⇒ duration omitted). Legacy 'continuous' normalized.  - Compiler/runtime: CompiledRule union (recur|span); span carries start/end clamps; no RRULE instance.
+  - Types: RuleOptionsJson.freq optional; RuleJson.duration optional. - Zod: refinement enforces (freq ⇒ duration required), (no freq ⇒ duration omitted). Legacy 'continuous' normalized. - Compiler/runtime: CompiledRule union (recur|span); span carries start/end clamps; no RRULE instance.
   - Coverage/Segments/Bounds/Describe: span support integrated; open-sided detection in bounds includes spans.
   - Tests: span.basic (coverage/segments), bounds.span, describe span.
   - Docs: README adds “Continuous (span) rules” section.
 
 - Docs: clarify bounds & clamps semantics
   - Document that JSON `ends` maps to RRULE `until` (inclusive), and that
-    intervals remain half‑open with `'s'` mode rounding of ends.  - Note cascade tie behavior at the same instant (later rule wins).
+    intervals remain half‑open with `'s'` mode rounding of ends. - Note cascade tie behavior at the same instant (later rule wins).
   - Add getEffectiveBounds notes (open‑sided detection; latest finite end vs
     open‑ended `undefined`) and DST behavior in `'s'` mode.
   - Updated: README.md, handbook/overview.md, and toRRuleOptions JSDoc.
 
 - Fix(tests): align bounds.more expectations with implemented behavior
   - Reverse-sweep latest end is strictly before the probe (2098-01-01 06:00).
-  - RRULE 'until' is inclusive → open-start case latest end is 1970-01-02 00:30.  - DST ('s' mode, America/Chicago): assert 1-hour span and local calendar day
+  - RRULE 'until' is inclusive → open-start case latest end is 1970-01-02 00:30. - DST ('s' mode, America/Chicago): assert 1-hour span and local calendar day
     instead of exact absolute instants to avoid environment-sensitive drift.
   - Result: bounds.more now matches the semantics of getEffectiveBounds across
     reverse-sweep and DST handling.
 
 - Fix(release): build after version bump to embed correct package version
-  - __RRSTACK_VERSION__ is injected at build time from package.json. The build
-    previously ran in after:init (pre‑bump), causing dist to embed the previous    version. Move “npm run build” to release‑it’s after:bump hook so the bundle
+  - **RRSTACK_VERSION** is injected at build time from package.json. The build
+    previously ran in after:init (pre‑bump), causing dist to embed the previous version. Move “npm run build” to release‑it’s after:bump hook so the bundle
     is rebuilt with the bumped version before publish.
 
 - Tests(bounds): expand getEffectiveBounds coverage (tie/fallback/DST/open)
   - Same‑instant tie on first day (blackout overrides; next day active).
-  - Backward fallback path: status at probe active with pre‑pass ambiguity,    forcing event‑by‑event reverse sweep; latest end matches active end.
+  - Backward fallback path: status at probe active with pre‑pass ambiguity, forcing event‑by‑event reverse sweep; latest end matches active end.
   - Multiple blackouts around last active end: confirm latest end reduces to
     prior day.
   - Open‑start active with early blackout: start remains open (undefined);
@@ -64,91 +79,91 @@ Completed (recent)
 - Fix(tests): seconds-mode clamps in bounds.more
   - The "'s' timeUnit" case used Date.UTC (ms) for starts/ends while the rule
     compiles in 's' mode. Switch clamps to the sec() helper so getEffectiveBounds
-    sees seconds throughout. Resolves the unit mismatch and assertion failure    on b.start/b.end.
+    sees seconds throughout. Resolves the unit mismatch and assertion failure on b.start/b.end.
 
 - Fix(tests): complete bounds.more.test.ts final case
   - Close the blackoutEarly compileRule call and finish assertions for the
-    “pre-pass ambiguous” scenario. Resolves TS1005/Unexpected EOF and restores    green build/docs/lint/typecheck/test.
+    “pre-pass ambiguous” scenario. Resolves TS1005/Unexpected EOF and restores green build/docs/lint/typecheck/test.
 
 - Tests(bounds): broaden getEffectiveBounds coverage
   - blackout-only rules → empty=true, no bounds,
-  - 's' timeUnit with closed clamps → integer second start/end,  - overlapping actives → earliest across actives; latest end is max across actives,
+  - 's' timeUnit with closed clamps → integer second start/end, - overlapping actives → earliest across actives; latest end is max across actives,
   - pre-pass ambiguity (earliest blackout before active) resolved by forward sweep to the first active start.
 
 - Fix(bounds): step to strictly earlier prevEnd during backward reset
   - After a jump that lands exactly on a boundary (candidate == cursor),
-    prevEnd equaled the cursor for some rules, and candidate selection    (which requires v < cursor) stalled. In resetBackward, when the
+    prevEnd equaled the cursor for some rules, and candidate selection (which requires v < cursor) stalled. In resetBackward, when the
     computed end is at/after the cursor, step to the previous occurrence
     (rrule.before on the current start) and recompute until prevEnd < cursor.
     This guarantees progress and restores the expected latest active end
     under blackout overrides (e.g., 2024-01-10 06:00).
 - Fix(bounds): ensure backward sweep progresses past boundary equality
   - When the backward candidate-jump landed exactly on a boundary
-    (candidate == cursor), reset state seeded inclusively at the cursor,    leaving prevEnd >= cursor and no strictly earlier candidate. The
+    (candidate == cursor), reset state seeded inclusively at the cursor, leaving prevEnd >= cursor and no strictly earlier candidate. The
     loop broke without finding the latest active end under blackout
     overrides. Seed resetBackward with cursor - 1 (bounded by domainMin)
     to compute the last start strictly before the cursor and continue scanning.
 - Fix(bounds): finalize backward sweep TS/test corrections
   - Backward jump now only selects candidates strictly before the current
-    cursor (v < cursor) for both top blackout prevStart and higher active    prevEnd, guaranteeing progress.
+    cursor (v < cursor) for both top blackout prevStart and higher active prevEnd, guaranteeing progress.
   - Backward fallback uses a fresh evolving `status` (union type) and
     updates it per iteration; removes TS2367/TS2322 and restores correct
     latest-end detection for blackout overrides.
 - Fix(bounds): TS/lint in backward fallback sweep
   - Track evolving `status` across iterations and compare
-    (status === 'blackout' && newStatus === 'active') instead of using    a fixed `statusNow`. Removes TS2367/no-unnecessary-condition and
+    (status === 'blackout' && newStatus === 'active') instead of using a fixed `statusNow`. Removes TS2367/no-unnecessary-condition and
     restores intended transition detection.
 
 - Perf(bounds): mirror candidate-filtered sweep for latest bound.
   While scanning backward and the cascade is blackout near the probe,
-  jump only to the previous start of the top blackout and previous ends  of higher-priority actives; evaluate status just before the jump to
+  jump only to the previous start of the top blackout and previous ends of higher-priority actives; evaluate status just before the jump to
   detect the blackout→active transition (latest forward end). Fall back
   to fine-grained reverse sweep when needed. Behavior unchanged.
 - Perf(bounds): cheaper probe status
   - Replace ruleCoversInstant(probe) with lastStartBefore + computed end
-    comparison per rule. Same semantics; avoids the heavier multi-strategy    coverage check and reduces rrule calls in getEffectiveBounds.
+    comparison per rule. Same semantics; avoids the heavier multi-strategy coverage check and reduces rrule calls in getEffectiveBounds.
 
 - Fix(bounds): lint clean-up for candidate-jump sweep
   - Remove unused minBoundary import.
-  - Replace prevStatus guard with per-iteration status check at the    current cursor; jump target recompute remains. Eliminates an
+  - Replace prevStatus guard with per-iteration status check at the current cursor; jump target recompute remains. Eliminates an
     “always-true” conditional flagged by ESLint. No behavior change;
     tests remain green.
 - Perf(bounds): add candidate-filtered jump sweep for earliest bound.
   While status is blackout, only the controlling blackout’s end and
-  higher‑priority active starts are considered; state is recomputed at  the jump target (ends-before-starts). This skips dense low‑priority
+  higher‑priority active starts are considered; state is recomputed at the jump target (ends-before-starts). This skips dense low‑priority
   occurrences masked by long higher‑priority blackouts. Public behavior
   unchanged; tests remain green.
 - Perf(bounds): add single-rule pre-pass for earliest/latest and early
   open-end detection. Skip the backward sweep when open-ended, and accept
-  earliest start when earliest active start precedes earliest blackout start,  and latest end when latest active end succeeds latest blackout end.
+  earliest start when earliest active start precedes earliest blackout start, and latest end when latest active end succeeds latest blackout end.
   Fall back to forward/backward sweeps on ties/ambiguity to preserve correctness.
 
 - Docs(README/handbook): add brief React hooks description to README and expand
   the “React” handbook page with structured signatures, parameter/return
-  details, behavior notes, and examples. Removed stray fences and ensured fence  hygiene in examples. No code changes; documentation only.
+  details, behavior notes, and examples. Removed stray fences and ensured fence hygiene in examples. No code changes; documentation only.
 
 - Docs(handbook): add external documentation index with TypeDoc front matter
   - Created handbook/index.md with `title` and `children` (overview, react) to
-    control sidebar structure.  - Updated typedoc.json to include only the index page (and CHANGELOG), removing
+    control sidebar structure. - Updated typedoc.json to include only the index page (and CHANGELOG), removing
     the individual handbook pages from projectDocuments so they appear as
     children of the index automatically.
 
 - Fix(react/useRRStack): resolve TS2554 and lint issues
   - Initialize cfgRef and debouncedRef with explicit initial values
-    (cfgRef from current debounce config; debouncedRef = null) to satisfy    React’s useRef signature and avoid “expected 1 argument” errors.
+    (cfgRef from current debounce config; debouncedRef = null) to satisfy React’s useRef signature and avoid “expected 1 argument” errors.
   - Use a null check once and non-null assertions where the debounced
     wrapper is guaranteed to exist; remove unnecessary optional chaining.
   - Re-run scripts to confirm typecheck/lint/docs/build/tests are green.
 - Fix(react/useRRStack): preserve debounced state across renders so flush() can
   emit pending trailing onChange immediately. Previous implementation recreated
-  the debounced closure on each render (due to identity‑based dependencies),  losing the pending value; moved timer/pending/inWindow to refs and read the
+  the debounced closure on each render (due to identity‑based dependencies), losing the pending value; moved timer/pending/inWindow to refs and read the
   latest onChange/debounce config via refs. Subscription now calls a stable
   debouncedRef. Re‑run tests to confirm the flush() test passes under fake
   timers.
 
 - Fix(react/useRRStack): decouple hook snapshot from Date.now()
   - useRRStack now uses a monotonic counter for the useSyncExternalStore
-    snapshot and increments it on each RRStack notification. This avoids test    flakiness under vi.useFakeTimers (where Date.now() is frozen) that could
+    snapshot and increments it on each RRStack notification. This avoids test flakiness under vi.useFakeTimers (where Date.now() is frozen) that could
     suppress re-renders and leave DOM state stale in debounce tests.
   - Follow-up: this also resolves the lingering "data-count '1' vs '4'"
     failure in useRRStack debounce test and fixes the lint error for an
@@ -353,4 +368,4 @@ Completed (recent)
 9. Next steps (implementation plan)
 
 - Optional: expand docs/handbook with a spans subsection and JSON examples.
-- Optional: post-bump guard in release-it to verify embedded __RRSTACK_VERSION__ equals package.json.version.
+- Optional: post-bump guard in release-it to verify embedded **RRSTACK_VERSION** equals package.json.version.

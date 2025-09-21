@@ -1,4 +1,5 @@
-import eslint from '@eslint/js';
+import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import prettierConfig from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
@@ -10,7 +11,7 @@ import { fileURLToPath } from 'url';
 
 const tsconfigRootDir = dirname(fileURLToPath(import.meta.url));
 
-export default tseslint.config(
+export default defineConfig([
   {
     ignores: [
       '.rollup.cache/**/*',
@@ -21,8 +22,8 @@ export default tseslint.config(
       '.stan/**/*',
     ],
   },
-  eslint.configs.recommended,
-  tseslint.configs.strictTypeChecked,
+  js.configs.recommended,
+  ...tseslint.configs.strictTypeChecked,
   prettierConfig,
   {
     ...vitestPlugin.configs.recommended,
@@ -36,7 +37,7 @@ export default tseslint.config(
       },
     },
     plugins: {
-      prettierPlugin,
+      prettier: prettierPlugin,
       'simple-import-sort': simpleImportSortPlugin,
       tsdoc: tsDocPlugin,
     },
@@ -48,7 +49,8 @@ export default tseslint.config(
       'no-unused-vars': 'off',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+      'prettier/prettier': 'error',
       'tsdoc/syntax': 'warn',
     },
   },
-);
+]);

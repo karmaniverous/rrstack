@@ -6,7 +6,7 @@
 
 import { DateTime } from 'luxon';
 
-import type { CompiledRecurRule,CompiledRule } from './compile';
+import type { CompiledRecurRule, CompiledRule } from './compile';
 import { compileRule } from './compile';
 import type {
   DurationParts,

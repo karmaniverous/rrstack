@@ -117,7 +117,11 @@ export class RRStack {
   /** @internal Notify all listeners (best‑effort; errors are swallowed). */
   private __notify(): void {
     for (const l of this.__listeners) {
-      try { l(this); } catch { /* noop */ }
+      try {
+        l(this);
+      } catch {
+        /* noop */
+      }
     }
   }
   // Getters / setters (property-style) ---------------------------------------
@@ -376,7 +380,9 @@ export class RRStack {
   /**
    * Swap two rules by index (no-op if indices are equal).
    */
-  swap(i: number, j: number): void {    if (!Number.isInteger(i) || !Number.isInteger(j)) {      throw new TypeError('indices must be integers');
+  swap(i: number, j: number): void {
+    if (!Number.isInteger(i) || !Number.isInteger(j)) {
+      throw new TypeError('indices must be integers');
     }
     const n = this.options.rules.length;
     if (i < 0 || i >= n || j < 0 || j >= n)

@@ -18,8 +18,7 @@ const normalizeByweekday = (v: unknown): WeekdayLike[] => {
       (x): x is WeekdayLike => typeof x === 'number' || x instanceof Weekday,
     );
   }
-  if (typeof v === 'number' || v instanceof Weekday)
-    return [v];
+  if (typeof v === 'number' || v instanceof Weekday) return [v];
   return [];
 };
 
@@ -111,7 +110,8 @@ export const localDayMatchesCommonPatterns = (
 ): boolean => {
   const { options } = rule;
   const tz = rule.tz;
-  const local =    rule.unit === 'ms'
+  const local =
+    rule.unit === 'ms'
       ? DateTime.fromMillis(t, { zone: tz })
       : DateTime.fromSeconds(t, { zone: tz });
 
@@ -161,9 +161,8 @@ export const localDayMatchesCommonPatterns = (
         : undefined;
 
     const anyMatches = byweekdayArr.some((w) => {
-      const weekdayIndex =
-        typeof w === 'number' ? w : (w).weekday;
-      const nth = typeof w === 'number' ? undefined : (w).n;
+      const weekdayIndex = typeof w === 'number' ? w : w.weekday;
+      const nth = typeof w === 'number' ? undefined : w.n;
       const isSameWeekday = ((weekdayIndex + 1) % 7 || 7) === wd; // map 0..6→1..7
       if (typeof nth === 'number' && nth !== 0)
         return isSameWeekday && weekOrdinal === nth;

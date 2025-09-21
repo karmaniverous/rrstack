@@ -1,6 +1,6 @@
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { fromIsoDuration,toIsoDuration } from './duration';
+import { fromIsoDuration, toIsoDuration } from './duration';
 import type { DurationParts } from './types';
 
 describe('duration helpers: toIsoDuration / fromIsoDuration', () => {

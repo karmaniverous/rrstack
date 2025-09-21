@@ -20,7 +20,8 @@ describe("'s' timeUnit: DST handling and rounded ends", () => {
         byhour: [1],
         byminute: [30],
         bysecond: [0],
-      },    };
+      },
+    };
     const cr = compileRule(rule, tzId, 's');
 
     const start = sec('2021-03-14T01:30:00', tz);
@@ -41,7 +42,8 @@ describe("'s' timeUnit: DST handling and rounded ends", () => {
         byhour: [1],
         byminute: [30],
         bysecond: [0],
-      },    };
+      },
+    };
     const cr = compileRule(rule, tzId, 's');
 
     const start = sec('2021-11-07T01:30:00', tz);

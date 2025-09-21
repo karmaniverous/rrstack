@@ -8,7 +8,8 @@ import type { RuleJson, TimeZoneId } from './types';
 describe('DST handling (America/Chicago)', () => {
   const tz = 'America/Chicago';
   const tzId = tz as unknown as TimeZoneId;
-  const ms = (isoLocal: string) => DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
+  const ms = (isoLocal: string) =>
+    DateTime.fromISO(isoLocal, { zone: tz }).toMillis();
   it('spring forward: 2021-03-14 01:30 + 1h => 03:30 local', () => {
     const rule: RuleJson = {
       effect: 'active',
@@ -17,7 +18,8 @@ describe('DST handling (America/Chicago)', () => {
         freq: 'daily',
         byhour: [1],
         byminute: [30],
-        bysecond: [0],      },
+        bysecond: [0],
+      },
     };
     const cr = compileRule(rule, tzId, 'ms');
 
@@ -38,7 +40,8 @@ describe('DST handling (America/Chicago)', () => {
         freq: 'daily',
         byhour: [1],
         byminute: [30],
-        bysecond: [0],      },
+        bysecond: [0],
+      },
     };
     const cr = compileRule(rule, tzId, 'ms');
 

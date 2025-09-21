@@ -44,7 +44,10 @@ describe('rule description helpers', () => {
         ends: Date.UTC(2024, 0, 12, 7, 0, 0),
       },
     };
-    const text = describeRule(span, tz, 'ms', { includeTimeZone: true, includeBounds: true });
+    const text = describeRule(span, tz, 'ms', {
+      includeTimeZone: true,
+      includeBounds: true,
+    });
     const lower = text.toLowerCase();
     expect(lower).toContain('active');
     expect(lower).toContain('continuously');

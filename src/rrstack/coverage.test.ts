@@ -22,7 +22,8 @@ describe('coverage', () => {
     );
     const day = Date.UTC(2024, 0, 2);
     const five = new Date(day + 5 * 3600 * 1000).getTime();
-    const fiveThirty = five + 30 * 60 * 1000;    const six = five + 60 * 60 * 1000;
+    const fiveThirty = five + 30 * 60 * 1000;
+    const six = five + 60 * 60 * 1000;
 
     expect(ruleCoversInstant(cr, five)).toBe(true);
     expect(ruleCoversInstant(cr, fiveThirty)).toBe(true);
