@@ -6,10 +6,16 @@ Last updated: 2025-09-21 (UTC)
 
 Completed (recent)
 
+- Chore(lint): remove unused import in RRStack.options.ts (UnixTimeUnit)
+  to satisfy @typescript-eslint/no-unused-vars.
+- Chore(knip): include root-level files in knip “project” globs so archive.ts
+  is accounted for; this prevents “tar” from being flagged as unused.
+- Chore(devDeps): remove unused devDependency “concurrently” (no scripts use it).
+  Leave “tar” in place (used by archive.ts).
+
 - BREAKING: drop 'continuous' alias for span rules
   - Users must omit options.freq to declare a span; 'continuous' is no longer
-    accepted or normalized.
-  - Code: removed tolerance in compile.ts; removed legacy allowance and
+    accepted or normalized.  - Code: removed tolerance in compile.ts; removed legacy allowance and
     normalization in RRStack.options.ts.
   - Schema: assets/rrstackconfig.schema.json updated; generator now deletes any
     leftover "anyOf" on freq to ensure a clean string enum.

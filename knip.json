@@ -1,11 +1,10 @@
 {
   "entry": ["src/**/index.ts"],
-  "project": ["*/**", "!docs/**", "!.stan/**"],
+  "project": ["**/*", "!docs/**", "!.stan/**"],
   "rules": {
     "exports": "off",
     "types": "off"
-  },
-  "vitest": {
+  },  "vitest": {
     "entry": ["*/**/*.test.!(*.*)"]
   }
 }

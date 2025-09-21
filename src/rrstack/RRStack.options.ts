@@ -15,14 +15,12 @@ import type {
   RRStackOptionsNormalized,
   RuleJson,
   TimeZoneId,
-  UnixTimeUnit,
 } from './types';
 
 // DurationParts validation: non-negative integers, and total > 0.
 export const NonNegInt = z.number().int().min(0);
 
-export const DurationPartsSchema = z
-  .object({
+export const DurationPartsSchema = z  .object({
     years: NonNegInt.optional(),
     months: NonNegInt.optional(),
     weeks: NonNegInt.optional(),
