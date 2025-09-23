@@ -1,7 +1,9 @@
-stanPath: .stan
-includes: []
+cliDefaults:
+  run:
+    plan: false
+    sequential: true
 excludes:
-  - "*.local"
+  - '*.local'
   - CHANGELOG.md
   - docs
   - package-lock.json
@@ -13,3 +15,5 @@ scripts:
   docs: npm run stan:docs
   knip: npm run knip
 patchOpenCommand: code -g {file}
+stanPath: .stan
+

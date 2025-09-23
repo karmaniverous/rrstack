@@ -18,6 +18,7 @@ export const toJsonSnapshot = (
     version,
     timezone: options.timezone as unknown as string,
     timeUnit: options.timeUnit,
+    defaultEffect: options.defaultEffect,
     rules: [...options.rules],
   };
 };

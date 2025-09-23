@@ -13,7 +13,6 @@ import type { Options as RRuleOptions } from 'rrule';
 export type instantStatus = 'active' | 'blackout';
 /** Range classification across `[from, to)`. */
 export type rangeStatus = instantStatus | 'partial';
-
 /** Time unit for inputs/outputs and internal computation. */
 export type UnixTimeUnit = 'ms' | 's';
 
@@ -98,13 +97,14 @@ export interface RRStackOptions {
   timezone: string;
   /** Time unit ('ms' | 's'). Defaults to 'ms'. */
   timeUnit?: UnixTimeUnit;
+  /** Baseline effect for uncovered instants. Defaults to 'auto'. */
+  defaultEffect?: instantStatus | 'auto';
   /** Rule list. Defaults to empty. */
   rules?: RuleJson[];
 }
 
 /**
- * Normalized options stored on the instance (frozen).
- * - `timeUnit` is required.
+ * Normalized options stored on the instance (frozen). * - `timeUnit` is required.
  * - `rules` is a readonly array.
  * - `timezone` is a branded, validated string.
  */
@@ -113,6 +113,7 @@ export interface RRStackOptionsNormalized
   timeUnit: UnixTimeUnit;
   rules: readonly RuleJson[];
   timezone: TimeZoneId;
+  defaultEffect: instantStatus | 'auto';
 }
 
 // Re-export useful rrule types so consumers can import from package API.

@@ -56,6 +56,7 @@ export const OptionsSchema = z.object({
   version: z.string().optional(),
   timezone: TimeZoneIdSchema,
   timeUnit: z.enum(['ms', 's']).default('ms'),
+  defaultEffect: z.enum(['active', 'blackout', 'auto']).default('auto'),
   rules: z.array(z.any()).default([]),
 });
 // String literal-union for RRULE frequency (lower-case human-readable).
@@ -68,7 +69,6 @@ const FreqSchema = z.enum([
   'minutely',
   'secondly',
 ] as const);
-
 export const RuleLiteSchema = z
   .object({
     effect: z.enum(['active', 'blackout']),
@@ -118,12 +118,14 @@ export const normalizeOptions = (
     version: opts.version,
     timezone: opts.timezone,
     timeUnit: opts.timeUnit,
+    defaultEffect: opts.defaultEffect,
     rules: opts.rules,
   });
 
   const normalized: RRStackOptionsNormalized = Object.freeze({
     timezone: parsed.timezone as unknown as TimeZoneId,
     timeUnit: parsed.timeUnit,
+    defaultEffect: parsed.defaultEffect,
     rules: Object.freeze([...(parsed.rules as RuleJson[])]),
   });
   return normalized;

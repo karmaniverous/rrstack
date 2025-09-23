@@ -1,16 +1,16 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-09-21 (UTC)
+Last updated: 2025-09-23 (UTC)
 
 ## This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
 Completed (recent)
 
+- Feat(core): add RRStackOptions.defaultEffect ('active' | 'blackout' | 'auto', default 'auto') and implement a virtual baseline span rule prepended at query time. All query surfaces (isActiveAt, getSegments, classifyRange, getEffectiveBounds) now respect the baseline without algorithm changes. JSON schema, normalization, persistence, and tests updated.
 - Fix(eslint config/types): remove deprecated tseslint.config usage and
   eliminate incorrect Linter.Plugin casts. Export a plain flat-config
   array while retaining strictTypeChecked + stylisticTypeChecked +
-  prettier layering and Vitest test-file rules. This resolves:
-  - TS2694 (“Linter has no exported member 'Plugin'”) during typecheck/build/docs
+  prettier layering and Vitest test-file rules. This resolves:  - TS2694 (“Linter has no exported member 'Plugin'”) during typecheck/build/docs
   - @typescript-eslint/no-deprecated on tseslint.config
   - @typescript-eslint/no-unsafe-assignment on plugin casts.
 

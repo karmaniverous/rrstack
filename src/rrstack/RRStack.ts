@@ -3,8 +3,7 @@
  *
  * RRStack evaluates a prioritized list of rules to answer point queries,
  * enumerate contiguous coverage segments, classify ranges, and compute
- * effective bounds. All computations are performed in the configured IANA
- * timezone with DST-correct duration arithmetic (Luxon).
+ * effective bounds. All computations are performed in the configured IANA * timezone with DST-correct duration arithmetic (Luxon).
  *
  * Notes
  * - Options are normalized and frozen on the instance.
@@ -39,7 +38,6 @@ import {
   type TimeZoneId,
   type UnixTimeUnit,
 } from './types';
-
 // Build-time injected in production bundles; fallback for dev/test.
 declare const __RRSTACK_VERSION__: string | undefined;
 
@@ -57,11 +55,36 @@ export class RRStack {
   private compiled: CompiledRule[] = [];
 
   /**
+   * Build the baseline (virtual) span rule from defaultEffect.
+   * - 'auto' => opposite of rule 0's effect, or 'active' when no rules.
+   * - otherwise => the provided defaultEffect.
+   */
+  private baselineEffect(): instantStatus {
+    const de = this.options.defaultEffect;
+    if (de !== 'auto') return de;
+    const first = this.options.rules[0];
+    if (!first) return 'active';
+    return first.effect === 'active' ? 'blackout' : 'active';
+  }
+
+  /** Construct the compiled baseline span (open-start/open-end) in current tz/unit. */
+  private makeBaseline(): CompiledRule {
+    return compileRule(
+      { effect: this.baselineEffect(), options: {} },
+      this.options.timezone,
+      this.options.timeUnit,
+    );
+  }
+
+  /** Working set with baseline prepended (lowest priority). */
+  private compiledWithBaseline(): CompiledRule[] {
+    return [this.makeBaseline(), ...this.compiled];
+  }
+  /**
    * Create a new RRStack.
    *
    * @param opts - Constructor options. `timeUnit` defaults to `'ms'`.
-   * @remarks Options are normalized and frozen on the instance. The stack
-   *          compiles its rules immediately. The optional `version` is ignored.
+   * @remarks Options are normalized and frozen on the instance. The stack   *          compiles its rules immediately. The optional `version` is ignored.
    */
   constructor(opts: RRStackOptions) {
     const normalized = normalizeOptions(opts);
@@ -239,11 +262,10 @@ export class RRStack {
    * @returns true when active; false when blackout.
    */
   isActiveAt(t: number): boolean {
-    return isActiveAtCompiled(this.compiled, t);
+    return isActiveAtCompiled(this.compiledWithBaseline(), t);
   }
 
-  /**
-   * Stream contiguous status segments over `[from, to)`.   *
+  /**   * Stream contiguous status segments over `[from, to)`.   *
    * @param from - Start of the window (inclusive), in the configured unit.
    * @param to - End of the window (exclusive), in the configured unit.
    * @param opts - Optional settings:
@@ -282,18 +304,16 @@ export class RRStack {
     to: number,
     opts?: { limit?: number },
   ): Iterable<{ start: number; end: number; status: instantStatus }> {
-    return getSegmentsOverWindow(this.compiled, from, to, opts);
+    return getSegmentsOverWindow(this.compiledWithBaseline(), from, to, opts);
   } /**
    * Classify a range `[from, to)` as `'active'`, `'blackout'`, or `'partial'`.
    * @param from - Start of the window (inclusive), in the configured unit.
-   * @param to - End of the window (exclusive), in the configured unit.
-   */
+   * @param to - End of the window (exclusive), in the configured unit.   */
   classifyRange(from: number, to: number): rangeStatus {
-    return classifyRangeOverWindow(this.compiled, from, to);
+    return classifyRangeOverWindow(this.compiledWithBaseline(), from, to);
   }
 
-  /**
-   * Compute effective active bounds across all rules.
+  /**   * Compute effective active bounds across all rules.
    * @returns `{ start?: number; end?: number; empty: boolean }`
    * - `start` and/or `end` are omitted for open-sided coverage.
    * - `empty` indicates no active coverage.
@@ -313,12 +333,11 @@ export class RRStack {
    * ```
    */
   getEffectiveBounds(): { start?: number; end?: number; empty: boolean } {
-    return getEffectiveBoundsFromCompiled(this.compiled);
+    return getEffectiveBoundsFromCompiled(this.compiledWithBaseline());
   }
   /**
    * Describe a rule by index as human-readable text.
-   * Leverages rrule.toText() plus effect and duration phrasing.
-   *
+   * Leverages rrule.toText() plus effect and duration phrasing.   *
    * @param index - Zero-based index into {@link rules}.
    * @param opts - Description options (timezone/bounds toggles).
    * @throws RangeError if index is out of bounds; TypeError if not an integer.
