@@ -6,9 +6,9 @@ Last updated: 2025-09-23 (UTC)
 
 Completed (recent)
 
+- Chore(lint): escape '>' in TSDoc for baselineEffect to clear tsdoc/syntax warnings.
 - Fix(core): include defaultEffect when freezing updated options in RRStack setters (timezone, rules, updateOptions) and refine baselineEffect to satisfy lint (no-unnecessary-condition).
 - Feat(core): add RRStackOptions.defaultEffect ('active' | 'blackout' | 'auto', default 'auto') and implement a virtual baseline span rule prepended at query time. All query surfaces (isActiveAt, getSegments, classifyRange, getEffectiveBounds) now respect the baseline without algorithm changes. JSON schema, normalization, persistence, and tests updated.
-
 ---
 
 0. Top Priority — Stabilize template baseline (pre-implementation)

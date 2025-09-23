@@ -56,8 +56,8 @@ export class RRStack {
 
   /**
    * Build the baseline (virtual) span rule from defaultEffect.
-   * - 'auto' => opposite of rule 0's effect, or 'active' when no rules.
-   * - otherwise => the provided defaultEffect.
+   * - 'auto' =\> opposite of rule 0's effect, or 'active' when no rules.
+   * - otherwise =\> the provided defaultEffect.
    */
   private baselineEffect(): instantStatus {
     const de = this.options.defaultEffect;
