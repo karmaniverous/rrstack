@@ -62,8 +62,9 @@ export class RRStack {
   private baselineEffect(): instantStatus {
     const de = this.options.defaultEffect;
     if (de !== 'auto') return de;
+    const hasFirst = this.options.rules.length > 0;
+    if (!hasFirst) return 'active';
     const first = this.options.rules[0];
-    if (!first) return 'active';
     return first.effect === 'active' ? 'blackout' : 'active';
   }
 
@@ -75,7 +76,6 @@ export class RRStack {
       this.options.timeUnit,
     );
   }
-
   /** Working set with baseline prepended (lowest priority). */
   private compiledWithBaseline(): CompiledRule[] {
     return [this.makeBaseline(), ...this.compiled];
@@ -163,16 +163,16 @@ export class RRStack {
    */
   set timezone(next: string) {
     const tz = TimeZoneIdSchema.parse(next) as unknown as TimeZoneId;
-    const { timeUnit, rules } = this.options;
+    const { timeUnit, rules, defaultEffect } = this.options;
     (this as unknown as { options: RRStackOptionsNormalized }).options =
       Object.freeze({
         timezone: tz,
         timeUnit,
+        defaultEffect,
         rules,
       });
     this.recompile();
   }
-
   /**
    * Get the rule list (frozen).
    */
@@ -188,17 +188,17 @@ export class RRStack {
   set rules(next: readonly RuleJson[]) {
     // Minimal rule-lite validation to fail fast; full validation in compile.
     next.forEach((r) => RuleLiteSchema.parse(r));
-    const { timezone, timeUnit } = this.options;
+    const { timezone, timeUnit, defaultEffect } = this.options;
     const frozen = Object.freeze([...(next as RuleJson[])]); // preserve readonly externally
     (this as unknown as { options: RRStackOptionsNormalized }).options =
       Object.freeze({
         timezone,
         timeUnit,
+        defaultEffect,
         rules: frozen,
       });
     this.recompile();
   }
-
   /**   * Get the configured time unit ('ms' | 's'). Immutable.
    */
   get timeUnit(): UnixTimeUnit {
@@ -225,11 +225,11 @@ export class RRStack {
       Object.freeze({
         timezone: tz as unknown as TimeZoneId,
         timeUnit: this.options.timeUnit,
+        defaultEffect: this.options.defaultEffect,
         rules: newRules,
       });
     this.recompile();
   }
-
   // Helpers -------------------------------------------------------------------
   /**
    * Return the current time in the configured unit.

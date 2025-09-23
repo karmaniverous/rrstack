@@ -17,6 +17,15 @@
         "s"
       ]
     },
+    "defaultEffect": {
+      "default": "auto",
+      "type": "string",
+      "enum": [
+        "active",
+        "blackout",
+        "auto"
+      ]
+    },
     "rules": {
       "type": "array",
       "items": {
@@ -188,6 +197,7 @@
   "required": [
     "timezone",
     "timeUnit",
+    "defaultEffect",
     "rules"
   ],
   "additionalProperties": false

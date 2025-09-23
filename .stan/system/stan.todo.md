@@ -6,8 +6,8 @@ Last updated: 2025-09-23 (UTC)
 
 Completed (recent)
 
-- Feat(core): add RRStackOptions.defaultEffect ('active' | 'blackout' | 'auto', default 'auto') and implement a virtual baseline span rule prepended at query time. All query surfaces (isActiveAt, getSegments, classifyRange, getEffectiveBounds) now respect the baseline without algorithm changes. JSON schema, normalization, persistence, and tests updated.
-- Fix(eslint config/types): remove deprecated tseslint.config usage and
+- Fix(core): include defaultEffect when freezing updated options in RRStack setters (timezone, rules, updateOptions) and refine baselineEffect to satisfy lint (no-unnecessary-condition).
+- Feat(core): add RRStackOptions.defaultEffect ('active' | 'blackout' | 'auto', default 'auto') and implement a virtual baseline span rule prepended at query time. All query surfaces (isActiveAt, getSegments, classifyRange, getEffectiveBounds) now respect the baseline without algorithm changes. JSON schema, normalization, persistence, and tests updated.- Fix(eslint config/types): remove deprecated tseslint.config usage and
   eliminate incorrect Linter.Plugin casts. Export a plain flat-config
   array while retaining strictTypeChecked + stylisticTypeChecked +
   prettier layering and Vitest test-file rules. This resolves:  - TS2694 (“Linter has no exported member 'Plugin'”) during typecheck/build/docs
