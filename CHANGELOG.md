@@ -2,13 +2,27 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.10.0](https://github.com/karmaniverous/rrstack/compare/0.9.0...0.10.0)
+
+- chore(todo): keep only defaultEffect items in Completed [`4064ba7`](https://github.com/karmaniverous/rrstack/commit/4064ba77397779ab44542c12fdc1e5ba7a2d8dc9)
+- feat: add defaultEffect baseline and virtual rule [`cc8c41b`](https://github.com/karmaniverous/rrstack/commit/cc8c41b2de1eef703a84e8ad52bfad7c8e989009)
+- feat(schema): defaulted options optional; tests + docs [`3c2c5b8`](https://github.com/karmaniverous/rrstack/commit/3c2c5b8bd59c6bd8b8e2645d67f41411facade83)
+- fix: include defaultEffect in setters; clean baseline lint [`f32a3ed`](https://github.com/karmaniverous/rrstack/commit/f32a3ed113cdcd49d46d51d14dbab3392df6a528)
+- fix(schema,types): optional defaults TS-safe; keep rules optional in schema [`a0cd7e3`](https://github.com/karmaniverous/rrstack/commit/a0cd7e3f38937eedadd74cf8699a3b750387cc9f)
+- chore(lint): validate rules in normalizeOptions; no unsafe spread [`b1e3856`](https://github.com/karmaniverous/rrstack/commit/b1e3856b372d3855ca6ec22d62dd0b4e4b2d86b5)
+- chore(lint): escape '&gt;' in TSDoc; update dev plan [`b2907d6`](https://github.com/karmaniverous/rrstack/commit/b2907d6e22897e30ee33dc1a58070371b6283847)
+- updated stan [`a478c4b`](https://github.com/karmaniverous/rrstack/commit/a478c4b5eebc7dd29583a076a7d142abe7cd90f2)
+
 #### [0.9.0](https://github.com/karmaniverous/rrstack/compare/0.8.2...0.9.0)
+
+> 21 September 2025
 
 - chore: fix lint and knip; remove unused devDependency [`d55bec4`](https://github.com/karmaniverous/rrstack/commit/d55bec42b67a11cd15a4caab0c6449d48a8efb49)
 - refactor(bounds): split getEffectiveBounds into focused modules [`97c7674`](https://github.com/karmaniverous/rrstack/commit/97c767453d150255ca52c8e0403ba468df74794a)
 - feat: add continuous (span) rules (no freq → duration omitted) [`bc1ffda`](https://github.com/karmaniverous/rrstack/commit/bc1ffda9185bf44d6753a6e13b825e4652677b5a)
 - build!: migrate to Zod v4 JSON Schema + ESLint flat config [`8174047`](https://github.com/karmaniverous/rrstack/commit/817404726829d75ea9e757efa32409c610aed947)
 - chore: adopt @vitest/eslint-plugin; strict type-aware lint; Zod v4 JSON schema [`6dc797a`](https://github.com/karmaniverous/rrstack/commit/6dc797a2d4253d98e811532daa0921fa24381157)
+- chore: release v0.9.0 [`baf87dc`](https://github.com/karmaniverous/rrstack/commit/baf87dc296bef87a428c6a6358ad2c9e478119b8)
 - chore: fix lint/typecheck; clean knip and deps [`e4c836c`](https://github.com/karmaniverous/rrstack/commit/e4c836c3a5291fcc5f020b749666cf10cda153c8)
 - feat!: drop 'continuous' alias; require undefined freq for spans [`7289fd8`](https://github.com/karmaniverous/rrstack/commit/7289fd89861df40877eeb8554c86551d409b73d6)
 - refactor(bounds): split into modules; fix lints and TS narrowings [`030defe`](https://github.com/karmaniverous/rrstack/commit/030defe7b904fa63b3ea373c97b2b25a095ae949)
