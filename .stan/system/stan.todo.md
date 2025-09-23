@@ -6,11 +6,12 @@ Last updated: 2025-09-23 (UTC)
 
 Completed (recent)
 
+- Chore(lint): replace unsafe any[] spread in normalizeOptions with
+  RuleLiteSchema-based coercion to RuleJson[].
 - Fix(types): coalesce defaulted optionals in normalizeOptions (timeUnit,
   defaultEffect, rules) to satisfy RRStackOptionsNormalized (TS-safe).
 - Fix(schema gen): preserve 'rules' as optional with default in generator
-  (extend) so the JSON Schema only requires 'timezone'.
-- Feat(schema): make all defaulted top-level properties optional (timeUnit, defaultEffect, rules) and regenerate JSON Schema (only 'timezone' required).
+  (extend) so the JSON Schema only requires 'timezone'.- Feat(schema): make all defaulted top-level properties optional (timeUnit, defaultEffect, rules) and regenerate JSON Schema (only 'timezone' required).
 - Tests: add segment and classifyRange cases under defaultEffect baseline to exercise streaming and classification with a baseline.
 - Docs: README “JSON Shapes and Types” now includes defaultEffect with a brief baseline semantics note.- Chore(lint): escape '>' in TSDoc for baselineEffect to clear tsdoc/syntax warnings.
 - Fix(core): include defaultEffect when freezing updated options in RRStack setters (timezone, rules, updateOptions) and refine baselineEffect to satisfy lint (no-unnecessary-condition).

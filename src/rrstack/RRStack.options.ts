@@ -128,7 +128,14 @@ export const normalizeOptions = (
   // Coalesce defaulted optionals to concrete values for normalized shape.
   const unit: UnixTimeUnit = (parsed.timeUnit ?? 'ms') as UnixTimeUnit;
   const de = parsed.defaultEffect ?? 'auto';
-  const rulesArr = Object.freeze([...(parsed.rules ?? ([] as RuleJson[]))]);
+  // Validate and coerce rules to RuleJson to avoid unsafe spreads of any[].
+  const rawRules = (parsed.rules ?? []) as unknown[];
+  const rulesArr: readonly RuleJson[] = Object.freeze(
+    rawRules.map((r) => {
+      // Reuse the lightweight rule schema; full validation still occurs during compilation.
+      return RuleLiteSchema.parse(r) as RuleJson;
+    }),
+  );
 
   const normalized: RRStackOptionsNormalized = Object.freeze({
     timezone: parsed.timezone as unknown as TimeZoneId,
