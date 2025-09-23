@@ -55,9 +55,12 @@ export const OptionsSchema = z.object({
   // Optional version in the unified input/serialization shape (ignored on input).
   version: z.string().optional(),
   timezone: TimeZoneIdSchema,
-  timeUnit: z.enum(['ms', 's']).default('ms'),
-  defaultEffect: z.enum(['active', 'blackout', 'auto']).default('auto'),
-  rules: z.array(z.any()).default([]),
+  timeUnit: z.enum(['ms', 's']).default('ms').optional(),
+  defaultEffect: z
+    .enum(['active', 'blackout', 'auto'])
+    .default('auto')
+    .optional(),
+  rules: z.array(z.any()).default([]).optional(),
 });
 // String literal-union for RRULE frequency (lower-case human-readable).
 const FreqSchema = z.enum([

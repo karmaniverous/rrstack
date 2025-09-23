@@ -250,13 +250,14 @@ export interface RRStackOptions {
   version?: string;
   timezone: string;
   timeUnit?: 'ms' | 's';
+  // Baseline effect for uncovered instants. Defaults to 'auto'.
+  defaultEffect?: 'active' | 'blackout' | 'auto';
   rules?: RuleJson[];
 ```
 
 Notes
 
-- The library compiles DurationParts into a Luxon Duration and computes ends in the rule timezone to remain DST-correct.
-- Half-open intervals [start, end): in 's' mode, end is rounded up to the next second to avoid boundary false negatives.
+- The library compiles DurationParts into a Luxon Duration and computes ends in the rule timezone to remain DST-correct.- Half-open intervals [start, end): in 's' mode, end is rounded up to the next second to avoid boundary false negatives.
 - Calendar vs exact:
   - { days: 1 } means “same local time next day” (can be 23 or 25 hours across DST),
   - { hours: 24 } means “exactly 24 hours.”
@@ -277,10 +278,16 @@ Generation details:
   least one of the fields (years|months|weeks|days|hours|minutes|seconds) to
   be an integer with minimum 1.
 
+Baseline (defaultEffect)
+
+- RRStack behaves as if a virtual, open-ended span rule is prepended:
+  - defaultEffect: 'auto' → opposite of rule 0’s effect, or 'active' if no rules,
+  - defaultEffect: 'active' | 'blackout' → use exactly that effect.
+- The baseline applies uniformly to isActiveAt, getSegments, classifyRange, and getEffectiveBounds.
+
 Example (programmatic access):
 
-```ts
-import { RRSTACK_CONFIG_SCHEMA } from '@karmaniverous/rrstack';
+```tsimport { RRSTACK_CONFIG_SCHEMA } from '@karmaniverous/rrstack';
 
 // pass to your JSON Schema validator of choice (e.g., Ajv)
 console.log(RRSTACK_CONFIG_SCHEMA.$schema, 'RRStackOptions schema loaded');

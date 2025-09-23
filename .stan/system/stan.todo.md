@@ -6,11 +6,13 @@ Last updated: 2025-09-23 (UTC)
 
 Completed (recent)
 
+- Feat(schema): make all defaulted top-level properties optional (timeUnit, defaultEffect, rules) and regenerate JSON Schema (only 'timezone' required).
+- Tests: add segment and classifyRange cases under defaultEffect baseline to exercise streaming and classification with a baseline.
+- Docs: README “JSON Shapes and Types” now includes defaultEffect with a brief baseline semantics note.
 - Chore(lint): escape '>' in TSDoc for baselineEffect to clear tsdoc/syntax warnings.
 - Fix(core): include defaultEffect when freezing updated options in RRStack setters (timezone, rules, updateOptions) and refine baselineEffect to satisfy lint (no-unnecessary-condition).
 - Feat(core): add RRStackOptions.defaultEffect ('active' | 'blackout' | 'auto', default 'auto') and implement a virtual baseline span rule prepended at query time. All query surfaces (isActiveAt, getSegments, classifyRange, getEffectiveBounds) now respect the baseline without algorithm changes. JSON schema, normalization, persistence, and tests updated.
 ---
-
 0. Top Priority — Stabilize template baseline (pre-implementation)
    [unchanged]
 

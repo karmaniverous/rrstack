@@ -196,8 +196,6 @@
   },
   "required": [
     "timezone",
-    "timeUnit",
-    "defaultEffect",
     "rules"
   ],
   "additionalProperties": false

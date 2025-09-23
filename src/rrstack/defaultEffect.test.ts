@@ -70,4 +70,53 @@ describe('defaultEffect (virtual baseline rule)', () => {
     expect(s.isActiveAt(during)).toBe(false);
     expect(s.isActiveAt(after)).toBe(true);
   });
+
+  it('getSegments: baseline active with a blackout slice yields active/blackout/active segments', () => {
+    const day = Date.UTC(2024, 0, 10);
+    const blk: RuleJson = {
+      effect: 'blackout',
+      duration: { hours: 1 },
+      options: { freq: 'daily', byhour: [5], byminute: [0], bysecond: [0] },
+    };
+    const s = new RRStack({
+      timezone: 'UTC',
+      defaultEffect: 'active',
+      rules: [blk],
+    });
+    const from = day + 4 * 3600 * 1000; // 04:00
+    const to = day + 6 * 3600 * 1000 + 30 * 60 * 1000; // 06:30
+    const segs = [...s.getSegments(from, to)];
+    expect(segs).toEqual([
+      { start: from, end: day + 5 * 3600 * 1000, status: 'active' },
+      {
+        start: day + 5 * 3600 * 1000,
+        end: day + 6 * 3600 * 1000,
+        status: 'blackout',
+      },
+      { start: day + 6 * 3600 * 1000, end: to, status: 'active' },
+    ]);
+  });
+
+  it('classifyRange: baseline active shows active or partial appropriately', () => {
+    const day = Date.UTC(2024, 0, 10);
+    const blk: RuleJson = {
+      effect: 'blackout',
+      duration: { hours: 1 },
+      options: { freq: 'daily', byhour: [5], byminute: [0], bysecond: [0] },
+    };
+    const s = new RRStack({
+      timezone: 'UTC',
+      defaultEffect: 'active',
+      rules: [blk],
+    });
+    expect(
+      s.classifyRange(
+        day + 4 * 3600 * 1000,
+        day + 4 * 3600 * 1000 + 30 * 60 * 1000,
+      ),
+    ).toBe('active');
+    expect(s.classifyRange(day + 4 * 3600 * 1000, day + 6 * 3600 * 1000)).toBe(
+      'partial',
+    );
+  });
 });
