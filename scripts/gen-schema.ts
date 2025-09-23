@@ -149,7 +149,8 @@ const ensureFreqStringEnum = (root: JSONSchema7): void => {
 async function main(): Promise<void> {
   // Build a strengthened Options schema for JSON Schema generation.
   const RRStackOptionsZod = OptionsSchema.extend({
-    rules: z.array(RuleLiteSchema),
+    // Preserve optional + default so the generated schema does not require 'rules'.
+    rules: z.array(RuleLiteSchema).default([]).optional(),
   });
 
   // 1) Generate base JSON Schema (draft-07) for RRStackOptions (no version) using Zod v4 native conversion.

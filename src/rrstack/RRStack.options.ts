@@ -15,11 +15,11 @@ import type {
   RRStackOptionsNormalized,
   RuleJson,
   TimeZoneId,
+  UnixTimeUnit,
 } from './types';
 
 // DurationParts validation: non-negative integers, and total > 0.
 export const NonNegInt = z.number().int().min(0);
-
 export const DurationPartsSchema = z
   .object({
     years: NonNegInt.optional(),
@@ -125,11 +125,16 @@ export const normalizeOptions = (
     rules: opts.rules,
   });
 
+  // Coalesce defaulted optionals to concrete values for normalized shape.
+  const unit: UnixTimeUnit = (parsed.timeUnit ?? 'ms') as UnixTimeUnit;
+  const de = parsed.defaultEffect ?? 'auto';
+  const rulesArr = Object.freeze([...(parsed.rules ?? ([] as RuleJson[]))]);
+
   const normalized: RRStackOptionsNormalized = Object.freeze({
     timezone: parsed.timezone as unknown as TimeZoneId,
-    timeUnit: parsed.timeUnit,
-    defaultEffect: parsed.defaultEffect,
-    rules: Object.freeze([...(parsed.rules as RuleJson[])]),
+    timeUnit: unit,
+    defaultEffect: de,
+    rules: rulesArr,
   });
   return normalized;
 };

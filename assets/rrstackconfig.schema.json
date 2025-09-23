@@ -27,6 +27,7 @@
       ]
     },
     "rules": {
+      "default": [],
       "type": "array",
       "items": {
         "type": "object",
@@ -195,8 +196,7 @@
     }
   },
   "required": [
-    "timezone",
-    "rules"
+    "timezone"
   ],
   "additionalProperties": false
 }
