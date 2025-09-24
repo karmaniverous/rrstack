@@ -41,8 +41,13 @@ Completed (recent)
   - Harden tests against dev double-invocation of effects (React 18/19):
     guard rrstack.addRule bursts in useEffect with once flags to avoid
     duplicate mutations during mount in test environment.
+- Docs: update README and handbook/react.md to reflect changeDebounce /
+  mutateDebounce / renderDebounce and new helpers (flushChanges,
+  flushMutations, cancelMutations, flushRender). Note staged vs compiled
+  behavior and migration notes.
 
 ---
+
 0. Top Priority — Stabilize template baseline (pre-implementation) [unchanged]
 
 ---

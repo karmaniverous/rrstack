@@ -302,51 +302,66 @@ console.log(RRSTACK_CONFIG_SCHEMA.$schema, 'RRStackOptions schema loaded');
 
 ## React hooks
 
-RRStack ships a tiny React adapter at the subpath `@karmaniverous/rrstack/react`. The
-hooks observe a live RRStack instance without re‑wrapping its control surface:
+RRStack ships a tiny React adapter at the subpath `@karmaniverous/rrstack/react`. The hooks
+observe a live RRStack instance without re‑wrapping its control surface (RRStack remains the
+single source of truth).
 
-- `useRRStack(json, onChange?, { resetKey?, debounce?, logger? })` →
-  `{ rrstack, version, flush, apply, flushApply, flushRender }`
-- `useRRStackSelector(rrstack, selector, isEqual?)` → derived value; re‑renders
-  only when the selection changes.
+- `useRRStack(json, onChange?, { resetKey?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? })`
+  →
+  `{ rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }`
+- `useRRStackSelector(rrstack, selector, isEqual?)` → derived value; re‑renders only when the
+  selection changes.
 
-Debounce knobs
+Debounce knobs (trailing is always true)
 
-- `debounce`: coalesce autosave (`onChange`) calls.
-- `applyDebounce`: coalesce frequent UI → `rrstack.updateOptions` calls (e.g., typing).
-- `renderDebounce`: coalesce version bumps from rrstack notifications to reduce repaint churn.
+- `changeDebounce`: coalesce autosave (`onChange`) calls.
+- `mutateDebounce`: coalesce frequent UI → `rrstack` edits (e.g., typing). Mutations are staged
+  (rules/timezone) and committed once per window.
+- `renderDebounce`: coalesce version bumps from rrstack notifications to reduce repaint churn
+  (optional leading paint).
 
 Helpers
 
-- `apply(p)`: apply `{ timezone?, rules? }` to rrstack using `applyDebounce`.
-- `flushApply()`, `flushRender()`, `flush()` to force pending operations immediately.
+- `flushChanges()`: flush pending trailing autosave immediately.
+- `flushMutations()`: commit staged edits right now.
+- `cancelMutations()`: discard staged edits.
+- `flushRender()`: force a paint now when `renderDebounce` is configured.
 
-Example
+Staged vs compiled (mutateDebounce)
+
+- Reads of `rrstack.rules` and `rrstack.timezone` reflect staged values prior to commit.
+- `toJson()` also overlays staged values.
+- Queries (`isActiveAt`, `getSegments`, etc.) continue to reflect the last committed compiled state
+  until a commit occurs.
+
+Example (debounced autosave + staged edits)
 
 ```tsx
 import { useRRStack } from '@karmaniverous/rrstack/react';
 import type { RRStackOptions } from '@karmaniverous/rrstack';
 
 function Editor({ json }: { json: RRStackOptions }) {
-  const { rrstack, version, flush } = useRRStack(
+  const { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender } = useRRStack(
     json,
     (s) => {
-      // autosave (debounced by the hook if configured)
+      // autosave (debounced by changeDebounce)
       void saveToServer(s.toJson());
     },
     {
-      debounce: 500, // autosave
-      applyDebounce: 150, // UI → rrstack
-      renderDebounce: { delay: 50, leading: true }, // rrstack → UI
+      changeDebounce: 600, // autosave (trailing)
+      mutateDebounce: 150, // UI → rrstack (staged + commit)
+      renderDebounce: { delay: 50, leading: true }, // rrstack → UI (coalesced paints)
     },
   );
 
-  // Use `version` to memoize heavy derived values (e.g. segments)
+  // Use `version` to memoize heavy derived values (e.g., segments)
 
   return (
     <button
       onClick={() => {
-        /* ... */ flush();
+        // Optionally force a commit + autosave now
+        flushMutations();
+        flushChanges();
       }}
     >
       Save now
@@ -355,9 +370,8 @@ function Editor({ json }: { json: RRStackOptions }) {
 }
 ```
 
-See “Handbook → React” on the docs site for full details:
+See “Handbook → React” for full details (options, staged vs compiled behavior, examples):
 https://docs.karmanivero.us/rrstack
-
 ## Rule description helpers
 
 Build a human-readable string describing a rule’s cadence using rrule’s toText(), augmented with effect and duration.
