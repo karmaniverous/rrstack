@@ -28,5 +28,34 @@ export const createRenderBumper = (
   const bump = (cb: () => void) => {
     const cfg = cfgRef.current;
     if (!cfg) {
+      // no debounce configured — run immediately
       lastCb = cb;
+      run();
+      return;
+    }
+    const { delay, leading } = cfg;
+    lastCb = cb;
+    if (leading && !inWindow) {
+      run();
+    }
+    inWindow = true;
+    if (timer) clearTimeout(timer);
+    // Always perform a trailing paint at window end
+    timer = setTimeout(() => {
+      timer = undefined;
+      inWindow = false;
+      run();
+    }, delay);
+  };
 
+  const flush = () => {
+    // If no debounce configured, nothing pending to flush
+    if (!cfgRef.current) return;
+    if (timer) clearTimeout(timer);
+    timer = undefined;
+    inWindow = false;
+    run();
+  };
+
+  return { bump, flush };
+};

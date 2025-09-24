@@ -9,6 +9,7 @@ export interface MutateManager {
   flush: () => void;
   cancel: () => void;
   ensureRules: () => RuleJson[];
+  stageRules: (next: RuleJson[]) => void;
   stageTimezone: (tz: string) => void;
   getStaged: () => {
     rules?: RuleJson[];
@@ -24,6 +25,10 @@ export const createMutateManager = (
   let timer: ReturnType<typeof setTimeout> | undefined;
   let inWindow = false;
   let staging: { rules?: RuleJson[]; timezone?: string } | null = null;
+
+  const stageRules = (next: RuleJson[]) => {
+    staging = { ...(staging ?? {}), rules: [...next] };
+  };
 
   const ensureRules = (): RuleJson[] => {
     if (staging?.rules) return staging.rules;
@@ -86,6 +91,7 @@ export const createMutateManager = (
     flush,
     cancel,
     ensureRules,
+    stageRules,
     stageTimezone,
     getStaged,
   };

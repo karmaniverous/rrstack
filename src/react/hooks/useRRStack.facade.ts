@@ -10,23 +10,24 @@ export const createRRStackFacade = (
 ): RRStack =>
   new Proxy(rrstackRef.current as unknown as object, {
     get(_t, prop) {
+      const staged = (): { rules?: RuleJson[]; timezone?: string } | null =>
+        mutate.getStaged();
+
       if (prop === 'rules') {
         // Prefer staged over committed for UI echo
-        return mutate.getStaged()?.rules ?? rrstackRef.current.rules;
+        return staged()?.rules ?? rrstackRef.current.rules;
       }
       if (prop === 'timezone') {
-        return mutate.getStaged()?.timezone ?? rrstackRef.current.timezone;
+        return staged()?.timezone ?? rrstackRef.current.timezone;
       }
       if (prop === 'toJson') {
         return () => {
           const snap = rrstackRef.current.toJson();
-          const staged = mutate.getStaged();
+          const s = staged();
           return {
             ...snap,
-            ...(staged?.timezone !== undefined
-              ? { timezone: staged.timezone }
-              : null),
-            ...(staged?.rules !== undefined ? { rules: staged.rules } : null),
+            ...(s?.timezone !== undefined ? { timezone: s.timezone } : null),
+            ...(s?.rules !== undefined ? { rules: s.rules } : null),
           };
         };
       }
@@ -36,11 +37,7 @@ export const createRRStackFacade = (
           if (p.rules !== undefined) {
             // clone to break external references
             const cloned = [...p.rules];
-            const s = mutate.getStaged();
-            const next = { ...(s ?? {}), rules: cloned };
-            // internal staging update
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (mutate as any).getStaged = () => next;
+            mutate.stageRules(cloned);
           }
           mutate.schedule();
         };
@@ -113,10 +110,7 @@ export const createRRStackFacade = (
       }
       if (prop === 'rules' && Array.isArray(value)) {
         const arr = [...(value as RuleJson[])];
-        const s = mutate.getStaged();
-        const next = { ...(s ?? {}), rules: arr };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (mutate as any).getStaged = () => next;
+        mutate.stageRules(arr);
         mutate.schedule();
         return true;
       }
