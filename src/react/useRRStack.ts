@@ -14,32 +14,20 @@ const CHANGE_DEBOUNCE_MS = 600;
 const MUTATE_DEBOUNCE_MS = 150;
 const RENDER_DEBOUNCE_MS = 50;
 
-type DebounceSpec =
-  | true
-  | number
-  | {
-      delay?: number;
-      leading?: boolean;
-    };
+// Debounce option shape:
+// - true: use default delay
+// - number: explicit delay
+// - object: { delay?: number; leading?: boolean }
+type DebounceSpec = true | number | { delay?: number; leading?: boolean };
 
+// Hook options. Trailing is always true for all debouncers by design.
 interface Options {
   resetKey?: string | number;
-  /**
-   * Debounce autosave (onChange) calls; trailing is always true.
-   * - true => default delay; number => explicit delay; object => { delay?, leading? }.
-   */
+  // Debounce autosave (onChange) calls
   changeDebounce?: DebounceSpec;
-  /**
-   * Debounce rrstack mutations (UI -> rrstack); trailing is always true.
-   * - Intercepts mutators/assignments and commits once per window.
-   * - true => default delay; number => explicit delay; object => { delay?, leading? }.
-   */
+  // Debounce rrstack mutations (UI -> rrstack)
   mutateDebounce?: DebounceSpec;
-  /**
-   * Debounce renders (rrstack -> UI); trailing is always true.
-   * - Coalesces version bumps to reduce repaint churn.
-   * - true => default delay; number => explicit delay; object => { delay?, leading? }.
-   */
+  // Debounce renders (rrstack -> UI)
   renderDebounce?: DebounceSpec;
   logger?:
     | boolean
@@ -56,7 +44,6 @@ interface Options {
         rrstack: RRStack;
       }) => void);
 }
-
 const toDebounceCfg = (
   v: DebounceSpec | undefined,
   defaultDelay: number,
@@ -371,14 +358,13 @@ export function useRRStack(
   useEffect(() => {
     // Staged getters overlay timezone/rules; mutators schedule commit
     const proxy = new Proxy(rrstackRef.current as unknown as object, {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       get(_target, prop, _receiver) {
         if (prop === 'rules') {
-          const staged = stagingRef.current?.rules;
-          return staged !== undefined ? staged : rrstackRef.current.rules;
+          return stagingRef.current?.rules ?? rrstackRef.current.rules;
         }
         if (prop === 'timezone') {
-          const staged = stagingRef.current?.timezone;
-          return staged !== undefined ? staged : rrstackRef.current.timezone;
+          return stagingRef.current?.timezone ?? rrstackRef.current.timezone;
         }
         if (prop === 'toJson') {
           return () => {
@@ -476,7 +462,7 @@ export function useRRStack(
         if (prop === 'rules' && Array.isArray(value)) {
           stagingRef.current = {
             ...(stagingRef.current ?? {}),
-            rules: [...value],
+            rules: [...(value as RuleJson[])],
           };
           mutRef.current!.schedule();
           return true;
@@ -487,7 +473,6 @@ export function useRRStack(
     }) as unknown as RRStack;
     facadeRef.current = proxy;
   }, [rrstack]);
-
   const flushChanges = useCallback(() => {
     changeRef.current!.flush();
     log('flushChanges');

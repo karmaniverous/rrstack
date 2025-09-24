@@ -1,4 +1,4 @@
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 
 import type { RRStack } from '../rrstack/RRStack';
 import type { DebounceCfgNormalized } from './debounce.util';
@@ -12,8 +12,8 @@ export interface ChangeEmitter {
  * Debounce onChange (autosave). Trailing is always true by design.
  */
 export const createChangeEmitter = (
-  onChangeRef: MutableRefObject<((s: RRStack) => void) | undefined>,
-  cfgRef: MutableRefObject<DebounceCfgNormalized | undefined>,
+  onChangeRef: RefObject<((s: RRStack) => void) | undefined>,
+  cfgRef: RefObject<DebounceCfgNormalized | undefined>,
 ): ChangeEmitter => {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let pending: RRStack | undefined;

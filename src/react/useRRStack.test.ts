@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import type { FC } from 'react';
 import { act } from 'react';
 import React, { useEffect, useMemo, useRef } from 'react';

@@ -1,4 +1,4 @@
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 
 import type { DebounceCfgNormalized } from './debounce.util';
 
@@ -11,7 +11,7 @@ export interface RenderBumper {
  * Debounce version bumps to coalesce renders. Trailing is always true.
  */
 export const createRenderBumper = (
-  cfgRef: MutableRefObject<DebounceCfgNormalized | undefined>,
+  cfgRef: RefObject<DebounceCfgNormalized | undefined>,
 ): RenderBumper => {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let inWindow = false;

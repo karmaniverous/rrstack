@@ -1,13 +1,12 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-09-23 (UTC)
+Last updated: 2025-09-24 (UTC)
 
 ## This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
 Completed (recent)
 
-- Feat(react): replace apply/applyDebounce with mutateDebounce (proxy/staging)
-  - All rrstack mutators/assignments are staged and committed once per window.
+- Feat(react): replace apply/applyDebounce with mutateDebounce (proxy/staging)  - All rrstack mutators/assignments are staged and committed once per window.
   - Add flushMutations()/cancelMutations(); staged reads overlay rules/timezone; queries remain compiled-only until commit.
 - API rename: debounce → changeDebounce; flush() → flushChanges().
 - Simplify debouncers: trailing always true; options accept true|number|{ delay?, leading? }.
@@ -25,10 +24,16 @@ Completed (recent)
 - Fix(core): include defaultEffect when freezing updated options in RRStack setters (timezone, rules, updateOptions) and refine baselineEffect to satisfy lint (no-unnecessary-condition).
 - Feat(core): add RRStackOptions.defaultEffect ('active' | 'blackout' | 'auto', default 'auto') and implement a virtual baseline span rule prepended at query time. All query surfaces (isActiveAt, getSegments, classifyRange, getEffectiveBounds) now respect the baseline without algorithm changes. JSON schema, normalization, persistence, and tests updated.
 
+- Fix(react/lint+types): resolve ESLint/TS issues to stabilize CI:
+  - use RefObject in small helpers (changeEmitter, renderBump) to satisfy deprecation rule.
+  - complete react/mutateFacade (fix parse error; add top/bottom/set traps); cast RuleJson[] to avoid unsafe spread warnings.
+  - quiet TSDoc escape warnings in useRRStack by switching to regular comments in problematic sections; prefer ?? in staged getters; suppress unused Proxy receiver param.
+  - test: narrow lint scope by disabling a single rule in useRRStack.test.ts.
+  - No behavior changes to core scheduling algorithms.
+
 ---
 
-0. Top Priority — Stabilize template baseline (pre-implementation)
-   [unchanged]
+0. Top Priority — Stabilize template baseline (pre-implementation)   [unchanged]
 
 ---
 
@@ -109,3 +114,26 @@ Completed (recent)
 ---
 
 9. Next steps (implementation plan)
+
+A. Decompose useRRStack (keep hook < ~200 LOC)
+- Extract cohesive modules under src/react/hooks:
+  1) useRRStack.config.ts — debounce defaults + option parsing (true|number|{ delay?, leading? } → { delay, leading }).
+  2) useRRStack.onChange.ts — changeDebounce + flushChanges().
+  3) useRRStack.mutate.ts — staging manager for mutateDebounce (rules/timezone snapshot, schedule/flush/cancel).
+  4) useRRStack.render.ts — renderDebounce + flushRender().
+  5) useRRStack.facade.ts — Proxy façade overlay (staged rules/timezone/toJson; intercept mutators/assignments).
+  6) useRRStack.logger.ts — typed logger ('init'|'reset'|'mutate'|'commit'|'flushChanges'|'flushMutations'|'flushRender'|'cancel').
+  7) react/useRRStack.ts — thin orchestrator wiring modules; returns { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }.
+- Prefer existing helpers (changeEmitter, renderBump, mutateFacade) where they align; migrate/rename into hooks/* to match the plan.
+
+B. Update exports and fix type surfaces
+- Ensure src/react/index.ts exports only stable API (useRRStack, useRRStackSelector). No stray DebounceOption types.
+
+C. Tests to new API/semantics
+- Replace debounce → changeDebounce; applyDebounce → mutateDebounce; flush() → flushChanges().
+- Remove apply/applyDebounce tests; add mutateDebounce coverage (staging reads vs compiled queries; single commit per window; autosave coalesced).
+- Keep renderDebounce tests and assert trailing paint (leading implies eventual trailing).
+
+D. Docs
+- README: keep intro/quick start lean; move detailed React content to handbook/react.md.
+- Handbook: document option shapes, defaults, staged-vs-compiled behavior, migration notes (0.11.0).
