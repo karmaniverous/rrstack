@@ -1,4 +1,5 @@
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
+
 import type { RRStack } from '../rrstack/RRStack';
 import type { RRStackOptions, RuleJson } from '../rrstack/types';
 import type { DebounceCfgNormalized } from './debounce.util';
@@ -16,8 +17,8 @@ export interface MutateFacade {
  * - Trailing commit is always performed; leading commit is optional.
  */
 export const createMutateFacade = (
-  rrstackRef: MutableRefObject<RRStack>,
-  cfgRef: MutableRefObject<DebounceCfgNormalized | undefined>,
+  rrstackRef: RefObject<RRStack>,
+  cfgRef: RefObject<DebounceCfgNormalized | undefined>,
   log: (t: 'commit') => void,
 ): MutateFacade => {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -29,7 +30,6 @@ export const createMutateFacade = (
     const next = [...(rrstackRef.current.rules as RuleJson[])];
     staging = { ...(staging ?? {}), rules: next };
     return next;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   };
   const stageTimezone = (tz: string): void => {
     staging = { ...(staging ?? {}), timezone: tz };
@@ -101,7 +101,11 @@ export const createMutateFacade = (
       if (prop === 'updateOptions') {
         return (p: Partial<Pick<RRStackOptions, 'timezone' | 'rules'>>) => {
           if (p.timezone !== undefined) stageTimezone(p.timezone);
-          if (p.rules !== undefined) staging = { ...(staging ?? {}), rules: [...p.rules] };
+          if (p.rules !== undefined)
+            staging = {
+              ...(staging ?? {}),
+              rules: [...p.rules],
+            };
           schedule();
         };
       }
@@ -147,4 +151,39 @@ export const createMutateFacade = (
         return (i: number) => {
           const arr = rulesSnapshot();
           if (i <= 0 || i >= arr.length) return;
+          const [r] = arr.splice(i, 1);
+          arr.unshift(r);
+          schedule();
+        };
+      }
+      if (prop === 'bottom') {
+        return (i: number) => {
+          const arr = rulesSnapshot();
+          if (i < 0 || i >= arr.length) return;
+          const [r] = arr.splice(i, 1);
+          arr.push(r);
+          schedule();
+        };
+      }
+      // fall through to real instance for all other members
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
+      return (rrstackRef.current as unknown as Record<PropertyKey, any>)[prop];
+    },
+    set(_t, prop, value) {
+      if (prop === 'timezone' && typeof value === 'string') {
+        stageTimezone(value);
+        schedule();
+        return true;
+      }
+      if (prop === 'rules' && Array.isArray(value)) {
+        staging = { ...(staging ?? {}), rules: [...(value as RuleJson[])] };
+        schedule();
+        return true;
+      }
+      // block unknown direct sets to keep façade deterministic
+      return false;
+    },
+  }) as unknown as RRStack;
 
+  return { facade, flush, cancel };
+};
