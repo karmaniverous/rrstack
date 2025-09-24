@@ -20,7 +20,12 @@ import type { RRStack, RRStackOptions } from '@karmaniverous/rrstack';
 ## useRRStack
 
 Create (or reset) and observe a live RRStack instance from JSON, with optional
-debounced change notifications.
+debounced change notifications. Advanced options allow debouncing how edits are
+applied to RRStack and how renders are coalesced:
+
+- applyDebounce: coalesce frequent UI → rrstack.updateOptions calls.
+- renderDebounce: coalesce version bumps (rrstack → UI) to reduce repaint churn.
+- debounce: existing autosave/onChange debounce (outbound).
 
 Signature
 
@@ -30,10 +35,30 @@ function useRRStack(
   onChange?: (s: RRStack) => void,
   opts?: {
     resetKey?: string | number;
-    debounce?: number | { delay: number; leading?: boolean; trailing?: boolean };
-    logger?: boolean | ((e: { type: 'init' | 'reset' | 'mutate' | 'flush'; rrstack: RRStack }) => void);
+    debounce?:
+      | number
+      | { delay: number; leading?: boolean; trailing?: boolean };
+    applyDebounce?:
+      | number
+      | { delay: number; leading?: boolean; trailing?: boolean };
+    renderDebounce?:
+      | number
+      | { delay: number; leading?: boolean; trailing?: boolean };
+    logger?:
+      | boolean
+      | ((e: {
+          type: 'init' | 'reset' | 'mutate' | 'flush';
+          rrstack: RRStack;
+        }) => void);
   },
-): { rrstack: RRStack; version: number; flush: () => void };
+): {
+  rrstack: RRStack;
+  version: number;
+  flush: () => void; // autosave flush
+  apply: (p: { timezone?: string; rules?: RuleJson[] }) => void;
+  flushApply: () => void; // applyDebounce flush
+  flushRender: () => void; // renderDebounce flush
+};
 ```
 
 Parameters
@@ -45,6 +70,10 @@ Parameters
 - `opts?:` options
   - `resetKey?: string | number` — change to intentionally rebuild the instance
     (e.g., switching documents).
+  - `applyDebounce?: number | { delay: number; leading?: boolean; trailing?: boolean }`
+    — coalesce frequent `rrstack.updateOptions` calls (UI → rrstack).
+  - `renderDebounce?: number | { delay: number; leading?: boolean; trailing?: boolean }`
+    — coalesce version bumps from rrstack notifications (rrstack → UI).
   - `debounce?: number | { delay: number; leading?: boolean; trailing?: boolean }`
     - number shorthand = `{ delay, leading: false, trailing: true }`.
     - `leading` fires immediately at the start of a burst.
@@ -55,11 +84,12 @@ Parameters
 
 Returns
 
-- `rrstack: RRStack` — the live instance (stable until `resetKey` changes).
-- `version: number` — monotonically increments after each mutation; use to
-  memoize heavy derived values (segments, etc.).
-- `flush(): void` — if a trailing debounced `onChange` is pending, emit it now
-  (no‑op otherwise).
+- `rrstack: RRStack` — the live instance (stable until `resetKey` changes)
+- `version: number` — increments after (debounced) renders; use to memoize heavy derived values
+- `flush(): void` — flush pending trailing `onChange` (autosave)
+- `apply(p): void` — apply `{ timezone?, rules? }` to rrstack, debounced per `applyDebounce`
+- `flushApply(): void` — flush pending trailing applies immediately
+- `flushRender(): void` — flush pending render debounce (force a paint)
 
 Behavior notes
 
@@ -68,13 +98,17 @@ Behavior notes
   pending trailing call in tests and UIs (including fake‑timer environments).
 - Debounce state is stable across renders; pending trailing calls persist until
   delivered or flushed.
+- RRStack core stays synchronous; debouncing is purely in the hook. `applyDebounce`
+  can lag rrstack behind form inputs for the debounce window; call `flushApply()`
+  when you need rrstack current (e.g., Save). `renderDebounce` reduces repaint
+  churn; `flushRender()` forces an immediate render when needed (e.g., preview).
 
 Example (debounced autosave + “save now”)
 
 ```tsx
 function Editor({ json, docId }: { json: RRStackOptions; docId: string }) {
   const onChange = (s: RRStack) => {
-    // autosave (can be debounced by the hook)
+    // autosave (debounced by the hook if configured)
     void saveToServer(docId, s.toJson());
   };
   const { rrstack, version, flush } = useRRStack(json, onChange, {
@@ -89,7 +123,12 @@ function Editor({ json, docId }: { json: RRStackOptions; docId: string }) {
   return (
     <div>
       <button onClick={() => rrstack.addRule(/*...*/)}>Add rule</button>
-      <button onClick={() => { flush(); void saveToServer(docId, rrstack.toJson()); }}>
+      <button
+        onClick={() => {
+          flush();
+          void saveToServer(docId, rrstack.toJson());
+        }}
+      >
         Save now
       </button>
       <div>Rules: {rrstack.rules.length}</div>
@@ -106,6 +145,58 @@ const { rrstack } = useRRStack(json, onChange, {
 });
 ```
 
+Apply/render debounces example
+
+```tsx
+function Editor({
+  json,
+  docId,
+  save,
+}: {
+  json: RRStackOptions;
+  docId: string;
+  save: (j: RRStackOptions) => Promise<void>;
+}) {
+  const onChange = (s: RRStack) => {
+    void save(s.toJson());
+  };
+  const { rrstack, apply, flush, flushApply, flushRender } = useRRStack(
+    json,
+    onChange,
+    {
+      resetKey: docId,
+      debounce: { delay: 600, trailing: true }, // autosave
+      applyDebounce: { delay: 150, trailing: true }, // UI → rrstack
+      renderDebounce: { delay: 50, leading: true }, // rrstack → UI
+    },
+  );
+
+  const onFormChange = (p: { timezone?: string; rules?: RuleJson[] }) =>
+    apply(p);
+
+  return (
+    <div>
+      <button
+        onClick={() => {
+          flushApply();
+          flush();
+        }}
+      >
+        Save now
+      </button>
+      <button
+        onClick={() => {
+          flushRender();
+        }}
+      >
+        Force paint
+      </button>
+      <HookFormRRStack rrstackJson={rrstack.toJson()} onChange={onFormChange} />
+    </div>
+  );
+}
+```
+
 ## useRRStackSelector
 
 Subscribe to an RRStack‑derived value. The selector recomputes on RRStack
@@ -113,11 +204,7 @@ mutations, and the component only re‑renders when `isEqual` deems the derived
 value changed (default `Object.is`).
 
 ```ts
-function useRRStackSelector<T>(
-  rrstack: RRStack,
-  selector: (s: RRStack) => T,
-  isEqual?: (a: T, b: T) => boolean, // default Object.is
-): T;
+function useRRStackSelector<T>(  rrstack: RRStack,  selector: (s: RRStack) => T,  isEqual?: (a: T, b: T) => boolean, // default Object.is): T;
 ```
 
 Parameters
@@ -134,6 +221,7 @@ Returns
 
 Example
 
+```tsx
 function RuleCount({ json }: { json: RRStackOptions }) {
   const { rrstack } = useRRStack(json);
   const count = useRRStackSelector(rrstack, (s) => s.rules.length);
@@ -148,4 +236,3 @@ function RuleCount({ json }: { json: RRStackOptions }) {
 - For long windows, prefer chunking (day/week) or a Worker for heavy sweeps.
 - In tests using fake timers, call `flush()` inside `act(async () => { ... })`
   and await a microtask to flush effects.
-

@@ -28,13 +28,20 @@ continuous coverage bounded by optional clamps:
   override earlier ones.
 
 Example (active span; Jan 10 05:00–07:00 UTC):
+
 ```ts
 const rules = [
-  { effect: 'active' as const,
+  {
+    effect: 'active' as const,
     // duration omitted
-    options: { starts: Date.UTC(2024,0,10,5,0,0), ends: Date.UTC(2024,0,10,7,0,0) } },
+    options: {
+      starts: Date.UTC(2024, 0, 10, 5, 0, 0),
+      ends: Date.UTC(2024, 0, 10, 7, 0, 0),
+    },
+  },
 ];
 ```
+
 UI tip: this maps naturally to a “Does not repeat” option that disables RRULE inputs.
 
 ## Installation
@@ -299,9 +306,20 @@ RRStack ships a tiny React adapter at the subpath `@karmaniverous/rrstack/react`
 hooks observe a live RRStack instance without re‑wrapping its control surface:
 
 - `useRRStack(json, onChange?, { resetKey?, debounce?, logger? })` →
-  `{ rrstack, version, flush }`
+  `{ rrstack, version, flush, apply, flushApply, flushRender }`
 - `useRRStackSelector(rrstack, selector, isEqual?)` → derived value; re‑renders
   only when the selection changes.
+
+Debounce knobs
+
+- `debounce`: coalesce autosave (`onChange`) calls.
+- `applyDebounce`: coalesce frequent UI → `rrstack.updateOptions` calls (e.g., typing).
+- `renderDebounce`: coalesce version bumps from rrstack notifications to reduce repaint churn.
+
+Helpers
+
+- `apply(p)`: apply `{ timezone?, rules? }` to rrstack using `applyDebounce`.
+- `flushApply()`, `flushRender()`, `flush()` to force pending operations immediately.
 
 Example
 
@@ -316,12 +334,24 @@ function Editor({ json }: { json: RRStackOptions }) {
       // autosave (debounced by the hook if configured)
       void saveToServer(s.toJson());
     },
-    { debounce: 500 },
+    {
+      debounce: 500, // autosave
+      applyDebounce: 150, // UI → rrstack
+      renderDebounce: { delay: 50, leading: true }, // rrstack → UI
+    },
   );
 
   // Use `version` to memoize heavy derived values (e.g. segments)
 
-  return <button onClick={() => { rrstack.addRule(/* ... */); flush(); }}>Save now</button>;
+  return (
+    <button
+      onClick={() => {
+        /* ... */ flush();
+      }}
+    >
+      Save now
+    </button>
+  );
 }
 ```
 
@@ -331,6 +361,7 @@ https://docs.karmanivero.us/rrstack
 ## Rule description helpers
 
 Build a human-readable string describing a rule’s cadence using rrule’s toText(), augmented with effect and duration.
+
 - Instance method (describe compiled rule by index):
 
 ```ts

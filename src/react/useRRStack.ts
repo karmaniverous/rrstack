@@ -7,7 +7,7 @@ import {
 } from 'react';
 
 import { RRStack } from '../rrstack/RRStack';
-import type { RRStackOptions } from '../rrstack/types';
+import type { RRStackOptions, RuleJson } from '../rrstack/types';
 export type DebounceOption =
   | number
   | {
@@ -19,6 +19,16 @@ export type DebounceOption =
 interface Options {
   resetKey?: string | number;
   debounce?: DebounceOption;
+  /**
+   * Debounce UI → rrstack applies (coalesce frequent rrstack.updateOptions calls).
+   * - Provide delay/leading/trailing semantics (default immediate: no debounce).
+   */
+  applyDebounce?: DebounceOption;
+  /**
+   * Debounce rrstack → UI renders (coalesce version bumps from notify).
+   * - Provide delay/leading/trailing semantics (default immediate: no debounce).
+   */
+  renderDebounce?: DebounceOption;
   logger?:
     | boolean
     | ((e: {
@@ -42,11 +52,27 @@ export function useRRStack(
   json: RRStackOptions,
   onChange?: (stack: RRStack) => void,
   opts?: Options,
-): { rrstack: RRStack; version: number; flush: () => void } {
-  const { resetKey, debounce: debounceOpt, logger } = opts ?? {};
+): {
+  rrstack: RRStack;
+  version: number;
+  flush: () => void;
+  apply: (p: { timezone?: string; rules?: RuleJson[] }) => void;
+  flushApply: () => void;
+  flushRender: () => void;
+} {
+  const {
+    resetKey,
+    debounce: debounceOpt,
+    applyDebounce: applyDebounceOpt,
+    renderDebounce: renderDebounceOpt,
+    logger,
+  } = opts ?? {};
 
   // Recreate the instance intentionally when resetKey changes.
   const rrstack = useMemo(() => new RRStack(json), [resetKey]);
+  // Keep a ref to the current instance for debounced helpers that outlive renders.
+  const rrstackRef = useRef(rrstack);
+  rrstackRef.current = rrstack;
 
   // Logging helper
   const log = useCallback(
@@ -145,6 +171,144 @@ export function useRRStack(
     debouncedRef.current = { call, flush: flushInner };
   }
 
+  // Debounced APPLY (UI -> rrstack.updateOptions)
+  const applyCfgRef = useRef<ReturnType<typeof toDebounceCfg> | undefined>(
+    toDebounceCfg(applyDebounceOpt),
+  );
+  applyCfgRef.current = toDebounceCfg(applyDebounceOpt);
+  const debouncedApplyRef = useRef<{
+    call: (p: { timezone?: string; rules?: RuleJson[] }) => void;
+    flush: () => void;
+  } | null>(null);
+  if (debouncedApplyRef.current === null) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let inWindow = false;
+    // latest-wins per field during the window
+    let pendingTz: string | undefined;
+    let pendingRules: RuleJson[] | undefined;
+    const applyNow = (tz?: string, rules?: RuleJson[]) => {
+      const patch: Partial<Pick<RRStackOptions, 'timezone' | 'rules'>> = {};
+      if (tz !== undefined) patch.timezone = tz;
+      if (rules !== undefined) patch.rules = rules;
+      if (Object.keys(patch).length > 0) {
+        try {
+          rrstackRef.current.updateOptions(patch);
+        } catch {
+          /* noop */
+        }
+      }
+    };
+    const call = (p: { timezone?: string; rules?: RuleJson[] }) => {
+      const cfg = applyCfgRef.current;
+      // Merge latest fields
+      if (p.timezone !== undefined) pendingTz = p.timezone;
+      if (p.rules !== undefined) pendingRules = p.rules;
+      if (!cfg) {
+        applyNow(p.timezone, p.rules);
+        // clear any pending
+        pendingTz = undefined;
+        pendingRules = undefined;
+        return;
+      }
+      const { delay, leading, trailing } = cfg;
+      if (leading && !inWindow) {
+        applyNow(pendingTz, pendingRules);
+        pendingTz = undefined;
+        pendingRules = undefined;
+      }
+      inWindow = true;
+      if (timer) clearTimeout(timer);
+      if (trailing) {
+        timer = setTimeout(() => {
+          timer = undefined;
+          inWindow = false;
+          // apply the latest pending
+          applyNow(pendingTz, pendingRules);
+          pendingTz = undefined;
+          pendingRules = undefined;
+        }, delay);
+      } else {
+        // trailing disabled: just end window later; no second apply
+        timer = setTimeout(() => {
+          timer = undefined;
+          inWindow = false;
+          pendingTz = undefined;
+          pendingRules = undefined;
+        }, delay);
+      }
+    };
+    const flushApply = () => {
+      const tz = pendingTz;
+      const rules = pendingRules;
+      pendingTz = undefined;
+      pendingRules = undefined;
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      inWindow = false;
+      applyNow(tz, rules);
+    };
+    debouncedApplyRef.current = { call, flush: flushApply };
+  }
+
+  // Debounced RENDER (rrstack -> UI version bump)
+  const renderCfgRef = useRef<ReturnType<typeof toDebounceCfg> | undefined>(
+    toDebounceCfg(renderDebounceOpt),
+  );
+  renderCfgRef.current = toDebounceCfg(renderDebounceOpt);
+  const renderDebounceRef = useRef<{
+    bump: (cb: () => void) => void;
+    flush: () => void;
+  } | null>(null);
+  if (renderDebounceRef.current === null) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let inWindow = false;
+    let pending = false;
+    let lastCb: (() => void) | undefined;
+    const run = () => {
+      try {
+        lastCb?.();
+      } catch {
+        /* noop */
+      }
+    };
+    const bump = (cb: () => void) => {
+      const cfg = renderCfgRef.current;
+      if (!cfg) {
+        // immediate render
+        lastCb = cb;
+        run();
+        return;
+      }
+      const { delay, leading, trailing } = cfg;
+      lastCb = cb;
+      if (leading && !inWindow) {
+        run();
+      } else {
+        pending = true;
+      }
+      inWindow = true;
+      if (timer) clearTimeout(timer);
+      // window end
+      timer = setTimeout(() => {
+        timer = undefined;
+        const shouldRun = trailing && pending;
+        pending = false;
+        inWindow = false;
+        if (shouldRun) run();
+      }, delay);
+    };
+    const flushRender = () => {
+      const cfg = renderCfgRef.current;
+      if (!cfg) return; // already immediate mode
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      pending = false;
+      inWindow = false;
+      run();
+    };
+    renderDebounceRef.current = { bump, flush: flushRender };
+  }
+
   // React external-store binding: one React-level subscriber per hook instance.
   // Use a monotonic counter for the snapshot; Date.now() can be frozen by fake timers.
   const versionRef = useRef(0);
@@ -159,11 +323,19 @@ export function useRRStack(
           } catch {
             /* noop */
           } // bump snapshot and then notify React
-          versionRef.current++;
+          const bumpOnce = () => {
+            versionRef.current++;
+            try {
+              reactCb();
+            } catch {
+              /* noop */
+            }
+          };
           try {
-            reactCb();
+            renderDebounceRef.current!.bump(bumpOnce);
           } catch {
-            /* noop */
+            // if renderDebounce not initialized, fallback immediate
+            bumpOnce();
           }
           log('mutate');
         });
@@ -185,5 +357,14 @@ export function useRRStack(
     debouncedRef.current!.flush();
     log('flush');
   }, [log]);
-  return { rrstack, version, flush };
+  const apply = useCallback((p: { timezone?: string; rules?: RuleJson[] }) => {
+    debouncedApplyRef.current!.call(p);
+  }, []);
+  const flushApply = useCallback(() => {
+    debouncedApplyRef.current!.flush();
+  }, []);
+  const flushRender = useCallback(() => {
+    renderDebounceRef.current!.flush();
+  }, []);
+  return { rrstack, version, flush, apply, flushApply, flushRender };
 }
