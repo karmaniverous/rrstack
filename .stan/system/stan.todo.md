@@ -35,6 +35,10 @@ Completed (recent)
 - Fix(react): complete src/react/mutateFacade.ts to resolve parser error and
   align with staging/commit semantics (RefObject, typed spreads, top/bottom/set).
 
+- Tests(react): migrate useRRStack tests to new API/semantics:
+  - debounce → changeDebounce; flush() → flushChanges().
+  - Leading debounce now includes a final trailing autosave; expectations updated.
+
 ---
 
 0. Top Priority — Stabilize template baseline (pre-implementation) [unchanged]

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import type { FC } from 'react';
 import { act } from 'react';
 import React, { useEffect, useMemo, useRef } from 'react';
@@ -122,18 +120,17 @@ describe('useRRStack (react)', () => {
     app.unmount();
   });
 
-  it('debounces onChange and supports flush()', async () => {
+  it('debounces onChange and supports flushChanges()', async () => {
     vi.useFakeTimers();
     const events: number[] = [];
-
     function DebouncedView(props: { json: RRStackOptions }) {
       const calls = useRef(0);
       const onChange = (s: RRStack) => {
         // record rule count when onChange fires
         events.push(s.rules.length);
       };
-      const { rrstack, flush } = useRRStack(props.json, onChange, {
-        debounce: { delay: 50, trailing: true },
+      const { rrstack, flushChanges } = useRRStack(props.json, onChange, {
+        changeDebounce: { delay: 50 },
       });
       // Kick a few mutations quickly
       useEffect(() => {
@@ -141,7 +138,7 @@ describe('useRRStack (react)', () => {
         rrstack.addRule(newRuleAt(2, 'y'));
         rrstack.addRule(newRuleAt(3, 'z'));
         // also show flush mechanics (won't run yet)
-        void flush;
+        void flushChanges;
       }, [rrstack]);
       const count = rrstack.rules.length;
       const renderCount = useMemo(() => ++calls.current, [count, rrstack]);
@@ -175,7 +172,7 @@ describe('useRRStack (react)', () => {
     vi.useRealTimers();
   });
 
-  it('supports leading debounce (fires immediately, no trailing)', async () => {
+  it('supports leading debounce (fires immediately, and still trailing)', async () => {
     vi.useFakeTimers();
     const events: number[] = [];
 
@@ -185,7 +182,7 @@ describe('useRRStack (react)', () => {
         events.push(s.rules.length);
       };
       const { rrstack } = useRRStack(json, onChange, {
-        debounce: { delay: 50, leading: true, trailing: false },
+        changeDebounce: { delay: 50, leading: true },
       });
       useEffect(() => {
         rrstack.addRule(newRuleAt(1, 'L1'));
@@ -215,18 +212,19 @@ describe('useRRStack (react)', () => {
     // DOM has applied all 3 adds already
     expect(div.getAttribute('data-count')).toBe('4');
 
-    // Advance time — trailing is disabled, so no further calls
+    // Advance time — trailing is always true now, so a final call is expected
     await act(async () => {
       vi.advanceTimersByTime(60);
       await Promise.resolve();
     });
-    expect(events).toEqual([2]);
+    // Leading (2) then trailing (final state count 4)
+    expect(events).toEqual([2, 4]);
 
     app.unmount();
     vi.useRealTimers();
   });
 
-  it('flush() triggers pending trailing onChange immediately', async () => {
+  it('flushChanges() triggers pending trailing onChange immediately', async () => {
     vi.useFakeTimers();
     const events: number[] = [];
     let FLUSH: (() => void) | undefined;
@@ -238,13 +236,13 @@ describe('useRRStack (react)', () => {
       const onChange = (s: RRStack) => {
         events.push(s.rules.length);
       };
-      const { rrstack, flush } = useRRStack(json, onChange, {
-        debounce: { delay: 50, trailing: true },
+      const { rrstack, flushChanges } = useRRStack(json, onChange, {
+        changeDebounce: { delay: 50 },
       });
       // Expose flush to the test
       useEffect(() => {
-        FLUSH = flush;
-      }, [flush]);
+        FLUSH = flushChanges;
+      }, [flushChanges]);
       // Kick a few mutations quickly
       useEffect(() => {
         rrstack.addRule(newRuleAt(1, 't1'));
