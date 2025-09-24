@@ -45,6 +45,8 @@ Completed (recent)
   mutateDebounce / renderDebounce and new helpers (flushChanges,
   flushMutations, cancelMutations, flushRender). Note staged vs compiled
   behavior and migration notes.
+- Lint: address prefer-nullish-coalescing in useRRStack.ts (use ??= for
+  singleton initializations of debouncers/managers).
 
 ---
 

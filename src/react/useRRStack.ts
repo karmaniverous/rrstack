@@ -72,9 +72,7 @@ export function useRRStack(
   );
   changeCfgRef.current = normalizeDebounce(changeDebounce, CHANGE_DEBOUNCE_MS);
   const changeRef = useRef<ChangeEmitter | null>(null);
-  if (changeRef.current === null) {
-    changeRef.current = createChangeEmitter(onChangeRef, changeCfgRef);
-  }
+  changeRef.current ??= createChangeEmitter(onChangeRef, changeCfgRef);
 
   // Mutate debouncer with staging manager
   const mutateCfgRef = useRef(
@@ -82,11 +80,9 @@ export function useRRStack(
   );
   mutateCfgRef.current = normalizeDebounce(mutateDebounce, MUTATE_DEBOUNCE_MS);
   const mutateRef = useRef<MutateManager | null>(null);
-  if (mutateRef.current === null) {
-    mutateRef.current = createMutateManager(rrstackRef, mutateCfgRef, (t) => {
-      log(t);
-    });
-  }
+  mutateRef.current ??= createMutateManager(rrstackRef, mutateCfgRef, (t) => {
+    log(t);
+  });
 
   // Render bumper (coalesce paints)
   const renderCfgRef = useRef(
@@ -94,9 +90,7 @@ export function useRRStack(
   );
   renderCfgRef.current = normalizeDebounce(renderDebounce, RENDER_DEBOUNCE_MS);
   const renderRef = useRef<RenderBumper | null>(null);
-  if (renderRef.current === null) {
-    renderRef.current = createRenderBumper(renderCfgRef);
-  }
+  renderRef.current ??= createRenderBumper(renderCfgRef);
 
   // React external-store binding: one React-level subscriber per hook instance.
   // Use a monotonic counter for the snapshot; Date.now() can be frozen by fake timers.
