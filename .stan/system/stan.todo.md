@@ -6,6 +6,14 @@ Last updated: 2025-09-23 (UTC)
 
 Completed (recent)
 
+- Feat(react): replace apply/applyDebounce with mutateDebounce (proxy/staging)
+  - All rrstack mutators/assignments are staged and committed once per window.
+  - Add flushMutations()/cancelMutations(); staged reads overlay rules/timezone; queries remain compiled-only until commit.
+- API rename: debounce → changeDebounce; flush() → flushChanges().
+- Simplify debouncers: trailing always true; options accept true|number|{ delay?, leading? }.
+- Feat(react): renderDebounce simplified (final paint always; optional leading).
+- Docs: README/Handbook updated with new options/helpers and staged-vs-compiled notes.
+- Chore(tests): follow-up pending to adapt or extend tests for mutateDebounce semantics.
 - Chore(lint): replace unsafe any[] spread in normalizeOptions with
   RuleLiteSchema-based coercion to RuleJson[].
 - Fix(types): coalesce defaulted optionals in normalizeOptions (timeUnit,
@@ -16,7 +24,9 @@ Completed (recent)
 - Docs: README “JSON Shapes and Types” now includes defaultEffect with a brief baseline semantics note.- Chore(lint): escape '>' in TSDoc for baselineEffect to clear tsdoc/syntax warnings.
 - Fix(core): include defaultEffect when freezing updated options in RRStack setters (timezone, rules, updateOptions) and refine baselineEffect to satisfy lint (no-unnecessary-condition).
 - Feat(core): add RRStackOptions.defaultEffect ('active' | 'blackout' | 'auto', default 'auto') and implement a virtual baseline span rule prepended at query time. All query surfaces (isActiveAt, getSegments, classifyRange, getEffectiveBounds) now respect the baseline without algorithm changes. JSON schema, normalization, persistence, and tests updated.
+
 ---
+
 0. Top Priority — Stabilize template baseline (pre-implementation)
    [unchanged]
 

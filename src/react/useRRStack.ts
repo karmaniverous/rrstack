@@ -8,44 +8,64 @@ import {
 
 import { RRStack } from '../rrstack/RRStack';
 import type { RRStackOptions, RuleJson } from '../rrstack/types';
-export type DebounceOption =
+
+// Default delays (ms)
+const CHANGE_DEBOUNCE_MS = 600;
+const MUTATE_DEBOUNCE_MS = 150;
+const RENDER_DEBOUNCE_MS = 50;
+
+type DebounceSpec =
+  | true
   | number
   | {
-      delay: number;
+      delay?: number;
       leading?: boolean;
-      trailing?: boolean;
     };
 
 interface Options {
   resetKey?: string | number;
-  debounce?: DebounceOption;
   /**
-   * Debounce UI → rrstack applies (coalesce frequent rrstack.updateOptions calls).
-   * - Provide delay/leading/trailing semantics (default immediate: no debounce).
+   * Debounce autosave (onChange) calls; trailing is always true.
+   * - true => default delay; number => explicit delay; object => { delay?, leading? }.
    */
-  applyDebounce?: DebounceOption;
+  changeDebounce?: DebounceSpec;
   /**
-   * Debounce rrstack → UI renders (coalesce version bumps from notify).
-   * - Provide delay/leading/trailing semantics (default immediate: no debounce).
+   * Debounce rrstack mutations (UI -> rrstack); trailing is always true.
+   * - Intercepts mutators/assignments and commits once per window.
+   * - true => default delay; number => explicit delay; object => { delay?, leading? }.
    */
-  renderDebounce?: DebounceOption;
+  mutateDebounce?: DebounceSpec;
+  /**
+   * Debounce renders (rrstack -> UI); trailing is always true.
+   * - Coalesces version bumps to reduce repaint churn.
+   * - true => default delay; number => explicit delay; object => { delay?, leading? }.
+   */
+  renderDebounce?: DebounceSpec;
   logger?:
     | boolean
     | ((e: {
-        type: 'init' | 'reset' | 'mutate' | 'flush';
+        type:
+          | 'init'
+          | 'reset'
+          | 'mutate'
+          | 'commit'
+          | 'flushChanges'
+          | 'flushMutations'
+          | 'flushRender'
+          | 'cancel';
         rrstack: RRStack;
       }) => void);
 }
 
 const toDebounceCfg = (
-  v: DebounceOption | undefined,
-): { delay: number; leading: boolean; trailing: boolean } | undefined => {
+  v: DebounceSpec | undefined,
+  defaultDelay: number,
+): { delay: number; leading: boolean } | undefined => {
   if (v === undefined) return undefined;
-  if (typeof v === 'number') {
-    return { delay: v, leading: false, trailing: true };
-  }
-  const { delay, leading = false, trailing = true } = v;
-  return { delay, leading, trailing };
+  if (v === true) return { delay: defaultDelay, leading: false };
+  if (typeof v === 'number') return { delay: v, leading: false };
+  const { delay, leading = false } = v;
+  return { delay: typeof delay === 'number' ? delay : defaultDelay, leading };
 };
 
 export function useRRStack(
@@ -53,37 +73,48 @@ export function useRRStack(
   onChange?: (stack: RRStack) => void,
   opts?: Options,
 ): {
-  rrstack: RRStack;
+  rrstack: RRStack; // façade (proxy)
   version: number;
-  flush: () => void;
-  apply: (p: { timezone?: string; rules?: RuleJson[] }) => void;
-  flushApply: () => void;
+  flushChanges: () => void;
+  flushMutations: () => void;
+  cancelMutations: () => void;
   flushRender: () => void;
 } {
   const {
     resetKey,
-    debounce: debounceOpt,
-    applyDebounce: applyDebounceOpt,
+    changeDebounce: changeDebounceOpt,
+    mutateDebounce: mutateDebounceOpt,
     renderDebounce: renderDebounceOpt,
     logger,
   } = opts ?? {};
 
   // Recreate the instance intentionally when resetKey changes.
   const rrstack = useMemo(() => new RRStack(json), [resetKey]);
-  // Keep a ref to the current instance for debounced helpers that outlive renders.
+  // Refs for current instance and façade
   const rrstackRef = useRef(rrstack);
   rrstackRef.current = rrstack;
+  const facadeRef = useRef<RRStack>(rrstack);
 
   // Logging helper
   const log = useCallback(
-    (type: 'init' | 'reset' | 'mutate' | 'flush') => {
+    (
+      type:
+        | 'init'
+        | 'reset'
+        | 'mutate'
+        | 'commit'
+        | 'flushChanges'
+        | 'flushMutations'
+        | 'flushRender'
+        | 'cancel',
+    ) => {
       if (!logger) return;
-      const payload = { type, rrstack };
+      const payload = { type, rrstack: rrstackRef.current };
       if (logger === true) {
         console.debug('[rrstack]', {
           type,
-          tz: rrstack.timezone,
-          ruleCount: rrstack.rules.length,
+          tz: rrstackRef.current.timezone,
+          ruleCount: rrstackRef.current.rules.length,
         });
       } else {
         try {
@@ -93,34 +124,34 @@ export function useRRStack(
         }
       }
     },
-    [logger, rrstack],
+    [logger],
   );
 
-  // Stable debounced wrapper across renders:
+  // Debounced autosave (onChange): trailing is implicit (always true)
   // - Keep latest onChange and debounce config in refs
-  // - Keep timer/pending/inWindow in a singleton ref so flush() survives re-renders
+  // - Keep timer/pending/inWindow in a singleton ref so flushChanges() survives re-renders
   const onChangeRef = useRef<typeof onChange>(onChange);
   onChangeRef.current = onChange;
-  const cfgRef = useRef<ReturnType<typeof toDebounceCfg> | undefined>(
-    toDebounceCfg(debounceOpt),
+  const changeCfgRef = useRef<ReturnType<typeof toDebounceCfg> | undefined>(
+    toDebounceCfg(changeDebounceOpt, CHANGE_DEBOUNCE_MS),
   );
-  cfgRef.current = toDebounceCfg(debounceOpt);
-  const debouncedRef = useRef<{
+  changeCfgRef.current = toDebounceCfg(changeDebounceOpt, CHANGE_DEBOUNCE_MS);
+  const changeRef = useRef<{
     call: (s: RRStack) => void;
     flush: () => void;
   } | null>(null);
-  if (debouncedRef.current === null) {
+  if (changeRef.current === null) {
     let timer: ReturnType<typeof setTimeout> | undefined;
     let pending: RRStack | undefined;
     let inWindow = false;
     const call = (s: RRStack) => {
-      const cfg = cfgRef.current;
+      const cfg = changeCfgRef.current;
       const cb = onChangeRef.current;
       if (!cb || !cfg) {
         cb?.(s);
         return;
       }
-      const { delay, leading, trailing } = cfg;
+      const { delay, leading } = cfg;
       if (leading && !inWindow) {
         try {
           cb(s);
@@ -131,28 +162,20 @@ export function useRRStack(
       inWindow = true;
       pending = s;
       if (timer) clearTimeout(timer);
-      if (trailing) {
-        timer = setTimeout(() => {
-          timer = undefined;
-          inWindow = false;
-          const p = pending;
-          pending = undefined;
-          if (p) {
-            try {
-              onChangeRef.current?.(p);
-            } catch {
-              /* noop */
-            }
+      // trailing always true: window end emits latest pending
+      timer = setTimeout(() => {
+        timer = undefined;
+        inWindow = false;
+        const p = pending;
+        pending = undefined;
+        if (p) {
+          try {
+            onChangeRef.current?.(p);
+          } catch {
+            /* noop */
           }
-        }, delay);
-      } else {
-        // trailing disabled: schedule window end only
-        timer = setTimeout(() => {
-          timer = undefined;
-          inWindow = false;
-          pending = undefined;
-        }, delay);
-      }
+        }
+      }, delay);
     };
     const flushInner = () => {
       // Emit any pending trailing call immediately.
@@ -168,93 +191,87 @@ export function useRRStack(
         /* noop */
       }
     };
-    debouncedRef.current = { call, flush: flushInner };
+    changeRef.current = { call, flush: flushInner };
   }
 
-  // Debounced APPLY (UI -> rrstack.updateOptions)
-  const applyCfgRef = useRef<ReturnType<typeof toDebounceCfg> | undefined>(
-    toDebounceCfg(applyDebounceOpt),
+  // Mutate debounce (UI -> rrstack) with staging façade; trailing always true
+  const mutateCfgRef = useRef<ReturnType<typeof toDebounceCfg> | undefined>(
+    toDebounceCfg(mutateDebounceOpt, MUTATE_DEBOUNCE_MS),
   );
-  applyCfgRef.current = toDebounceCfg(applyDebounceOpt);
-  const debouncedApplyRef = useRef<{
-    call: (p: { timezone?: string; rules?: RuleJson[] }) => void;
+  mutateCfgRef.current = toDebounceCfg(mutateDebounceOpt, MUTATE_DEBOUNCE_MS);
+  const stagingRef = useRef<{ rules?: RuleJson[]; timezone?: string } | null>(
+    null,
+  );
+  const ensureRules = (): RuleJson[] => {
+    const staged = stagingRef.current;
+    if (staged && Array.isArray(staged.rules)) return staged.rules;
+    const next = [...(rrstackRef.current.rules as RuleJson[])];
+    stagingRef.current = { ...(stagingRef.current ?? {}), rules: next };
+    return next;
+  };
+  const stageTimezone = (tz: string) => {
+    stagingRef.current = { ...(stagingRef.current ?? {}), timezone: tz };
+  };
+  // Commit staged changes now
+  const commitNow = () => {
+    const staged = stagingRef.current;
+    if (!staged) return;
+    const patch: Partial<Pick<RRStackOptions, 'timezone' | 'rules'>> = {};
+    if (staged.timezone !== undefined) patch.timezone = staged.timezone;
+    if (staged.rules !== undefined) patch.rules = staged.rules;
+    stagingRef.current = null;
+    if (Object.keys(patch).length > 0) {
+      rrstackRef.current.updateOptions(patch);
+      log('commit');
+    }
+  };
+  // Debounce commit
+  const mutRef = useRef<{
+    schedule: () => void;
     flush: () => void;
+    cancel: () => void;
   } | null>(null);
-  if (debouncedApplyRef.current === null) {
+  if (mutRef.current === null) {
     let timer: ReturnType<typeof setTimeout> | undefined;
     let inWindow = false;
-    // latest-wins per field during the window
-    let pendingTz: string | undefined;
-    let pendingRules: RuleJson[] | undefined;
-    const applyNow = (tz?: string, rules?: RuleJson[]) => {
-      const patch: Partial<Pick<RRStackOptions, 'timezone' | 'rules'>> = {};
-      if (tz !== undefined) patch.timezone = tz;
-      if (rules !== undefined) patch.rules = rules;
-      if (Object.keys(patch).length > 0) {
-        try {
-          rrstackRef.current.updateOptions(patch);
-        } catch {
-          /* noop */
-        }
-      }
-    };
-    const call = (p: { timezone?: string; rules?: RuleJson[] }) => {
-      const cfg = applyCfgRef.current;
-      // Merge latest fields
-      if (p.timezone !== undefined) pendingTz = p.timezone;
-      if (p.rules !== undefined) pendingRules = p.rules;
+    const schedule = () => {
+      const cfg = mutateCfgRef.current;
       if (!cfg) {
-        applyNow(p.timezone, p.rules);
-        // clear any pending
-        pendingTz = undefined;
-        pendingRules = undefined;
+        commitNow();
         return;
       }
-      const { delay, leading, trailing } = cfg;
+      const { delay, leading } = cfg;
       if (leading && !inWindow) {
-        applyNow(pendingTz, pendingRules);
-        pendingTz = undefined;
-        pendingRules = undefined;
+        commitNow();
       }
       inWindow = true;
       if (timer) clearTimeout(timer);
-      if (trailing) {
-        timer = setTimeout(() => {
-          timer = undefined;
-          inWindow = false;
-          // apply the latest pending
-          applyNow(pendingTz, pendingRules);
-          pendingTz = undefined;
-          pendingRules = undefined;
-        }, delay);
-      } else {
-        // trailing disabled: just end window later; no second apply
-        timer = setTimeout(() => {
-          timer = undefined;
-          inWindow = false;
-          pendingTz = undefined;
-          pendingRules = undefined;
-        }, delay);
-      }
+      timer = setTimeout(() => {
+        timer = undefined;
+        inWindow = false;
+        commitNow();
+      }, delay);
     };
-    const flushApply = () => {
-      const tz = pendingTz;
-      const rules = pendingRules;
-      pendingTz = undefined;
-      pendingRules = undefined;
+    const flush = () => {
       if (timer) clearTimeout(timer);
       timer = undefined;
       inWindow = false;
-      applyNow(tz, rules);
+      commitNow();
     };
-    debouncedApplyRef.current = { call, flush: flushApply };
+    const cancel = () => {
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      inWindow = false;
+      stagingRef.current = null;
+    };
+    mutRef.current = { schedule, flush, cancel };
   }
 
   // Debounced RENDER (rrstack -> UI version bump)
   const renderCfgRef = useRef<ReturnType<typeof toDebounceCfg> | undefined>(
-    toDebounceCfg(renderDebounceOpt),
+    toDebounceCfg(renderDebounceOpt, RENDER_DEBOUNCE_MS),
   );
-  renderCfgRef.current = toDebounceCfg(renderDebounceOpt);
+  renderCfgRef.current = toDebounceCfg(renderDebounceOpt, RENDER_DEBOUNCE_MS);
   const renderDebounceRef = useRef<{
     bump: (cb: () => void) => void;
     flush: () => void;
@@ -262,7 +279,6 @@ export function useRRStack(
   if (renderDebounceRef.current === null) {
     let timer: ReturnType<typeof setTimeout> | undefined;
     let inWindow = false;
-    let pending = false;
     let lastCb: (() => void) | undefined;
     const run = () => {
       try {
@@ -279,36 +295,33 @@ export function useRRStack(
         run();
         return;
       }
-      const { delay, leading, trailing } = cfg;
+      const { delay, leading } = cfg;
       lastCb = cb;
       if (leading && !inWindow) {
         run();
-      } else {
-        pending = true;
       }
       inWindow = true;
       if (timer) clearTimeout(timer);
-      // window end
+      // Always perform a trailing paint at window end
       timer = setTimeout(() => {
         timer = undefined;
-        const shouldRun = trailing && pending;
-        pending = false;
         inWindow = false;
-        if (shouldRun) run();
+        run();
       }, delay);
     };
     const flushRender = () => {
       const cfg = renderCfgRef.current;
-      if (!cfg) return; // already immediate mode
+      if (!cfg) {
+        // already immediate mode; nothing pending
+        return;
+      }
       if (timer) clearTimeout(timer);
       timer = undefined;
-      pending = false;
       inWindow = false;
       run();
     };
     renderDebounceRef.current = { bump, flush: flushRender };
   }
-
   // React external-store binding: one React-level subscriber per hook instance.
   // Use a monotonic counter for the snapshot; Date.now() can be frozen by fake timers.
   const versionRef = useRef(0);
@@ -319,10 +332,11 @@ export function useRRStack(
         const unsub = rrstack.subscribe(() => {
           // call debounced onChange & log
           try {
-            debouncedRef.current!.call(rrstack);
+            changeRef.current!.call(rrstackRef.current);
           } catch {
             /* noop */
-          } // bump snapshot and then notify React
+          }
+          // bump snapshot and then notify React
           const bumpOnce = () => {
             versionRef.current++;
             try {
@@ -343,7 +357,7 @@ export function useRRStack(
           unsub();
         };
       },
-      [rrstack, log],
+      [log, rrstack],
     ),
     () => versionRef.current,
     () => 0,
@@ -353,18 +367,149 @@ export function useRRStack(
     if (resetKey !== undefined) log('reset');
   }, [resetKey, log]);
 
-  const flush = useCallback(() => {
-    debouncedRef.current!.flush();
-    log('flush');
+  // Build façade proxy once per rrstack instance (resetKey change)
+  useEffect(() => {
+    // Staged getters overlay timezone/rules; mutators schedule commit
+    const proxy = new Proxy(rrstackRef.current as unknown as object, {
+      get(_target, prop, _receiver) {
+        if (prop === 'rules') {
+          const staged = stagingRef.current?.rules;
+          return staged !== undefined ? staged : rrstackRef.current.rules;
+        }
+        if (prop === 'timezone') {
+          const staged = stagingRef.current?.timezone;
+          return staged !== undefined ? staged : rrstackRef.current.timezone;
+        }
+        if (prop === 'toJson') {
+          return () => {
+            const snap = rrstackRef.current.toJson();
+            const tz = stagingRef.current?.timezone;
+            const rules = stagingRef.current?.rules;
+            return {
+              ...snap,
+              ...(tz !== undefined ? { timezone: tz } : null),
+              ...(rules !== undefined ? { rules } : null),
+            };
+          };
+        }
+        // Mutators (stage + schedule)
+        if (prop === 'updateOptions') {
+          return (p: Partial<Pick<RRStackOptions, 'timezone' | 'rules'>>) => {
+            if (p.timezone !== undefined) stageTimezone(p.timezone);
+            if (p.rules !== undefined) {
+              stagingRef.current = {
+                ...(stagingRef.current ?? {}),
+                rules: [...p.rules],
+              };
+            }
+            mutRef.current!.schedule();
+          };
+        }
+        if (prop === 'addRule') {
+          return (rule: RuleJson, index?: number) => {
+            const arr = ensureRules();
+            if (index === undefined) arr.push(rule);
+            else arr.splice(index, 0, rule);
+            mutRef.current!.schedule();
+          };
+        }
+        if (prop === 'removeRule') {
+          return (i: number) => {
+            const arr = ensureRules();
+            arr.splice(i, 1);
+            mutRef.current!.schedule();
+          };
+        }
+        if (prop === 'swap') {
+          return (i: number, j: number) => {
+            const arr = ensureRules();
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+            mutRef.current!.schedule();
+          };
+        }
+        if (prop === 'up') {
+          return (i: number) => {
+            const arr = ensureRules();
+            if (i <= 0 || i >= arr.length) return;
+            [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
+            mutRef.current!.schedule();
+          };
+        }
+        if (prop === 'down') {
+          return (i: number) => {
+            const arr = ensureRules();
+            if (i < 0 || i >= arr.length - 1) return;
+            [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+            mutRef.current!.schedule();
+          };
+        }
+        if (prop === 'top') {
+          return (i: number) => {
+            const arr = ensureRules();
+            if (i <= 0 || i >= arr.length) return;
+            const [r] = arr.splice(i, 1);
+            arr.unshift(r);
+            mutRef.current!.schedule();
+          };
+        }
+        if (prop === 'bottom') {
+          return (i: number) => {
+            const arr = ensureRules();
+            if (i < 0 || i >= arr.length - 1) return;
+            const [r] = arr.splice(i, 1);
+            arr.push(r);
+            mutRef.current!.schedule();
+          };
+        }
+        // fall through to real instance
+
+        return (rrstackRef.current as unknown as Record<PropertyKey, unknown>)[
+          prop
+        ];
+      },
+      set(_target, prop, value) {
+        if (prop === 'timezone' && typeof value === 'string') {
+          stageTimezone(value);
+          mutRef.current!.schedule();
+          return true;
+        }
+        if (prop === 'rules' && Array.isArray(value)) {
+          stagingRef.current = {
+            ...(stagingRef.current ?? {}),
+            rules: [...value],
+          };
+          mutRef.current!.schedule();
+          return true;
+        }
+        // block unknown direct sets to keep façade deterministic
+        return false;
+      },
+    }) as unknown as RRStack;
+    facadeRef.current = proxy;
+  }, [rrstack]);
+
+  const flushChanges = useCallback(() => {
+    changeRef.current!.flush();
+    log('flushChanges');
   }, [log]);
-  const apply = useCallback((p: { timezone?: string; rules?: RuleJson[] }) => {
-    debouncedApplyRef.current!.call(p);
-  }, []);
-  const flushApply = useCallback(() => {
-    debouncedApplyRef.current!.flush();
-  }, []);
+  const flushMutations = useCallback(() => {
+    mutRef.current!.flush();
+    log('flushMutations');
+  }, [log]);
+  const cancelMutations = useCallback(() => {
+    mutRef.current!.cancel();
+    log('cancel');
+  }, [log]);
   const flushRender = useCallback(() => {
     renderDebounceRef.current!.flush();
-  }, []);
-  return { rrstack, version, flush, apply, flushApply, flushRender };
+    log('flushRender');
+  }, [log]);
+  return {
+    rrstack: facadeRef.current,
+    version,
+    flushChanges,
+    flushMutations,
+    cancelMutations,
+    flushRender,
+  };
 }
