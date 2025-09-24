@@ -142,6 +142,10 @@ A. Decompose useRRStack (keep hook < ~200 LOC)
   7. react/useRRStack.ts — thin orchestrator wiring modules; returns { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }.
 - Prefer existing helpers (changeEmitter, renderBump, mutateFacade) where they align; migrate/rename into hooks/\* to match the plan.
 
+  re-run knip to confirm no unused files remain under src/react. The orchestrator
+  now consumes the extracted modules; hooks files should no longer be reported
+  as unused.
+
 B. Update exports and fix type surfaces
 
 - Ensure src/react/index.ts exports only stable API (useRRStack, useRRStackSelector). No stray DebounceOption types.
