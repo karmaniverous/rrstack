@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
 
-import type { DebounceCfgNormalized } from './debounce.util';
+import type { DebounceCfgNormalized } from './useRRStack.config';
 
 export interface RenderBumper {
   bump: (cb: () => void) => void;
@@ -29,26 +29,4 @@ export const createRenderBumper = (
     const cfg = cfgRef.current;
     if (!cfg) {
       lastCb = cb;
-      run();
-      return;
-    }
-    const { delay, leading } = cfg;
-    lastCb = cb;
-    if (leading && !inWindow) run();
-    inWindow = true;
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => {
-      timer = undefined;
-      inWindow = false;
-      run();
-    }, delay);
-  };
-  const flush = () => {
-    if (!cfgRef.current) return;
-    if (timer) clearTimeout(timer);
-    timer = undefined;
-    inWindow = false;
-    run();
-  };
-  return { bump, flush };
-};
+

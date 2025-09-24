@@ -1,7 +1,7 @@
 import type { RefObject } from 'react';
 
-import type { RRStack } from '../rrstack/RRStack';
-import type { DebounceCfgNormalized } from './debounce.util';
+import type { RRStack } from '../../rrstack/RRStack';
+import type { DebounceCfgNormalized } from './useRRStack.config';
 
 export interface ChangeEmitter {
   call: (s: RRStack) => void;

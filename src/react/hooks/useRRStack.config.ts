@@ -1,6 +1,11 @@
+// Debounce defaults (ms)
+export const CHANGE_DEBOUNCE_MS = 600;
+export const MUTATE_DEBOUNCE_MS = 150;
+export const RENDER_DEBOUNCE_MS = 50;
+
 // Debounce option shape:
-// - true: use default delay (leading false)
-// - number: explicit delay (leading false)
+// - true: use default delay
+// - number: explicit delay
 // - object: { delay?: number; leading?: boolean }
 export type DebounceSpec =
   | true
