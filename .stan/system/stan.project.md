@@ -41,7 +41,7 @@ Continuous (span) rules
     - if freq absent ⇒ duration must be omitted.
   - Compiler/runtime:
     - compileRule emits `CompiledRule` union: `{ kind: 'recur' | 'span', ... }`
-    - span rules carry `start?`, `end?` in configured unit; no RRULE instance.  - Queries:
+    - span rules carry `start?`, `end?` in configured unit; no RRULE instance. - Queries:
     - coverage, segments, bounds, and describe paths treat spans as first-class.
     - describe: “Active/Blackout continuously [from …; until …] (timezone …)”.
 
@@ -197,6 +197,13 @@ Generated artifacts policy
 - Ensure CHANGELOG.md includes ALL commits by configuring auto-changelog in package.json:
   - "auto-changelog": { "output": "CHANGELOG.md", "unreleased": true, "commitLimit": false, "hideCredit": true }
   - Release step runs: npx auto-changelog -p
+
+Release discipline (assistant policy)
+
+- Do NOT bump the package version or edit CHANGELOG.md in patches.
+- Versioning and changelog updates are owned by the release workflow
+  (release-it + auto-changelog). Assistant patches must leave package.json
+  "version" and CHANGELOG.md untouched.
 
 Documentation
 

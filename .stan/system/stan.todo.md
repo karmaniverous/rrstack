@@ -6,6 +6,8 @@ Last updated: 2025-09-24 (UTC)
 
 Completed (recent)
 
+- Docs(handbook/react): add debounced form control examples (controlled and uncontrolled); enumerate useRRStack options and outputs.
+- Policy(project): record “never bump package version or edit CHANGELOG.md” in stan.project.md (release workflow owns them).
 - Feat(react): replace apply/applyDebounce with mutateDebounce (proxy/staging) - All rrstack mutators/assignments are staged and committed once per window.
   - Add flushMutations()/cancelMutations(); staged reads overlay rules/timezone; queries remain compiled-only until commit.
 - API rename: debounce → changeDebounce; flush() → flushChanges().
