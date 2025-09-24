@@ -123,6 +123,7 @@ describe('useRRStack (react)', () => {
   it('debounces onChange and supports flushChanges()', async () => {
     vi.useFakeTimers();
     const events: number[] = [];
+    const once = { current: false };
     function DebouncedView(props: { json: RRStackOptions }) {
       const calls = useRef(0);
       const onChange = (s: RRStack) => {
@@ -134,6 +135,9 @@ describe('useRRStack (react)', () => {
       });
       // Kick a few mutations quickly
       useEffect(() => {
+        // Guard against dev double-invocation of effects
+        if (once.current) return;
+        once.current = true;
         rrstack.addRule(newRuleAt(1, 'x'));
         rrstack.addRule(newRuleAt(2, 'y'));
         rrstack.addRule(newRuleAt(3, 'z'));
@@ -178,6 +182,7 @@ describe('useRRStack (react)', () => {
 
     const DebouncedLeadingView: FC<{ json: RRStackOptions }> = ({ json }) => {
       const calls = useRef(0);
+      const did = useRef(false);
       const onChange = (s: RRStack) => {
         events.push(s.rules.length);
       };
@@ -185,6 +190,8 @@ describe('useRRStack (react)', () => {
         changeDebounce: { delay: 50, leading: true },
       });
       useEffect(() => {
+        if (did.current) return;
+        did.current = true;
         rrstack.addRule(newRuleAt(1, 'L1'));
         rrstack.addRule(newRuleAt(2, 'L2'));
         rrstack.addRule(newRuleAt(3, 'L3'));
@@ -228,6 +235,7 @@ describe('useRRStack (react)', () => {
     vi.useFakeTimers();
     const events: number[] = [];
     let FLUSH: (() => void) | undefined;
+    const did = { current: false };
 
     const DebouncedTrailingWithFlush: FC<{ json: RRStackOptions }> = ({
       json,
@@ -245,6 +253,8 @@ describe('useRRStack (react)', () => {
       }, [flushChanges]);
       // Kick a few mutations quickly
       useEffect(() => {
+        if (did.current) return;
+        did.current = true;
         rrstack.addRule(newRuleAt(1, 't1'));
         rrstack.addRule(newRuleAt(2, 't2'));
         rrstack.addRule(newRuleAt(3, 't3'));

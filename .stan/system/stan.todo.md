@@ -38,9 +38,11 @@ Completed (recent)
 - Tests(react): migrate useRRStack tests to new API/semantics:
   - debounce → changeDebounce; flush() → flushChanges().
   - Leading debounce now includes a final trailing autosave; expectations updated.
+  - Harden tests against dev double-invocation of effects (React 18/19):
+    guard rrstack.addRule bursts in useEffect with once flags to avoid
+    duplicate mutations during mount in test environment.
 
 ---
-
 0. Top Priority — Stabilize template baseline (pre-implementation) [unchanged]
 
 ---
