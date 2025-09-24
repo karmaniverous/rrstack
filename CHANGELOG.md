@@ -2,9 +2,29 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.11.0](https://github.com/karmaniverous/rrstack/compare/0.10.0...0.11.0)
+
+- wip decomposition [`3b69e27`](https://github.com/karmaniverous/rrstack/commit/3b69e2783ee0a97d54cc08ff869a46a62fb0088d)
+- feat(react): mutateDebounce proxy; rename debounce-&gt;changeDebounce; flush-&gt;flushChanges [`c0424a0`](https://github.com/karmaniverous/rrstack/commit/c0424a02911b315d3840f95fc7208ad43a5aa998)
+- refactor(react): wire useRRStack to extracted hooks; resolve knip unused [`024e962`](https://github.com/karmaniverous/rrstack/commit/024e962c4b6c81bdff5f6a2b63b55f74232cb56d)
+- docs(react): full listings after apply/render debounce additions [`20a9519`](https://github.com/karmaniverous/rrstack/commit/20a9519b0d028d96752a48ac3710ddc33e14ed36)
+- wip useRRStack decomposition [`a639052`](https://github.com/karmaniverous/rrstack/commit/a6390528b897c535652f9adb40eb8faa9ed0b1ae)
+- chore(react): fix lint/type errors; complete mutate facade; prep hook split [`1f93645`](https://github.com/karmaniverous/rrstack/commit/1f93645032470d118d095753d9741878c06c3c33)
+- chore(react): fix mutateFacade and remove stray file causing lint failures [`afe384c`](https://github.com/karmaniverous/rrstack/commit/afe384c591be552ec3fb04e8610e76bdff73e613)
+- docs(react): update README/handbook for new hook APIs; bump v0.11.0 [`24b3522`](https://github.com/karmaniverous/rrstack/commit/24b35225dd4c4c731280b66071528e94dd331040)
+- docs(react): debounced form controls; policy note [`257453f`](https://github.com/karmaniverous/rrstack/commit/257453f46767222f042a5b21e3283215e6a8bc08)
+- refactor(react): complete hooks split; fix render module; harden facade [`b04f727`](https://github.com/karmaniverous/rrstack/commit/b04f727639b2d7b5b7abf28abf71553ab5369199)
+- test(react): migrate useRRStack tests to changeDebounce/flushChanges [`9405b9a`](https://github.com/karmaniverous/rrstack/commit/9405b9a341087ceacac24d412cb47314cf7c9796)
+- chore: finalize v0.11.0 — lint cleanups, changelog, version bump [`fa4f14a`](https://github.com/karmaniverous/rrstack/commit/fa4f14a0fdebfb07e7e24ecb7933d7e6addcd0d5)
+- test(react): guard effect-driven mutations to avoid double-adds in dev [`f78929f`](https://github.com/karmaniverous/rrstack/commit/f78929ffd3229fa62c856a47821fc0a7f1b2ae44)
+- updated stan [`ca7aaf1`](https://github.com/karmaniverous/rrstack/commit/ca7aaf151e7c28f11659e7b224f147de3a36699f)
+
 #### [0.10.0](https://github.com/karmaniverous/rrstack/compare/0.9.0...0.10.0)
 
+> 24 September 2025
+
 - chore(todo): keep only defaultEffect items in Completed [`4064ba7`](https://github.com/karmaniverous/rrstack/commit/4064ba77397779ab44542c12fdc1e5ba7a2d8dc9)
+- chore: release v0.10.0 [`a142193`](https://github.com/karmaniverous/rrstack/commit/a142193be279b416c7bc45f170ee04b698bca83c)
 - feat: add defaultEffect baseline and virtual rule [`cc8c41b`](https://github.com/karmaniverous/rrstack/commit/cc8c41b2de1eef703a84e8ad52bfad7c8e989009)
 - feat(schema): defaulted options optional; tests + docs [`3c2c5b8`](https://github.com/karmaniverous/rrstack/commit/3c2c5b8bd59c6bd8b8e2645d67f41411facade83)
 - fix: include defaultEffect in setters; clean baseline lint [`f32a3ed`](https://github.com/karmaniverous/rrstack/commit/f32a3ed113cdcd49d46d51d14dbab3392df6a528)
