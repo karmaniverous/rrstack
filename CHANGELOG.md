@@ -2,11 +2,25 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.11.1](https://github.com/karmaniverous/rrstack/compare/0.11.0...0.11.1)
+
+- perf(bounds): 100× faster getEffectiveBounds (no far-future scans) [`972b7a9`](https://github.com/karmaniverous/rrstack/commit/972b7a94374e29489033fe7080ee4273b45bf860)
+- docs(handbook): add deep-dive Algorithms page and link from Handbook [`9730ac7`](https://github.com/karmaniverous/rrstack/commit/9730ac7590238dd1ac1401576d64ccb0ad1bc4d4)
+- updated docs [`b2acba0`](https://github.com/karmaniverous/rrstack/commit/b2acba08111d9f6790eb8f470d51da4183b2de69)
+- docs(react): include all debounce methods in examples [`d06da72`](https://github.com/karmaniverous/rrstack/commit/d06da72796c707fac6aab1a40613c9654cd8a9cc)
+- fix(bounds): finite probe + reverse sweep; cascade-correct latest end [`3d2a914`](https://github.com/karmaniverous/rrstack/commit/3d2a914aa86367332da50469822769351188e502)
+- fix(bounds): return probe when active before probe; strict backstep; add stan:build [`05d9b10`](https://github.com/karmaniverous/rrstack/commit/05d9b10298b03239e916a0d7aa7690d0f6745c08)
+- fix(bounds): parametric latest-end (probe) and robust backstep [`364063b`](https://github.com/karmaniverous/rrstack/commit/364063b52fbfa62d2068d0c3f99bfe6073e8cef6)
+- updated stan [`a35b79e`](https://github.com/karmaniverous/rrstack/commit/a35b79eca0eb6cfc8c75d89e673416890644fd02)
+
 #### [0.11.0](https://github.com/karmaniverous/rrstack/compare/0.10.0...0.11.0)
+
+> 25 September 2025
 
 - wip decomposition [`3b69e27`](https://github.com/karmaniverous/rrstack/commit/3b69e2783ee0a97d54cc08ff869a46a62fb0088d)
 - feat(react): mutateDebounce proxy; rename debounce-&gt;changeDebounce; flush-&gt;flushChanges [`c0424a0`](https://github.com/karmaniverous/rrstack/commit/c0424a02911b315d3840f95fc7208ad43a5aa998)
 - refactor(react): wire useRRStack to extracted hooks; resolve knip unused [`024e962`](https://github.com/karmaniverous/rrstack/commit/024e962c4b6c81bdff5f6a2b63b55f74232cb56d)
+- chore: release v0.11.0 [`f465e75`](https://github.com/karmaniverous/rrstack/commit/f465e75849a569ec4fbc8b7522b8144e8fcccc70)
 - docs(react): full listings after apply/render debounce additions [`20a9519`](https://github.com/karmaniverous/rrstack/commit/20a9519b0d028d96752a48ac3710ddc33e14ed36)
 - wip useRRStack decomposition [`a639052`](https://github.com/karmaniverous/rrstack/commit/a6390528b897c535652f9adb40eb8faa9ed0b1ae)
 - chore(react): fix lint/type errors; complete mutate facade; prep hook split [`1f93645`](https://github.com/karmaniverous/rrstack/commit/1f93645032470d118d095753d9741878c06c3c33)
