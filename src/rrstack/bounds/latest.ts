@@ -74,13 +74,18 @@ const computeFiniteProbe = (rules: CompiledRule[]): number | undefined => {
   return Math.max(...ends);
 };
 
-export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
+export const computeLatestEnd = (
+  rules: CompiledRule[],
+  probe: number,
+): number | undefined => {
   // 1) Open-ended to the right ⇒ no finite latest bound.
   if (hasOpenEndedActive(rules)) return undefined;
 
   // 2) Finite probe (max end across finite contributors).
-  const probe = computeFiniteProbe(rules);
-  if (probe === undefined) return undefined;
+  const finiteProbe = computeFiniteProbe(rules);
+  // Start from the earlier of (external probe, finiteProbe). This preserves
+  // “strictly before probe window” semantics in legacy tests.
+  const cursorStart = Math.min(probe, finiteProbe ?? probe);
 
   // If the cascade is active immediately before the probe, the probe itself
   // is the latest active end (half-open intervals).
@@ -91,8 +96,11 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
     const coveringBefore = rules.map((r) => coversAt(r, testAt));
     return cascadedStatus(coveringBefore, rules);
   };
-  if (statusJustBefore(probe) === 'active') {
-    return probe;
+  // Only short-circuit when we are pinned to a finite end (cursorStart equals
+  // the finite probe). When cursorStart derives from an external probe, we
+  // must search backward (legacy “pre-pass ambiguous” behavior).
+  if (finiteProbe !== undefined && cursorStart === finiteProbe) {
+    if (statusJustBefore(cursorStart) === 'active') return cursorStart;
   }
   // 3) Bounded reverse sweep from probe.
   const n = rules.length;
@@ -123,7 +131,7 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
       if (typeof s0 === 'number') {
         let s = s0;
         let e = computeOccurrenceEnd(recur, s);
-        while (e > cursor) {
+        while (e >= cursor) {
           const wallS = epochToWallDate(s, recur.tz, recur.unit);
           const sPrev = recur.rrule.before(wallS, false);
           if (!sPrev) break;
@@ -138,8 +146,8 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
     return { covering, prevStart, prevEnd };
   };
 
-  let { covering, prevStart, prevEnd } = resetBackward(probe);
-  let cursor = probe;
+  let { covering, prevStart, prevEnd } = resetBackward(cursorStart);
+  let cursor = cursorStart;
   let guard = 0;
 
   const statusNow = cascadedStatus(covering, rules);
@@ -264,5 +272,7 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
   }
   // If we didn’t find an earlier transition, the finite probe is the latest end.
   // This covers pure-active or “tie at probe” cases without far-future scans.
-  return probe;
+  // Use the actual starting cursor we selected (cursorStart), which already
+  // reflects min(external probe, finite probe).
+  return cursorStart;
 };

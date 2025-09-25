@@ -40,7 +40,9 @@ export const getEffectiveBounds = (
   const openEndDetected = detectOpenEnd(rules);
 
   // 3) Latest bound (finite/local); skip when open-ended
-  const latestEnd = openEndDetected ? undefined : computeLatestEnd(rules);
+  const latestEnd = openEndDetected
+    ? undefined
+    : computeLatestEnd(rules, probe);
 
   // 4) Emptiness (no far-future probe)
   const empty =
