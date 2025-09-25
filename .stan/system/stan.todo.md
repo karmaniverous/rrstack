@@ -16,8 +16,13 @@ Completed (recent)
     contributors (spans, count-limited recurrences, until-limited recurrences).
   - getEffectiveBounds now computes earliest → open-end → latest; emptiness is
     decided without probing the far future.
-- Docs(handbook/react): ensure examples include changeDebounce, mutateDebounce,
-  and renderDebounce with inline explanations across examples.
+  - Latest end details:
+    - Short-circuit to the finite probe when the cascade is active immediately
+      before it (probe is the latest end).
+    - In recurrence backstep, use strict e > cursor to avoid skipping the final
+      day when end == probe.
+    - If the bounded reverse sweep finds no earlier transition, return the probe.- Docs(handbook/react): ensure examples include changeDebounce, mutateDebounce,
+      and renderDebounce with inline explanations across examples.
 - Docs(handbook/react): add debounced form control examples (controlled and uncontrolled); enumerate useRRStack options and outputs.- Policy(project): record “never bump package version or edit CHANGELOG.md” in stan.project.md (release workflow owns them).
 - Feat(react): replace apply/applyDebounce with mutateDebounce (proxy/staging) - All rrstack mutators/assignments are staged and committed once per window. - Add flushMutations()/cancelMutations(); staged reads overlay rules/timezone; queries remain compiled-only until commit.
 - API rename: debounce → changeDebounce; flush() → flushChanges().

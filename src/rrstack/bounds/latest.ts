@@ -23,7 +23,6 @@ import {
   lastStartBefore,
   topCoveringIndex,
 } from './common';
-
 const hasAnyStart = (r: CompiledRecurRule): boolean =>
   !!r.rrule.after(epochToWallDate(domainMin(), r.tz, r.unit), true);
 
@@ -83,9 +82,20 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
   const probe = computeFiniteProbe(rules);
   if (probe === undefined) return undefined;
 
+  // If the cascade is active immediately before the probe, the probe itself
+  // is the latest active end (half-open intervals).
+  const statusJustBefore = (t: number): 'active' | 'blackout' => {
+    const min = domainMin();
+    if (t <= min) return 'blackout';
+    const testAt = t - 1;
+    const coveringBefore = rules.map((r) => coversAt(r, testAt));
+    return cascadedStatus(coveringBefore, rules);
+  };
+  if (statusJustBefore(probe) === 'active') {
+    return probe;
+  }
   // 3) Bounded reverse sweep from probe.
   const n = rules.length;
-
   const resetBackward = (
     cursor: number,
   ): {
@@ -113,7 +123,7 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
       if (typeof s0 === 'number') {
         let s = s0;
         let e = computeOccurrenceEnd(recur, s);
-        while (e >= cursor) {
+        while (e > cursor) {
           const wallS = epochToWallDate(s, recur.tz, recur.unit);
           const sPrev = recur.rrule.before(wallS, false);
           if (!sPrev) break;
@@ -131,14 +141,6 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
   let { covering, prevStart, prevEnd } = resetBackward(probe);
   let cursor = probe;
   let guard = 0;
-
-  const statusJustBefore = (t: number): 'active' | 'blackout' => {
-    const min = domainMin();
-    if (t <= min) return 'blackout';
-    const testAt = t - 1;
-    const coveringBefore = rules.map((r) => coversAt(r, testAt));
-    return cascadedStatus(coveringBefore, rules);
-  };
 
   const statusNow = cascadedStatus(covering, rules);
   if (statusNow === 'blackout') {
@@ -260,5 +262,7 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
     }
     wasBlackout = !isActiveNow;
   }
-  return undefined;
+  // If we didn’t find an earlier transition, the finite probe is the latest end.
+  // This covers pure-active or “tie at probe” cases without far-future scans.
+  return probe;
 };
