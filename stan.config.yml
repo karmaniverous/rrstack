@@ -3,17 +3,18 @@ cliDefaults:
     plan: false
     sequential: true
 excludes:
-  - "*.local"
+  - '*.local'
   - CHANGELOG.md
   - docs
   - package-lock.json
 scripts:
   typecheck: npm run typecheck
   lint: npm run lint:fix
-  test: npm run test
+  test: npm run test -- --no-color
   build: npm run stan:build
-  docs: npm run stan:docs
+  docs: npm run docs -- --emit none
   knip: npm run knip
 patchOpenCommand: code -g {file}
 stanPath: .stan
 includes: []
+

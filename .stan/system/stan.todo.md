@@ -6,10 +6,19 @@ Last updated: 2025-09-25 (UTC)
 
 Completed (recent)
 
+- Perf(core): 100× faster effective-bounds
+  - Open-end detection is now O(1), purely by stack inspection (no far-future
+    rrule scans). The cascade is open-ended iff the last open-ended candidate
+    is an active source (active open span, infinite active recurrence with any
+    start, or baseline active). A blackout open-ended span closes the future.
+  - Latest bound computation is finite/local. It derives a finite cutoff from
+    the last open-ended blackout span (if present) and only inspects finite
+    contributors (spans, count-limited recurrences, until-limited recurrences).
+  - getEffectiveBounds now computes earliest → open-end → latest; emptiness is
+    decided without probing the far future.
 - Docs(handbook/react): ensure examples include changeDebounce, mutateDebounce,
   and renderDebounce with inline explanations across examples.
-- Docs(handbook/react): add debounced form control examples (controlled and uncontrolled); enumerate useRRStack options and outputs.
-- Policy(project): record “never bump package version or edit CHANGELOG.md” in stan.project.md (release workflow owns them).
+- Docs(handbook/react): add debounced form control examples (controlled and uncontrolled); enumerate useRRStack options and outputs.- Policy(project): record “never bump package version or edit CHANGELOG.md” in stan.project.md (release workflow owns them).
 - Feat(react): replace apply/applyDebounce with mutateDebounce (proxy/staging) - All rrstack mutators/assignments are staged and committed once per window.  - Add flushMutations()/cancelMutations(); staged reads overlay rules/timezone; queries remain compiled-only until commit.
 - API rename: debounce → changeDebounce; flush() → flushChanges().
 - Simplify debouncers: trailing always true; options accept true|number|{ delay?, leading? }.
@@ -135,7 +144,6 @@ Completed (recent)
 9. Next steps (implementation plan)
 
 A. Decompose useRRStack (keep hook < ~200 LOC)
-
 - Extract cohesive modules under src/react/hooks:
   1. useRRStack.config.ts — debounce defaults + option parsing (true|number|{ delay?, leading? } → { delay, leading }).
   2. useRRStack.onChange.ts — changeDebounce + flushChanges().
@@ -164,3 +172,4 @@ D. Docs
 
 - README: keep intro/quick start lean; move detailed React content to handbook/react.md.
 - Handbook: document option shapes, defaults, staged-vs-compiled behavior, migration notes (0.11.0).
+- Bounds: document probe-free open-end detection and finite latest-end strategy.

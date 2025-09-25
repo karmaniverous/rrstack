@@ -1,15 +1,22 @@
 /**
- * Latest-bound computation.
+ * Latest-bound computation (finite probe + bounded backward sweep; no far-future scans).
+ *
+ * Strategy:
+ * 1) If any open-ended active source exists (active open span or infinite recurrence with any start),
+ *    the cascade is open-ended to the right ⇒ return undefined.
+ * 2) Otherwise, compute a finite probe as the maximum end boundary across all finite contributors
+ *    (spans with end; count- or until-bounded recurrences; blackout or active alike).
+ * 3) Run a bounded reverse sweep starting from the probe to find the latest instant at which
+ *    the cascade transitions from active to blackout. This honors cascade overlays (last-wins),
+ *    without scanning from 1970 or to 2099.
  */
 import type { CompiledRecurRule, CompiledRule } from '../compile';
 import {
   computeOccurrenceEnd,
-  domainMax,
   domainMin,
   epochToWallDate,
   floatingDateToZonedEpoch,
 } from '../coverage/time';
-import { maxBoundary } from '../util/heap';
 import {
   cascadedStatus,
   coversAt,
@@ -17,56 +24,68 @@ import {
   topCoveringIndex,
 } from './common';
 
-/**
- * Compute latest active end across the rule set (finite).
- * Caller should suppress the value when open-ended coverage is detected.
- */
-export const computeLatestEnd = (
-  rules: CompiledRule[],
-  probe: number,
-): number | undefined => {
-  // Fast-path pre-pass (latest):
-  // A1 = latest active end among rules with last start <= probe.
-  // B1 = latest blackout end among rules with last start <= probe.
-  let latestActiveEndCandidate: number | undefined = undefined;
-  let latestBlackoutEndCandidate: number | undefined = undefined;
+const hasAnyStart = (r: CompiledRecurRule): boolean =>
+  !!r.rrule.after(epochToWallDate(domainMin(), r.tz, r.unit), true);
 
+const hasOpenEndedActive = (rules: CompiledRule[]): boolean => {
   for (const r of rules) {
-    const last = lastStartBefore(r, probe);
-    if (typeof last !== 'number') continue;
-    const e =
-      r.kind === 'span'
-        ? typeof r.end === 'number'
-          ? r.end
-          : domainMax(r.unit)
-        : computeOccurrenceEnd(r, last);
-    if (r.effect === 'active') {
-      if (
-        latestActiveEndCandidate === undefined ||
-        e > latestActiveEndCandidate
-      ) {
-        latestActiveEndCandidate = e;
+    if (r.effect !== 'active' || !r.isOpenEnd) continue;
+    if (r.kind === 'span') return true;
+    const recur = r as CompiledRecurRule;
+    const hasUntil = !!(recur.options as { until?: Date | null }).until;
+    const hasCount =
+      typeof (recur.options as { count?: number | null }).count === 'number';
+    if (!hasUntil && !hasCount && hasAnyStart(recur)) return true;
+  }
+  return false;
+};
+
+/** Compute a finite probe = max end across all finite contributors (active or blackout). */
+const computeFiniteProbe = (rules: CompiledRule[]): number | undefined => {
+  const ends: number[] = [];
+  for (const r of rules) {
+    if (r.kind === 'span') {
+      if (typeof r.end === 'number') ends.push(r.end);
+      continue;
+    }
+    const recur = r as CompiledRecurRule;
+    const hasCount =
+      typeof (recur.options as { count?: number | null }).count === 'number';
+    const hasUntil = !!(recur.options as { until?: Date | null }).until;
+    if (hasCount) {
+      const starts = recur.rrule.all();
+      if (starts.length > 0) {
+        const d = starts[starts.length - 1]!;
+        const s = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
+        ends.push(computeOccurrenceEnd(recur, s));
       }
-    } else {
-      if (
-        latestBlackoutEndCandidate === undefined ||
-        e > latestBlackoutEndCandidate
-      ) {
-        latestBlackoutEndCandidate = e;
+      continue;
+    }
+    if (hasUntil) {
+      const until = (recur.options as { until?: Date | null }).until!;
+      // inclusive of a start at 'until'
+      const d = recur.rrule.before(until, true);
+      if (d) {
+        const s = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
+        ends.push(computeOccurrenceEnd(recur, s));
       }
     }
   }
-  if (
-    typeof latestActiveEndCandidate === 'number' &&
-    (typeof latestBlackoutEndCandidate !== 'number' ||
-      latestActiveEndCandidate > latestBlackoutEndCandidate)
-  ) {
-    return latestActiveEndCandidate;
-  }
+  if (ends.length === 0) return undefined;
+  return Math.max(...ends);
+};
 
-  // Candidate-filtered jump sweep (backward). Fall back to event-by-event only
-  // when current status at cursor is not blackout.
+export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
+  // 1) Open-ended to the right ⇒ no finite latest bound.
+  if (hasOpenEndedActive(rules)) return undefined;
+
+  // 2) Finite probe (max end across finite contributors).
+  const probe = computeFiniteProbe(rules);
+  if (probe === undefined) return undefined;
+
+  // 3) Bounded reverse sweep from probe.
   const n = rules.length;
+
   const resetBackward = (
     cursor: number,
   ): {
@@ -77,18 +96,19 @@ export const computeLatestEnd = (
     const covering = new Array<boolean>(n).fill(false);
     const prevStart = new Array<number | undefined>(n).fill(undefined);
     const prevEnd = new Array<number | undefined>(n).fill(undefined);
+
     for (let i = 0; i < n; i++) {
-      const prevCursor = cursor > domainMin() ? cursor - 1 : cursor;
       const r = rules[i];
       if (r.kind === 'span') {
         const s = typeof r.start === 'number' ? r.start : domainMin();
-        const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
+        const e = typeof r.end === 'number' ? r.end : Number.POSITIVE_INFINITY;
         if (s < cursor) prevStart[i] = s;
         if (e < cursor) prevEnd[i] = e;
         if (e > cursor && s <= cursor) covering[i] = true;
         continue;
       }
-      const recur = r;
+      const recur = r as CompiledRecurRule;
+      const prevCursor = cursor > domainMin() ? cursor - 1 : cursor;
       const s0 = lastStartBefore(recur, prevCursor);
       if (typeof s0 === 'number') {
         let s = s0;
@@ -107,6 +127,7 @@ export const computeLatestEnd = (
     }
     return { covering, prevStart, prevEnd };
   };
+
   let { covering, prevStart, prevEnd } = resetBackward(probe);
   let cursor = probe;
   let guard = 0;
@@ -125,16 +146,13 @@ export const computeLatestEnd = (
       let candidate: number | undefined = undefined;
       const top = topCoveringIndex(covering);
       if (typeof top === 'number') {
-        if (typeof prevStart[top] === 'number' && prevStart[top] < cursor) {
+        if (typeof prevStart[top] === 'number' && prevStart[top]! < cursor) {
           candidate = prevStart[top]!;
         }
         for (let j = top + 1; j < n; j++) {
           if (rules[j].effect === 'active' && typeof prevEnd[j] === 'number') {
             const v = prevEnd[j]!;
-            if (
-              v < cursor &&
-              (typeof candidate !== 'number' || v > candidate)
-            ) {
+            if (v < cursor && (typeof candidate !== 'number' || v > candidate)) {
               candidate = v;
             }
           }
@@ -143,10 +161,7 @@ export const computeLatestEnd = (
         for (let j = 0; j < n; j++) {
           if (rules[j].effect === 'active' && typeof prevEnd[j] === 'number') {
             const v = prevEnd[j]!;
-            if (
-              v < cursor &&
-              (typeof candidate !== 'number' || v > candidate)
-            ) {
+            if (v < cursor && (typeof candidate !== 'number' || v > candidate)) {
               candidate = v;
             }
           }
@@ -156,8 +171,9 @@ export const computeLatestEnd = (
         typeof candidate !== 'number' ||
         candidate <= domainMin() ||
         candidate >= cursor
-      )
+      ) {
         break;
+      }
       if (statusJustBefore(candidate) === 'active') {
         return candidate;
       }
@@ -167,10 +183,17 @@ export const computeLatestEnd = (
     return undefined;
   }
 
-  // Fallback: original reverse event-by-event sweep.
+  // Fallback: reverse event-by-event sweep.
   let wasBlackout = cascadedStatus(covering, rules) === 'blackout';
   while (guard++ < 100000) {
-    const t = maxBoundary(prevStart, prevEnd);
+    // Choose the latest boundary among previous starts/ends
+    let t: number | undefined = undefined;
+    for (let i = 0; i < n; i++) {
+      const vS = prevStart[i];
+      const vE = prevEnd[i];
+      if (typeof vS === 'number' && (t === undefined || vS > t)) t = vS;
+      if (typeof vE === 'number' && (t === undefined || vE > t)) t = vE;
+    }
     if (t === undefined || t < domainMin()) break;
 
     for (let i = 0; i < n; i++) {
@@ -182,7 +205,6 @@ export const computeLatestEnd = (
           const recur = rules[i] as CompiledRecurRule;
           const s2 = prevStart[i];
           if (typeof s2 === 'number') {
-            prevStart[i] = s2;
             const wallS2 = epochToWallDate(s2, recur.tz, recur.unit);
             const sPrev = recur.rrule.before(wallS2, false);
             if (sPrev) {
