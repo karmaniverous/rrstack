@@ -24,7 +24,6 @@ are coalesced:
 - mutateDebounce: coalesce frequent UI → rrstack edits (staged + commit).
 - renderDebounce: coalesce version bumps (rrstack → UI) to reduce repaint churn (optional leading).
 - changeDebounce: autosave/onChange debounce (always trailing).
-
 Signature
 
 ```ts
@@ -123,9 +122,23 @@ function Editor({ json, docId }: { json: RRStackOptions; docId: string }) {
     // autosave (debounced by the hook if configured)
     void saveToServer(docId, s.toJson());
   };
-  const { rrstack, version, flushChanges } = useRRStack(json, onChange, {
+  const {
+    rrstack,
+    version,
+    flushChanges,
+    flushMutations,
+    flushRender,
+  } = useRRStack(json, onChange, {
     resetKey: docId,
-    changeDebounce: 600, // autosave (trailing)
+    // Autosave: debounce onChange calls. Trailing is always true; use leading for an
+    // immediate first save in the window.
+    changeDebounce: { delay: 600 /*, leading: false */ },
+    // UI → rrstack: stage frequent edits (rules/timezone) and commit once per window.
+    // leading: true commits the first change immediately, then coalesces the rest.
+    mutateDebounce: { delay: 150, leading: true },
+    // rrstack → UI: coalesce paints by delaying version bumps. Still performs a trailing paint;
+    // leading: true also allows an immediate paint for snappier feedback.
+    renderDebounce: { delay: 50, leading: true },
     logger: true,
   });
 
@@ -137,6 +150,8 @@ function Editor({ json, docId }: { json: RRStackOptions; docId: string }) {
       <button onClick={() => rrstack.addRule(/*...*/)}>Add rule</button>
       <button
         onClick={() => {
+          // Ensure the latest staged edits are compiled and saved immediately.
+          flushMutations();
           flushChanges();
           void saveToServer(docId, rrstack.toJson());
         }}
@@ -153,7 +168,12 @@ Leading example
 
 ```tsx
 const { rrstack } = useRRStack(json, onChange, {
+  // Autosave: fire once immediately, then again at the end of the window.
   changeDebounce: { delay: 200, leading: true },
+  // Stage → commit UI edits (rules/timezone) once per window; first commit immediate.
+  mutateDebounce: { delay: 150, leading: true },
+  // Coalesce paints; allow an immediate paint for responsive UI.
+  renderDebounce: { delay: 50, leading: true },
 });
 ```
 
@@ -180,17 +200,19 @@ function Editor({
     flushRender,
   } = useRRStack(json, onChange, {
     resetKey: docId,
-    changeDebounce: 600, // autosave (trailing)
-    mutateDebounce: { delay: 150, leading: true }, // UI → rrstack
-    renderDebounce: { delay: 50, leading: true }, // rrstack → UI
+    // Autosave: coalesce onChange. Trailing is always true.
+    changeDebounce: { delay: 600 /*, leading: false */ },
+    // UI → rrstack: stage and commit once per window (first commit immediate).
+    mutateDebounce: { delay: 150, leading: true },
+    // rrstack → UI: coalesce paints; allow an immediate paint for responsiveness.
+    renderDebounce: { delay: 50, leading: true },
   });
 
   // Example: stage edits quickly from a form
   // rrstack.updateOptions({ rules: nextRules });
 
   return (
-    <div>
-      <button
+    <div>      <button
         onClick={() => {
           flushMutations();
           flushChanges();
@@ -242,9 +264,12 @@ export function TimeZoneFieldUncontrolled({ json }: { json: RRStackOptions }) {
       void saveToServer(s.toJson());
     },
     {
-      changeDebounce: 600, // autosave debounce (trailing)
-      mutateDebounce: 150, // stage + commit tz/rules once per window
-      // optional: renderDebounce: { delay: 50, leading: true },
+      // Autosave: debounce onChange; trailing is always true.
+      changeDebounce: { delay: 600 },
+      // UI → rrstack: stage + commit timezone/rules once per window.
+      mutateDebounce: { delay: 150 },
+      // rrstack → UI: coalesce paints; leading paint keeps typing snappy.
+      renderDebounce: { delay: 50, leading: true },
     },
   );
 
@@ -254,7 +279,6 @@ export function TimeZoneFieldUncontrolled({ json }: { json: RRStackOptions }) {
   useEffect(() => {
     if (ref.current) ref.current.value = rrstack.timezone;
   }, [rrstack, rrstack.timezone]);
-
   return (
     <form
       onSubmit={(e) => {
@@ -308,16 +332,19 @@ export function TimeZoneFieldControlled({ json }: { json: RRStackOptions }) {
       void saveToServer(s.toJson());
     },
     {
-      changeDebounce: { delay: 600 }, // autosave (trailing)
-      mutateDebounce: { delay: 200, leading: true }, // immediate first commit, then trailing
-      renderDebounce: { delay: 50, leading: true }, // reduce repaint churn
+      // Autosave: coalesce onChange calls; trailing is always true.
+      changeDebounce: { delay: 600 },
+      // UI → rrstack: stage frequent input changes and commit once per window.
+      // leading: true commits the first change immediately to keep queries in sync.
+      mutateDebounce: { delay: 200, leading: true },
+      // rrstack → UI: coalesce paints to reduce repaint churn; leading paint keeps UI responsive.
+      renderDebounce: { delay: 50, leading: true },
     },
   );
 
   const [tz, setTz] = useState(rrstack.timezone);
 
-  // Re-sync when the underlying instance resets or external mutations occur.
-  useEffect(() => {
+  // Re-sync when the underlying instance resets or external mutations occur.  useEffect(() => {
     setTz(rrstack.timezone);
   }, [rrstack, rrstack.timezone]);
 
@@ -404,3 +431,4 @@ function RuleCount({ json }: { json: RRStackOptions }) {
 - For long windows, prefer chunking (day/week) or a Worker for heavy sweeps.
 - In tests using fake timers, call `flushChanges()` and/or `flushMutations()` inside
   `act(async () => { ... })` and await a microtask to flush effects.
+```
