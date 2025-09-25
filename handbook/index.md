@@ -2,6 +2,7 @@
 title: Handbook
 children:
   - ./overview.md
+  - ./algorithms.md
   - ./react.md
 ---
 
@@ -16,7 +17,6 @@ workflows, patterns, and integration points.
 - Overview
 
   See an end-to-end introduction to RRStack:
-
   - Why this library and when to use it
   - Key capabilities (point queries, streaming segments, range classification,
     effective bounds, JSON round-tripping, human-readable rule descriptions)
@@ -29,7 +29,6 @@ workflows, patterns, and integration points.
 
   Integrate a live RRStack instance with React using tiny hooks that preserve
   the library as the single source of truth:
-
   - useRRStack(json, onChange?, { resetKey?, debounce?, logger? }) — live
     instance with version and flush
   - useRRStackSelector(rrstack, selector, isEqual?) — derived values with
