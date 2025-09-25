@@ -19,7 +19,7 @@ Completed (recent)
 - Docs(handbook/react): ensure examples include changeDebounce, mutateDebounce,
   and renderDebounce with inline explanations across examples.
 - Docs(handbook/react): add debounced form control examples (controlled and uncontrolled); enumerate useRRStack options and outputs.- Policy(project): record “never bump package version or edit CHANGELOG.md” in stan.project.md (release workflow owns them).
-- Feat(react): replace apply/applyDebounce with mutateDebounce (proxy/staging) - All rrstack mutators/assignments are staged and committed once per window.  - Add flushMutations()/cancelMutations(); staged reads overlay rules/timezone; queries remain compiled-only until commit.
+- Feat(react): replace apply/applyDebounce with mutateDebounce (proxy/staging) - All rrstack mutators/assignments are staged and committed once per window. - Add flushMutations()/cancelMutations(); staged reads overlay rules/timezone; queries remain compiled-only until commit.
 - API rename: debounce → changeDebounce; flush() → flushChanges().
 - Simplify debouncers: trailing always true; options accept true|number|{ delay?, leading? }.
 - Feat(react): renderDebounce simplified (final paint always; optional leading).
@@ -65,6 +65,7 @@ Completed (recent)
 0. Top Priority — Stabilize template baseline (pre-implementation) [unchanged]
 
 ---
+
 1. Requirements (confirmed)
 
 - Options
@@ -144,6 +145,7 @@ Completed (recent)
 9. Next steps (implementation plan)
 
 A. Decompose useRRStack (keep hook < ~200 LOC)
+
 - Extract cohesive modules under src/react/hooks:
   1. useRRStack.config.ts — debounce defaults + option parsing (true|number|{ delay?, leading? } → { delay, leading }).
   2. useRRStack.onChange.ts — changeDebounce + flushChanges().

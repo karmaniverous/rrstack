@@ -58,7 +58,7 @@ export const getEffectiveBounds = (
 /**
  * Cheap emptiness test:
  * - Not empty if any open-ended active source exists (baseline active, open-ended span, infinite recurrence with any start).
- * - Not empty if any finite active source exists (span with end > start, or recurrence with a first start).
+ * - Not empty if any finite active source exists (span with end \> start, or recurrence with a first start).
  * - Otherwise empty.
  */
 function isCascadeInactiveEverywhere(rules: CompiledRule[]): boolean {

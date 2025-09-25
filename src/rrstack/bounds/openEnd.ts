@@ -9,11 +9,7 @@
  *   • Baseline active (compiled as open span).
  * - A blackout open-ended span closes the future starting at its start; it is not open-ended.
  */
-import type {
-  CompiledRecurRule,
-  CompiledRule,
-  CompiledSpanRule,
-} from '../compile';
+import type { CompiledRecurRule, CompiledRule } from '../compile';
 import { domainMin, epochToWallDate } from '../coverage/time';
 
 export const detectOpenEnd = (rules: CompiledRule[]): boolean => {
@@ -25,9 +21,7 @@ export const detectOpenEnd = (rules: CompiledRule[]): boolean => {
     return !!d;
   };
 
-  for (let i = 0; i < rules.length; i++) {
-    const r = rules[i];
-
+  for (const r of rules) {
     // Open-ended active span
     if (r.effect === 'active' && r.kind === 'span' && r.isOpenEnd) {
       lastKind = 'active';

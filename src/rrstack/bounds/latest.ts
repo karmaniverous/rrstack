@@ -31,7 +31,7 @@ const hasOpenEndedActive = (rules: CompiledRule[]): boolean => {
   for (const r of rules) {
     if (r.effect !== 'active' || !r.isOpenEnd) continue;
     if (r.kind === 'span') return true;
-    const recur = r as CompiledRecurRule;
+    const recur = r;
     const hasUntil = !!(recur.options as { until?: Date | null }).until;
     const hasCount =
       typeof (recur.options as { count?: number | null }).count === 'number';
@@ -48,14 +48,14 @@ const computeFiniteProbe = (rules: CompiledRule[]): number | undefined => {
       if (typeof r.end === 'number') ends.push(r.end);
       continue;
     }
-    const recur = r as CompiledRecurRule;
+    const recur = r;
     const hasCount =
       typeof (recur.options as { count?: number | null }).count === 'number';
     const hasUntil = !!(recur.options as { until?: Date | null }).until;
     if (hasCount) {
       const starts = recur.rrule.all();
       if (starts.length > 0) {
-        const d = starts[starts.length - 1]!;
+        const d = starts[starts.length - 1];
         const s = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
         ends.push(computeOccurrenceEnd(recur, s));
       }
@@ -107,7 +107,7 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
         if (e > cursor && s <= cursor) covering[i] = true;
         continue;
       }
-      const recur = r as CompiledRecurRule;
+      const recur = r;
       const prevCursor = cursor > domainMin() ? cursor - 1 : cursor;
       const s0 = lastStartBefore(recur, prevCursor);
       if (typeof s0 === 'number') {
@@ -146,13 +146,16 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
       let candidate: number | undefined = undefined;
       const top = topCoveringIndex(covering);
       if (typeof top === 'number') {
-        if (typeof prevStart[top] === 'number' && prevStart[top]! < cursor) {
+        if (typeof prevStart[top] === 'number' && prevStart[top] < cursor) {
           candidate = prevStart[top]!;
         }
         for (let j = top + 1; j < n; j++) {
           if (rules[j].effect === 'active' && typeof prevEnd[j] === 'number') {
             const v = prevEnd[j]!;
-            if (v < cursor && (typeof candidate !== 'number' || v > candidate)) {
+            if (
+              v < cursor &&
+              (typeof candidate !== 'number' || v > candidate)
+            ) {
               candidate = v;
             }
           }
@@ -161,7 +164,10 @@ export const computeLatestEnd = (rules: CompiledRule[]): number | undefined => {
         for (let j = 0; j < n; j++) {
           if (rules[j].effect === 'active' && typeof prevEnd[j] === 'number') {
             const v = prevEnd[j]!;
-            if (v < cursor && (typeof candidate !== 'number' || v > candidate)) {
+            if (
+              v < cursor &&
+              (typeof candidate !== 'number' || v > candidate)
+            ) {
               candidate = v;
             }
           }
