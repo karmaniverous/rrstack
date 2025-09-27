@@ -2,8 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.12.4](https://github.com/karmaniverous/rrstack/compare/0.12.3...0.12.4)
+
+- feat: RRStack.formatInstant to format instants in stack tz/unit [`2f82fde`](https://github.com/karmaniverous/rrstack/commit/2f82fde208efc5c78dafa8d1cda87c504877cbb1)
+
 #### [0.12.3](https://github.com/karmaniverous/rrstack/compare/0.12.2...0.12.3)
 
+> 27 September 2025
+
+- chore: release v0.12.3 [`d06cafd`](https://github.com/karmaniverous/rrstack/commit/d06cafdaf4227e6d9687fc8dae34b9ad41e3b59a)
 - feat: add DescribeOptions.formatTimeZone for custom tz labels [`a3df5a2`](https://github.com/karmaniverous/rrstack/commit/a3df5a292b77b9f720edb1840e81f78ccdf93ca5)
 
 #### [0.12.2](https://github.com/karmaniverous/rrstack/compare/0.12.1...0.12.2)
