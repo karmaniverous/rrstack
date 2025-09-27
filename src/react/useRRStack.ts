@@ -14,9 +14,11 @@ import {
   MUTATE_DEBOUNCE_MS,
   normalizeDebounce,
   RENDER_DEBOUNCE_MS,
+  type UseRRStackBaseOptions,
+  type UseRRStackBaseOutput,
 } from './hooks/useRRStack.config';
 import { createRRStackFacade } from './hooks/useRRStack.facade';
-import { createLogger, type LogEventType } from './hooks/useRRStack.logger';
+import { createLogger } from './hooks/useRRStack.logger';
 import {
   createMutateManager,
   type MutateManager,
@@ -31,23 +33,18 @@ import {
 } from './hooks/useRRStack.render';
 
 // Hook options. Trailing is always true for all debouncers by design.
-export interface UseRRStackOptions {
+export interface UseRRStackOptions extends UseRRStackBaseOptions {
   changeDebounce?: DebounceSpec;
   json: RRStackOptions;
-  logger?: boolean | ((e: { type: LogEventType; rrstack: RRStack }) => void);
   mutateDebounce?: DebounceSpec;
   onChange?: (stack: RRStack) => void;
-  renderDebounce?: DebounceSpec;
-  resetKey?: string | number;
 }
 
-export interface UseRRStackOutput {
+export interface UseRRStackOutput extends UseRRStackBaseOutput {
   cancelMutations: () => void;
   flushChanges: () => void;
   flushMutations: () => void;
-  flushRender: () => void;
   rrstack: RRStack; // façade (proxy)
-  version: number;
 }
 
 export function useRRStack({

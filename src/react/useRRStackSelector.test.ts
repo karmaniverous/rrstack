@@ -50,11 +50,14 @@ describe('useRRStackSelector', () => {
     let current: RRStack | undefined;
     function Probe() {
       const { rrstack } = useRRStack({ json: EXAMPLE });
-      const derived = useRRStackSelector(rrstack, (s) => s.rules.length);
+      const { selection } = useRRStackSelector({
+        rrstack,
+        selector: (s) => s.rules.length,
+      });
       useEffect(() => {
         current = rrstack;
       }, [rrstack]);
-      return React.createElement('div', { 'data-derived': String(derived) });
+      return React.createElement('div', { 'data-derived': String(selection) });
     }
 
     const app = mount(React.createElement(Probe));

@@ -1,3 +1,6 @@
+import type { RRStack } from '../../rrstack/RRStack';
+import type { LogEventType } from './useRRStack.logger';
+
 // Debounce defaults (ms)
 export const CHANGE_DEBOUNCE_MS = 600;
 export const MUTATE_DEBOUNCE_MS = 150;
@@ -30,3 +33,20 @@ export const normalizeDebounce = (
   const { delay, leading = false } = spec;
   return { delay: typeof delay === 'number' ? delay : defaultDelay, leading };
 };
+
+/**
+ * Shared base options for RRStack React hooks.
+ */
+export interface UseRRStackBaseOptions {
+  renderDebounce?: DebounceSpec;
+  logger?: boolean | ((e: { type: LogEventType; rrstack: RRStack }) => void);
+  resetKey?: string | number;
+}
+
+/**
+ * Shared base output for RRStack React hooks.
+ */
+export interface UseRRStackBaseOutput {
+  version: number;
+  flushRender: () => void;
+}

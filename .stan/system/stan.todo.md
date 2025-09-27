@@ -6,6 +6,17 @@ Last updated: 2025-09-27 (UTC)
 
 Completed (recent)
 
+- React hooks:
+  - Add shared UseRRStackBaseOptions (renderDebounce, logger, resetKey) and
+    UseRRStackBaseOutput (version, flushRender) to keep hook APIs aligned.
+  - useRRStackOptions/Output now extend the shared base types (no behavior change).
+  - useRRStackSelector:
+    - Switch to single options-object signature:
+      { rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? }.
+    - Return { selection, version, flushRender } to match useRRStack naming.
+    - Support renderDebounce with identical semantics to useRRStack (trailing
+      always true; optional leading; default 50 ms via shared constants).
+    - Logger parity (init/reset/mutate/flushRender) via shared createLogger.
 - Tests(react): align useRRStack tests to new single-options signature
   ({ json, onChange?, ... }); update selector usage; resolves TS2554/TS2345.
 - Perf(core): 100× faster effective-bounds
