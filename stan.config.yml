@@ -3,7 +3,7 @@ cliDefaults:
     plan: false
     sequential: true
 excludes:
-  - '*.local'
+  - "*.local"
   - CHANGELOG.md
   - docs
   - package-lock.json
@@ -17,4 +17,3 @@ scripts:
 patchOpenCommand: code -g {file}
 stanPath: .stan
 includes: []
-

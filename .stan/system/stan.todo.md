@@ -1,11 +1,13 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-09-25 (UTC)
+Last updated: 2025-09-27 (UTC)
 
 ## This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
 Completed (recent)
 
+- Tests(react): align useRRStack tests to new single-options signature
+  ({ json, onChange?, ... }); update selector usage; resolves TS2554/TS2345.
 - Perf(core): 100× faster effective-bounds
   - Open-end detection is now O(1), purely by stack inspection (no far-future
     rrule scans). The cascade is open-ended iff the last open-ended candidate

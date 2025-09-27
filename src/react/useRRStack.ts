@@ -31,29 +31,34 @@ import {
 } from './hooks/useRRStack.render';
 
 // Hook options. Trailing is always true for all debouncers by design.
-interface Options {
-  resetKey?: string | number;
+export interface UseRRStackOptions {
   changeDebounce?: DebounceSpec;
-  mutateDebounce?: DebounceSpec;
-  renderDebounce?: DebounceSpec;
+  json: RRStackOptions;
   logger?: boolean | ((e: { type: LogEventType; rrstack: RRStack }) => void);
+  mutateDebounce?: DebounceSpec;
+  onChange?: (stack: RRStack) => void;
+  renderDebounce?: DebounceSpec;
+  resetKey?: string | number;
 }
 
-export function useRRStack(
-  json: RRStackOptions,
-  onChange?: (stack: RRStack) => void,
-  opts?: Options,
-): {
-  rrstack: RRStack; // façade (proxy)
-  version: number;
+export interface UseRRStackOutput {
+  cancelMutations: () => void;
   flushChanges: () => void;
   flushMutations: () => void;
-  cancelMutations: () => void;
   flushRender: () => void;
-} {
-  const { resetKey, changeDebounce, mutateDebounce, renderDebounce, logger } =
-    opts ?? {};
+  rrstack: RRStack; // façade (proxy)
+  version: number;
+}
 
+export function useRRStack({
+  changeDebounce,
+  json,
+  logger,
+  mutateDebounce,
+  onChange,
+  renderDebounce,
+  resetKey,
+}: UseRRStackOptions): UseRRStackOutput {
   // Recreate the instance intentionally when resetKey changes.
   const rrstack = useMemo(() => new RRStack(json), [resetKey]);
   // Refs for current instance and façade

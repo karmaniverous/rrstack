@@ -49,7 +49,7 @@ describe('useRRStackSelector', () => {
   it('recomputes derived value on mutation', () => {
     let current: RRStack | undefined;
     function Probe() {
-      const { rrstack } = useRRStack(EXAMPLE);
+      const { rrstack } = useRRStack({ json: EXAMPLE });
       const derived = useRRStackSelector(rrstack, (s) => s.rules.length);
       useEffect(() => {
         current = rrstack;

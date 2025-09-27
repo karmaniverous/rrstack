@@ -75,7 +75,7 @@ function View(props: {
 }) {
   const { json, resetKey, onReady } = props;
   const calls = useRef(0);
-  const { rrstack } = useRRStack(json, undefined, { resetKey });
+  const { rrstack } = useRRStack({ json, resetKey });
   useEffect(() => {
     onReady?.(rrstack);
   }, [onReady, rrstack]);
@@ -130,7 +130,9 @@ describe('useRRStack (react)', () => {
         // record rule count when onChange fires
         events.push(s.rules.length);
       };
-      const { rrstack, flushChanges } = useRRStack(props.json, onChange, {
+      const { rrstack, flushChanges } = useRRStack({
+        json: props.json,
+        onChange,
         changeDebounce: { delay: 50 },
       });
       // Kick a few mutations quickly
@@ -186,7 +188,9 @@ describe('useRRStack (react)', () => {
       const onChange = (s: RRStack) => {
         events.push(s.rules.length);
       };
-      const { rrstack } = useRRStack(json, onChange, {
+      const { rrstack } = useRRStack({
+        json,
+        onChange,
         changeDebounce: { delay: 50, leading: true },
       });
       useEffect(() => {
@@ -244,7 +248,9 @@ describe('useRRStack (react)', () => {
       const onChange = (s: RRStack) => {
         events.push(s.rules.length);
       };
-      const { rrstack, flushChanges } = useRRStack(json, onChange, {
+      const { rrstack, flushChanges } = useRRStack({
+        json,
+        onChange,
         changeDebounce: { delay: 50 },
       });
       // Expose flush to the test
