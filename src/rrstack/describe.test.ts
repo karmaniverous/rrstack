@@ -53,4 +53,30 @@ describe('rule description helpers', () => {
     expect(lower).toContain('continuously');
     expect(lower).toContain('from 2024-01-10');
   });
+
+  it('formatTimeZone customizes timezone label (recurring)', () => {
+    const text = describeRule(rule, tz, 'ms', {
+      includeTimeZone: true,
+      formatTimeZone: () => 'FriendlyTZ',
+    });
+    const lower = text.toLowerCase();
+    expect(lower).toContain('timezone friendlytz');
+    // default label should be replaced; presence of friendly label is sufficient
+  });
+
+  it('formatTimeZone customizes timezone label (span)', () => {
+    const span: RuleJson = {
+      effect: 'blackout',
+      // duration omitted for span
+      options: {
+        starts: Date.UTC(2024, 0, 10, 5, 0, 0),
+        ends: Date.UTC(2024, 0, 12, 7, 0, 0),
+      },
+    };
+    const text = describeRule(span, tz, 'ms', {
+      includeTimeZone: true,
+      formatTimeZone: () => 'FriendlyTZ',
+    });
+    expect(text.toLowerCase()).toContain('timezone friendlytz');
+  });
 });

@@ -6,11 +6,15 @@ Last updated: 2025-09-27 (UTC)
 
 Completed (recent)
 
+- Feat(core): add DescribeOptions.formatTimeZone to customize the timezone
+  label in rule descriptions. Applied in describeCompiledRule for both recurring
+  and span rules when includeTimeZone is true. Added tests for recurring and
+  span paths.
+
 - Feat(core/react): allow rrstack.addRule() to be called with no arguments.
   Defaults to an active, open-ended span rule: `{ effect: 'active', options: {} }`.
   Updated both core RRStack.addRule and the React façade to mirror behavior.
   Added a unit test covering the no-arg case.
-
 - Docs: align React hooks to single-options signatures across README and
   Handbook; update bullets and examples for:
   - useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?,

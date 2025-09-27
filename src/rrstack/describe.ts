@@ -2,6 +2,7 @@
  * Requirements addressed:
  * - Provide a human-readable rule description leveraging rrule's toText().
  * - Include effect and duration; optionally include timezone and bounds.
+ * - Allow custom formatting of the timezone label.
  */
 
 import { DateTime } from 'luxon';
@@ -66,6 +67,12 @@ export interface DescribeOptions {
   includeTimeZone?: boolean;
   /** Append "[from <dtstart>; until <until>]" if clamps are present — default false */
   includeBounds?: boolean;
+  /**
+   * Optional formatter for the timezone label. When provided and
+   * includeTimeZone is true, the description will use
+   * `(timezone formatTimeZone(tzId))` instead of the raw tz id.
+   */
+  formatTimeZone?: (tzId: string) => string;
 }
 
 /**
@@ -76,12 +83,21 @@ export const describeCompiledRule = (
   compiled: CompiledRule,
   opts: DescribeOptions = {},
 ): string => {
-  const { includeTimeZone = true, includeBounds = false } = opts;
+  const {
+    includeTimeZone = true,
+    includeBounds = false,
+    formatTimeZone,
+  } = opts;
   const effect = compiled.effect === 'active' ? 'Active' : 'Blackout';
   if (compiled.kind === 'span') {
     // Continuous coverage between clamps (open sides allowed)
     let s = `${effect} continuously`;
-    if (includeTimeZone) s += ` (timezone ${compiled.tz})`;
+    if (includeTimeZone) {
+      const tzLabel = formatTimeZone
+        ? formatTimeZone(compiled.tz)
+        : compiled.tz;
+      s += ` (timezone ${tzLabel})`;
+    }
     if (includeBounds) {
       const tz = compiled.tz;
       const fmt = (v?: number) =>
@@ -106,7 +122,10 @@ export const describeCompiledRule = (
   const recur = compiled;
   const durText = durationToTextFromCompiled(recur);
   let s = `${effect} for ${durText}: ${recur.rrule.toText()}`;
-  if (includeTimeZone) s += ` (timezone ${recur.tz})`;
+  if (includeTimeZone) {
+    const tzLabel = formatTimeZone ? formatTimeZone(recur.tz) : recur.tz;
+    s += ` (timezone ${tzLabel})`;
+  }
 
   if (includeBounds) {
     // Example:
@@ -153,6 +172,7 @@ export const describeRule = (
  * ```ts
  * const text = describeRule(rule, RRStack.asTimeZoneId('UTC'), 'ms', {
  *   includeTimeZone: true,
+ *   formatTimeZone: (tz) => friendlyTzNameMap[tz] ?? tz,
  *   includeBounds: true,
  * });
  * ```
