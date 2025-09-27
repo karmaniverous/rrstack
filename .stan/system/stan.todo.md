@@ -6,10 +6,12 @@ Last updated: 2025-09-27 (UTC)
 
 Completed (recent)
 
+- Tests(describe): validate that weekday position (“third Tuesday”) and time
+  (“5:00”, “9:00”) appear in rule descriptions (describeRule/describeCompiledRule).
+
 - Feat(core): add RRStack.formatInstant(t, opts?) to format an instant using
   the stack’s configured timezone and timeUnit. Defaults to ISO (suppressing
-  milliseconds); supports { format?: string; locale?: string } via Luxon.
-  Added unit tests for ms/s and a custom format string.
+  milliseconds); supports { format?: string; locale?: string } via Luxon.  Added unit tests for ms/s and a custom format string.
 
 - Feat(core): add DescribeOptions.formatTimeZone to customize the timezone
   label in rule descriptions. Applied in describeCompiledRule for both recurring
