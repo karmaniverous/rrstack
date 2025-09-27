@@ -67,6 +67,40 @@ Tips
   false negatives (still half‑open intervals).
 - For UI: prefer chunking long windows (day/week) or a Worker for heavy sweeps.
 
+## Span rules (continuous coverage)
+
+Not every schedule needs a recurrence. Omit `options.freq` to declare a span
+rule with optional open ends. Span rules participate in the cascade exactly like
+recurring rules (later rules override earlier ones).
+
+```ts
+const rules = [
+  {
+    effect: 'active' as const,
+    // duration omitted
+    options: {
+      starts: Date.UTC(2024, 0, 10, 5, 0, 0),
+      ends: Date.UTC(2024, 0, 10, 7, 0, 0),
+    },
+  },
+];
+```
+
+## Baseline (defaultEffect)
+
+RRStack supports a configurable baseline effect for uncovered instants via
+`defaultEffect`:
+
+- 'auto' (default): opposite of the first rule’s effect, or 'active' when there
+  are no rules.
+- 'active' | 'blackout': use exactly that baseline everywhere not covered by
+  rules.
+
+Internally, the baseline behaves like a virtual, open‑ended span rule prepended
+to the cascade (lowest priority). All query surfaces respect the baseline:
+`isActiveAt`, `getSegments`, `classifyRange`, and `getEffectiveBounds` (which
+returns open‑sided bounds when the baseline is 'active').
+
 ## Bounds & clamps semantics
 
 - Cascade and ties: later rules override earlier rules at covered instants.

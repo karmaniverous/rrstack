@@ -6,6 +6,16 @@ Last updated: 2025-09-27 (UTC)
 
 Completed (recent)
 
+- Docs: align React hooks to single-options signatures across README and
+  Handbook; update bullets and examples for:
+  - useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?,
+    renderDebounce?, logger? }) → { rrstack, version, flushChanges,
+    flushMutations, cancelMutations, flushRender }
+  - useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?,
+    resetKey? }) → { selection, version, flushRender }
+- Docs: fix installation/JSON Schema code fences in README.
+- Docs: add “Span rules” and “Baseline (defaultEffect)” sections to Handbook
+  Overview; add baseline section to Algorithms page.
 - React hooks:
   - Add shared UseRRStackBaseOptions (renderDebounce, logger, resetKey) and
     UseRRStackBaseOutput (version, flushRender) to keep hook APIs aligned.

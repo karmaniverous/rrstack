@@ -19,10 +19,27 @@ Goals and constraints
   handled correctly (spring forward/fall back).
 - Later rules override earlier ones at covered instants (last‑wins cascade).
 
+Baseline (defaultEffect)
+
+- The baseline behaves like a virtual, open‑ended span rule prepended to the
+  cascade (lowest priority).
+- Values:
+  - 'auto' (default): opposite of the first rule’s effect, or 'active' when
+    no rules exist.
+  - 'active' | 'blackout': use exactly that effect for uncovered instants.
+- All queries respect the baseline:
+  - `isActiveAt` classifies uncovered instants by the baseline.
+  - `getSegments` yields baseline segments where no rule covers the window.
+  - `classifyRange` accounts for baseline vs overlays.
+  - `getEffectiveBounds` returns open‑sided bounds when the baseline is 'active'
+    and no finite active contributors exist; open‑end detection remains O(1)
+    via stack inspection.
+- The last‑wins rule still applies: later rules override the baseline anywhere
+  they cover.
+
 Core coverage primitives
 
-- Spans (continuous coverage):
-  - options.freq omitted → span rule; duration must be omitted,
+- Spans (continuous coverage):  - options.freq omitted → span rule; duration must be omitted,
   - start/end clamps live in options.starts/options.ends (open sides allowed),
   - coverage test: s <= t < e (open sides use domainMin()/domainMax()).
 - Recurrences (RRULE based):

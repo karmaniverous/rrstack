@@ -46,7 +46,8 @@ UI tip: this maps naturally to a “Does not repeat” option that disables RRUL
 
 ## Installation
 
-```bashnpm install @karmaniverous/rrstack
+```bash
+npm install @karmaniverous/rrstack
 # or
 yarn add @karmaniverous/rrstack
 # or
@@ -55,7 +56,6 @@ pnpm add @karmaniverous/rrstack
 
 - ESM and CJS consumers are supported.
 - TypeScript typings are included.
-
 ## Quick Start
 
 ```ts
@@ -294,26 +294,24 @@ Baseline (defaultEffect)
 
 Example (programmatic access):
 
-```tsimport { RRSTACK_CONFIG_SCHEMA } from '@karmaniverous/rrstack';
+```ts
+import { RRSTACK_CONFIG_SCHEMA } from '@karmaniverous/rrstack';
 
 // pass to your JSON Schema validator of choice (e.g., Ajv)
 console.log(RRSTACK_CONFIG_SCHEMA.$schema, 'RRStackOptions schema loaded');
 ```
 
 ## React hooks
-
 RRStack ships a tiny React adapter at the subpath `@karmaniverous/rrstack/react`. The hooks
 observe a live RRStack instance without re‑wrapping its control surface (RRStack remains the
 single source of truth).
 
-- `useRRStack(json, onChange?, { resetKey?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? })`
-  →
-  `{ rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }`
-- `useRRStackSelector(rrstack, selector, isEqual?)` → derived value; re‑renders only when the
-  selection changes.
+- `useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? })`
+  → `{ rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }`
+- `useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? })`
+  → `{ selection, version, flushRender }` (re‑renders only when selection changes).
 
 Debounce knobs (trailing is always true)
-
 - `changeDebounce`: coalesce autosave (`onChange`) calls.
 - `mutateDebounce`: coalesce frequent UI → `rrstack` edits (e.g., typing). Mutations are staged
   (rules/timezone) and committed once per window.
@@ -329,11 +327,11 @@ Helpers
 
 Staged vs compiled (mutateDebounce)
 
-- Reads of `rrstack.rules` and `rrstack.timezone` reflect staged values prior to commit.
+- Reads of `rrstack.rules` and `rrstack.timezone` reflect staged values prior to
+  commit.
 - `toJson()` also overlays staged values.
 - Queries (`isActiveAt`, `getSegments`, etc.) continue to reflect the last committed compiled state
   until a commit occurs.
-
 Example (debounced autosave + staged edits)
 
 ```tsx
@@ -341,23 +339,26 @@ import { useRRStack } from '@karmaniverous/rrstack/react';
 import type { RRStackOptions } from '@karmaniverous/rrstack';
 
 function Editor({ json }: { json: RRStackOptions }) {
-  const { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender } = useRRStack(
+  const {
+    rrstack,
+    version,
+    flushChanges,
+    flushMutations,
+    cancelMutations,
+    flushRender,
+  } = useRRStack({
     json,
-    (s) => {
-      // autosave (debounced by changeDebounce)
+    onChange: (s) => {
       void saveToServer(s.toJson());
     },
-    {
-      changeDebounce: 600, // autosave (trailing)
-      mutateDebounce: 150, // UI → rrstack (staged + commit)
-      renderDebounce: { delay: 50, leading: true }, // rrstack → UI (coalesced paints)
-    },
-  );
+    changeDebounce: { delay: 600 },
+    mutateDebounce: { delay: 150 },
+    renderDebounce: { delay: 50, leading: true },
+  });
 
   // Use `version` to memoize heavy derived values (e.g., segments)
 
-  return (
-    <button
+  return (    <button
       onClick={() => {
         // Optionally force a commit + autosave now
         flushMutations();

@@ -29,9 +29,9 @@ workflows, patterns, and integration points.
 
   Integrate a live RRStack instance with React using tiny hooks that preserve
   the library as the single source of truth:
-  - useRRStack(json, onChange?, { resetKey?, debounce?, logger? }) — live
-    instance with version and flush
-  - useRRStackSelector(rrstack, selector, isEqual?) — derived values with
-    minimal re-renders
-
-  Read: [React hooks](./react.md)
+  - useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?,
+    renderDebounce?, logger? }) — returns
+    { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }
+  - useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?,
+    resetKey? }) — returns { selection, version, flushRender } with minimal
+    re-renders
