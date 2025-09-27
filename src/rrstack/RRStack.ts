@@ -14,6 +14,8 @@
  * @public
  */
 
+import { DateTime } from 'luxon';
+
 import { type CompiledRule, compileRule } from './compile';
 import { isValidTimeZone } from './coverage/time';
 import { describeCompiledRule, type DescribeOptions } from './describe';
@@ -240,12 +242,40 @@ export class RRStack {
       : Math.floor(Date.now() / 1000);
   }
 
+  /**
+   * Format an instant using this stack's configured timezone and time unit.
+   * - In 'ms' mode, `t` is interpreted as milliseconds since epoch.
+   * - In 's' mode, `t` is interpreted as integer seconds since epoch.
+   *
+   * @param t - Instant in the configured unit.
+   * @param opts - Optional formatting:
+   *   - format?: Luxon toFormat string (e.g., 'yyyy-LL-dd HH:mm').
+   *   - locale?: BCP-47 locale tag applied prior to formatting.
+   * @returns A string representation (ISO by default).
+   *
+   * @example
+   * stack.formatInstant(Date.UTC(2024, 0, 2, 5, 30, 0)); // '2024-01-02T05:30:00Z' (UTC)
+   * stack.formatInstant(ms, { format: 'yyyy-LL-dd HH:mm' }); // '2024-01-02 05:30'
+   */
+  formatInstant(
+    t: number,
+    opts?: { format?: string; locale?: string },
+  ): string {
+    const tz = this.timezone;
+    const dt =
+      this.timeUnit === 'ms'
+        ? DateTime.fromMillis(t, { zone: tz })
+        : DateTime.fromSeconds(t, { zone: tz });
+    const d = opts?.locale ? dt.setLocale(opts.locale) : dt;
+    if (opts?.format) return d.toFormat(opts.format);
+    return d.toISO({ suppressMilliseconds: true }) ?? '';
+  }
+
   // JSON persistence ----------------------------------------------------------
 
   /**
    * Serialize the stack to JSON.
-   * @returns A {@link RRStackOptions} including `version` injected at build time
-   *          (fallback `'0.0.0'` in dev/test).
+   * @returns A {@link RRStackOptions} including `version` injected at build time   *          (fallback `'0.0.0'` in dev/test).
    */
   toJson(): RRStackOptions {
     const v =

@@ -6,10 +6,14 @@ Last updated: 2025-09-27 (UTC)
 
 Completed (recent)
 
+- Feat(core): add RRStack.formatInstant(t, opts?) to format an instant using
+  the stack’s configured timezone and timeUnit. Defaults to ISO (suppressing
+  milliseconds); supports { format?: string; locale?: string } via Luxon.
+  Added unit tests for ms/s and a custom format string.
+
 - Feat(core): add DescribeOptions.formatTimeZone to customize the timezone
   label in rule descriptions. Applied in describeCompiledRule for both recurring
-  and span rules when includeTimeZone is true. Added tests for recurring and
-  span paths.
+  and span rules when includeTimeZone is true. Added tests for recurring and  span paths.
 
 - Feat(core/react): allow rrstack.addRule() to be called with no arguments.
   Defaults to an active, open-ended span rule: `{ effect: 'active', options: {} }`.
