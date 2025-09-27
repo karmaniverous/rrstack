@@ -2,8 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.12.2](https://github.com/karmaniverous/rrstack/compare/0.12.1...0.12.2)
+
+- feat: allow addRule() with no args (defaults to active span) [`d7dabe8`](https://github.com/karmaniverous/rrstack/commit/d7dabe8b6a0c7e84b2923f54d1743ecb71f989c4)
+
 #### [0.12.1](https://github.com/karmaniverous/rrstack/compare/0.12.0...0.12.1)
 
+> 27 September 2025
+
+- chore: release v0.12.1 [`9d4e451`](https://github.com/karmaniverous/rrstack/commit/9d4e4513a6402c0991b77d85f521e30a49d2d443)
 - options -&gt; props [`69fbbac`](https://github.com/karmaniverous/rrstack/commit/69fbbacc84346e911dfd759cc088276dd5ccc6ec)
 
 #### [0.12.0](https://github.com/karmaniverous/rrstack/compare/0.11.1...0.12.0)
