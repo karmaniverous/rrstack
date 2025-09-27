@@ -2,8 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.12.0](https://github.com/karmaniverous/rrstack/compare/0.11.1...0.12.0)
+
+- test(react): update useRRStack tests to options object API [`8ccb14e`](https://github.com/karmaniverous/rrstack/commit/8ccb14ec8fd37d5a7962c3470c873e7aee4ebf1f)
+- feat(react): debounced options-object API for useRRStackSelector; shared base types [`1472b4d`](https://github.com/karmaniverous/rrstack/commit/1472b4d44b6acc5af8302fb4f23719211e462196)
+- docs: update README and handbook; fix hook signatures [`414dd8b`](https://github.com/karmaniverous/rrstack/commit/414dd8bf6013161192926759ab3a4ac6a6c973ef)
+- updated docs [`b06a19c`](https://github.com/karmaniverous/rrstack/commit/b06a19cb5b0c12ea21ebe72435e1c701088b8e2f)
+
 #### [0.11.1](https://github.com/karmaniverous/rrstack/compare/0.11.0...0.11.1)
 
+> 25 September 2025
+
+- chore: release v0.11.1 [`031e7de`](https://github.com/karmaniverous/rrstack/commit/031e7de7182adc33075e83b9dded6275527b8efe)
 - perf(bounds): 100× faster getEffectiveBounds (no far-future scans) [`972b7a9`](https://github.com/karmaniverous/rrstack/commit/972b7a94374e29489033fe7080ee4273b45bf860)
 - docs(handbook): add deep-dive Algorithms page and link from Handbook [`9730ac7`](https://github.com/karmaniverous/rrstack/commit/9730ac7590238dd1ac1401576d64ccb0ad1bc4d4)
 - updated docs [`b2acba0`](https://github.com/karmaniverous/rrstack/commit/b2acba08111d9f6790eb8f470d51da4183b2de69)

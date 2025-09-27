@@ -15,11 +15,34 @@ unit‑aware operation.</p>
 handled correctly (spring forward/fall back).</li>
 <li>Later rules override earlier ones at covered instants (last‑wins cascade).</li>
 </ul>
+<p>Baseline (defaultEffect)</p>
+<ul>
+<li>The baseline behaves like a virtual, open‑ended span rule prepended to the
+cascade (lowest priority).</li>
+<li>Values:
+<ul>
+<li>'auto' (default): opposite of the first rule’s effect, or 'active' when
+no rules exist.</li>
+<li>'active' | 'blackout': use exactly that effect for uncovered instants.</li>
+</ul>
+</li>
+<li>All queries respect the baseline:
+<ul>
+<li><code>isActiveAt</code> classifies uncovered instants by the baseline.</li>
+<li><code>getSegments</code> yields baseline segments where no rule covers the window.</li>
+<li><code>classifyRange</code> accounts for baseline vs overlays.</li>
+<li><code>getEffectiveBounds</code> returns open‑sided bounds when the baseline is 'active'
+and no finite active contributors exist; open‑end detection remains O(1)
+via stack inspection.</li>
+</ul>
+</li>
+<li>The last‑wins rule still applies: later rules override the baseline anywhere
+they cover.</li>
+</ul>
 <p>Core coverage primitives</p>
 <ul>
-<li>Spans (continuous coverage):
+<li>Spans (continuous coverage):  - options.freq omitted → span rule; duration must be omitted,
 <ul>
-<li>options.freq omitted → span rule; duration must be omitted,</li>
 <li>start/end clamps live in options.starts/options.ends (open sides allowed),</li>
 <li>coverage test: s &lt;= t &lt; e (open sides use domainMin()/domainMax()).</li>
 </ul>
