@@ -10,8 +10,8 @@ import type { RRStack } from '../rrstack/RRStack';
 import {
   normalizeDebounce,
   RENDER_DEBOUNCE_MS,
-  type UseRRStackBaseOptions,
   type UseRRStackBaseOutput,
+  type UseRRStackBaseProps,
 } from './hooks/useRRStack.config';
 import { createLogger } from './hooks/useRRStack.logger';
 import {
@@ -19,7 +19,7 @@ import {
   type RenderBumper,
 } from './hooks/useRRStack.render';
 
-export interface UseRRStackSelectorOptions<T> extends UseRRStackBaseOptions {
+export interface UseRRStackSelectorProps<T> extends UseRRStackBaseProps {
   rrstack: RRStack;
   selector: (s: RRStack) => T;
   isEqual?: (a: T, b: T) => boolean;
@@ -42,7 +42,7 @@ export function useRRStackSelector<T>({
   renderDebounce,
   logger,
   resetKey,
-}: UseRRStackSelectorOptions<T>): UseRRStackSelectorOutput<T> {
+}: UseRRStackSelectorProps<T>): UseRRStackSelectorOutput<T> {
   const rrstackRef = useRef(rrstack);
   rrstackRef.current = rrstack;
 

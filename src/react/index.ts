@@ -4,13 +4,13 @@
  */
 export type {
   DebounceSpec,
-  UseRRStackBaseOptions,
   UseRRStackBaseOutput,
+  UseRRStackBaseProps,
 } from './hooks/useRRStack.config';
-export type { UseRRStackOptions, UseRRStackOutput } from './useRRStack';
+export type { UseRRStackOutput, UseRRStackProps } from './useRRStack';
 export { useRRStack } from './useRRStack';
 export type {
-  UseRRStackSelectorOptions,
   UseRRStackSelectorOutput,
+  UseRRStackSelectorProps,
 } from './useRRStackSelector';
 export { useRRStackSelector } from './useRRStackSelector';

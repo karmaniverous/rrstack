@@ -14,8 +14,8 @@ import {
   MUTATE_DEBOUNCE_MS,
   normalizeDebounce,
   RENDER_DEBOUNCE_MS,
-  type UseRRStackBaseOptions,
   type UseRRStackBaseOutput,
+  type UseRRStackBaseProps,
 } from './hooks/useRRStack.config';
 import { createRRStackFacade } from './hooks/useRRStack.facade';
 import { createLogger } from './hooks/useRRStack.logger';
@@ -33,7 +33,7 @@ import {
 } from './hooks/useRRStack.render';
 
 // Hook options. Trailing is always true for all debouncers by design.
-export interface UseRRStackOptions extends UseRRStackBaseOptions {
+export interface UseRRStackProps extends UseRRStackBaseProps {
   changeDebounce?: DebounceSpec;
   json: RRStackOptions;
   mutateDebounce?: DebounceSpec;
@@ -55,7 +55,7 @@ export function useRRStack({
   onChange,
   renderDebounce,
   resetKey,
-}: UseRRStackOptions): UseRRStackOutput {
+}: UseRRStackProps): UseRRStackOutput {
   // Recreate the instance intentionally when resetKey changes.
   const rrstack = useMemo(() => new RRStack(json), [resetKey]);
   // Refs for current instance and façade

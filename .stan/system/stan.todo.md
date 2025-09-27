@@ -17,9 +17,9 @@ Completed (recent)
 - Docs: add “Span rules” and “Baseline (defaultEffect)” sections to Handbook
   Overview; add baseline section to Algorithms page.
 - React hooks:
-  - Add shared UseRRStackBaseOptions (renderDebounce, logger, resetKey) and
+  - Add shared UseRRStackBaseProps (renderDebounce, logger, resetKey) and
     UseRRStackBaseOutput (version, flushRender) to keep hook APIs aligned.
-  - useRRStackOptions/Output now extend the shared base types (no behavior change).
+  - UseRRStackProps/Output now extend the shared base types (no behavior change).
   - useRRStackSelector:
     - Switch to single options-object signature:
       { rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? }.
@@ -205,3 +205,4 @@ D. Docs
 - README: keep intro/quick start lean; move detailed React content to handbook/react.md.
 - Handbook: document option shapes, defaults, staged-vs-compiled behavior, migration notes (0.11.0).
 - Bounds: document probe-free open-end detection and finite latest-end strategy.
+

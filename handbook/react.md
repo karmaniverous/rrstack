@@ -29,7 +29,7 @@ are coalesced:
   Signature
 
 ```ts
-function useRRStack(options: {
+function useRRStack(props: {
   json: RRStackOptions;
   onChange?: (s: RRStack) => void;
   resetKey?: string | number;
@@ -60,9 +60,9 @@ function useRRStack(options: {
 };
 ```
 
-Hook options and outputs (quick reference)
+Hook props and outputs (quick reference)
 
-- Options
+- Props
   - resetKey: string | number
     - Recreate the RRStack instance intentionally when this value changes (e.g., switching documents).
   - changeDebounce: true | number | { delay?: number; leading?: boolean }
@@ -78,7 +78,7 @@ Hook options and outputs (quick reference)
   - version: number (incremented on debounced render); use as a memo key for heavy derivations.
   - flushChanges(): void; flushMutations(): void; cancelMutations(): void; flushRender(): void
 
-Parameters (options object)
+Parameters (props object)
 
 - `json: RRStackOptions` — JSON input for the stack (same shape as `new RRStack(opts)`). A new instance is only created when `resetKey` changes.
 - `onChange?: (s: RRStack) => void` — optional callback fired after successful mutations (post‑compile). The constructor does not trigger this callback.
@@ -393,7 +393,7 @@ mutations and the component only re‑renders when `isEqual` deems the derived
 value changed (default `Object.is`).
 
 ```ts
-function useRRStackSelector<T>(options: {
+function useRRStackSelector<T>(props: {
   rrstack: RRStack;
   selector: (s: RRStack) => T;
   isEqual?: (a: T, b: T) => boolean; // default Object.is
@@ -412,7 +412,7 @@ function useRRStackSelector<T>(options: {
 };
 ```
 
-Parameters (options object)
+Parameters (props object)
 
 - `rrstack: RRStack` — the live instance from `useRRStack`.
 - `selector: (s) => T` — computes the derived value.

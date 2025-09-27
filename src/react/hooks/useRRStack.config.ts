@@ -37,7 +37,7 @@ export const normalizeDebounce = (
 /**
  * Shared base options for RRStack React hooks.
  */
-export interface UseRRStackBaseOptions {
+export interface UseRRStackBaseProps {
   renderDebounce?: DebounceSpec;
   logger?: boolean | ((e: { type: LogEventType; rrstack: RRStack }) => void);
   resetKey?: string | number;
