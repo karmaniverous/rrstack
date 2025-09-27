@@ -11,6 +11,17 @@ const ruleAt = (h: number, label: string): RuleJson => ({
 });
 
 describe('RRStack convenience mutators', () => {
+  it('addRule with no args appends a default active open span', () => {
+    const s = new RRStack({ timezone: 'UTC', rules: [] });
+    s.addRule(); // no arguments
+    expect(s.rules.length).toBe(1);
+    const r = s.rules[0];
+    expect(r.effect).toBe('active');
+    // span defaults: duration omitted; empty options object
+    expect(r.duration).toBeUndefined();
+    expect(r.options).toEqual({});
+  });
+
   it('addRule inserts at index or appends when index omitted', () => {
     const s = new RRStack({ timezone: 'UTC', rules: [] });
     s.addRule(ruleAt(5, 'A'));

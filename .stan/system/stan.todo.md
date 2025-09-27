@@ -6,12 +6,16 @@ Last updated: 2025-09-27 (UTC)
 
 Completed (recent)
 
+- Feat(core/react): allow rrstack.addRule() to be called with no arguments.
+  Defaults to an active, open-ended span rule: `{ effect: 'active', options: {} }`.
+  Updated both core RRStack.addRule and the React façade to mirror behavior.
+  Added a unit test covering the no-arg case.
+
 - Docs: align React hooks to single-options signatures across README and
   Handbook; update bullets and examples for:
   - useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?,
     renderDebounce?, logger? }) → { rrstack, version, flushChanges,
-    flushMutations, cancelMutations, flushRender }
-  - useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?,
+    flushMutations, cancelMutations, flushRender }  - useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?,
     resetKey? }) → { selection, version, flushRender }
 - Docs: fix installation/JSON Schema code fences in README.
 - Docs: add “Span rules” and “Baseline (defaultEffect)” sections to Handbook

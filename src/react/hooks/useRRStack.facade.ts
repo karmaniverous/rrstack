@@ -43,10 +43,12 @@ export const createRRStackFacade = (
         };
       }
       if (prop === 'addRule') {
-        return (rule: RuleJson, index?: number) => {
+        return (rule?: RuleJson, index?: number) => {
           const arr = mutate.ensureRules();
-          if (index === undefined) arr.push(rule);
-          else arr.splice(index, 0, rule);
+          const effectiveRule: RuleJson =
+            rule ?? ({ effect: 'active', options: {} } as RuleJson);
+          if (index === undefined) arr.push(effectiveRule);
+          else arr.splice(index, 0, effectiveRule);
           mutate.schedule();
         };
       }

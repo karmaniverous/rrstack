@@ -362,25 +362,28 @@ export class RRStack {
   /**
    * Insert a rule at a specific index (or append when index is omitted).
    * Delegates to the {@link rules} setter (single recompile).
+   * When called with no arguments, inserts a default span rule:
+   * `{ effect: 'active', options: {} }`.
    */
-  addRule(rule: RuleJson, index?: number): void {
+  addRule(rule?: RuleJson, index?: number): void {
+    // Default to an active, open-ended span when no rule is provided.
+    const effectiveRule: RuleJson = rule ?? { effect: 'active', options: {} };
     // Lightweight validation
-    RuleLiteSchema.parse(rule);
+    RuleLiteSchema.parse(effectiveRule);
     const next = [...(this.options.rules as RuleJson[])];
     if (index === undefined) {
-      next.push(rule);
+      next.push(effectiveRule);
     } else {
       if (!Number.isInteger(index))
         throw new TypeError('index must be an integer');
       if (index < 0 || index > next.length)
         throw new RangeError('index out of range');
-      next.splice(index, 0, rule);
+      next.splice(index, 0, effectiveRule);
     }
     this.rules = next;
   }
 
-  /**
-   * Remove the rule at the specified index.
+  /**   * Remove the rule at the specified index.
    * Delegates to the {@link rules} setter (single recompile).
    *
    * @param i - Zero-based index of the rule to remove.
