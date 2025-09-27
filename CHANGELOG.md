@@ -2,11 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.12.1](https://github.com/karmaniverous/rrstack/compare/0.12.0...0.12.1)
+
+- options -&gt; props [`69fbbac`](https://github.com/karmaniverous/rrstack/commit/69fbbacc84346e911dfd759cc088276dd5ccc6ec)
+
 #### [0.12.0](https://github.com/karmaniverous/rrstack/compare/0.11.1...0.12.0)
+
+> 27 September 2025
 
 - test(react): update useRRStack tests to options object API [`8ccb14e`](https://github.com/karmaniverous/rrstack/commit/8ccb14ec8fd37d5a7962c3470c873e7aee4ebf1f)
 - feat(react): debounced options-object API for useRRStackSelector; shared base types [`1472b4d`](https://github.com/karmaniverous/rrstack/commit/1472b4d44b6acc5af8302fb4f23719211e462196)
 - docs: update README and handbook; fix hook signatures [`414dd8b`](https://github.com/karmaniverous/rrstack/commit/414dd8bf6013161192926759ab3a4ac6a6c973ef)
+- chore: release v0.12.0 [`df31048`](https://github.com/karmaniverous/rrstack/commit/df31048787c03e1d3b6204af46f3b46a467b4c0d)
 - updated docs [`b06a19c`](https://github.com/karmaniverous/rrstack/commit/b06a19cb5b0c12ea21ebe72435e1c701088b8e2f)
 
 #### [0.11.1](https://github.com/karmaniverous/rrstack/compare/0.11.0...0.11.1)
