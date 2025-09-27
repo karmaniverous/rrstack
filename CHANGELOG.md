@@ -2,8 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.12.3](https://github.com/karmaniverous/rrstack/compare/0.12.2...0.12.3)
+
+- feat: add DescribeOptions.formatTimeZone for custom tz labels [`a3df5a2`](https://github.com/karmaniverous/rrstack/commit/a3df5a292b77b9f720edb1840e81f78ccdf93ca5)
+
 #### [0.12.2](https://github.com/karmaniverous/rrstack/compare/0.12.1...0.12.2)
 
+> 27 September 2025
+
+- chore: release v0.12.2 [`07ca515`](https://github.com/karmaniverous/rrstack/commit/07ca515b87e978e3169780821d96106b4794f586)
 - feat: allow addRule() with no args (defaults to active span) [`d7dabe8`](https://github.com/karmaniverous/rrstack/commit/d7dabe8b6a0c7e84b2923f54d1743ecb71f989c4)
 
 #### [0.12.1](https://github.com/karmaniverous/rrstack/compare/0.12.0...0.12.1)
