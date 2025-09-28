@@ -9,6 +9,13 @@ Completed (recent)
 - Requirements: integrate a detailed plan for pluggable rule descriptions (descriptor/AST + translators) and reusable frequency lexicon exports, with configuration points, exports, and acceptance criteria. Updated dev plan with prioritized implementation steps.
 - Tests(describe): validate that weekday position (“third Tuesday”) and time (“5:00”, “9:00”) appear in rule descriptions (describeRule/describeCompiledRule).
 
+- Refactor(describe): prefer Luxon for date/time formatting; compose strings only
+  - formatLocalTime now uses Luxon toFormat in the rule timezone (h12/h23, hm/hms/auto).
+  - Month names rendered via Luxon (LLLL) and lower‑cased for strict‑en output.
+  - Removed manual hour/meridiem assembly; code focuses on composing phrases.
+  - Lint: avoid template interpolation of non‑string/nullable values (String() and conditional appends).
+  - No API changes; outputs preserved for existing tests.
+
 - Feat(describe): COUNT/UNTIL phrasing and YEARLY multi‑month lists
   - Append “for N occurrences” when COUNT is present.
   - Append “until YYYY‑MM‑DD” (inclusive start semantics) using descriptor tz/unit.

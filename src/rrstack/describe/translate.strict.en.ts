@@ -33,20 +33,7 @@ const ORD_SHORT: Partial<Record<number, string>> = {
   5: '5th',
   [-1]: 'last',
 };
-const MONTH_NAME_EN: Record<number, string> = {
-  1: 'january',
-  2: 'february',
-  3: 'march',
-  4: 'april',
-  5: 'may',
-  6: 'june',
-  7: 'july',
-  8: 'august',
-  9: 'september',
-  10: 'october',
-  11: 'november',
-  12: 'december',
-};
+
 const joinList = (items: string[]): string =>
   items.length <= 1
     ? (items[0] ?? '')
@@ -82,7 +69,9 @@ const mergeLexicon = (
   };
 };
 
-const formatTime = (
+// Use Luxon to render a local time-of-day string in the rule’s timezone.
+const formatLocalTime = (
+  tz: string,
   hours?: number[],
   minutes?: number[],
   seconds?: number[],
@@ -93,24 +82,23 @@ const formatTime = (
   const h = hours[0];
   const m = minutes?.[0] ?? 0;
   const s = seconds?.[0] ?? 0;
+  const dt = DateTime.fromObject(
+    { hour: h, minute: m, second: s, millisecond: 0 },
+    { zone: tz },
+  );
+  const useSeconds = tf === 'hms' || (tf === 'auto' && s > 0);
   if (hc === 'h12') {
-    const ampm = h < 12 ? 'am' : 'pm';
-    const h12 = (h % 12 || 12).toString();
-    const mm = String(m).padStart(2, '0');
-    if (tf === 'hms') {
-      const ss = String(s).padStart(2, '0');
-      return `${h12}:${mm}:${ss} ${ampm}`;
-    }
-    return `${h12}:${mm} ${ampm}`;
+    return dt.toFormat(useSeconds ? 'h:mm:ss a' : 'h:mm a');
   }
-  const hh = String(h);
-  const mm = String(m).padStart(2, '0');
-  if (tf === 'hms') {
-    const ss = String(s).padStart(2, '0');
-    return `${hh}:${mm}:${ss}`;
-  }
-  return `${hh}:${mm}`;
+  // 24-hour, no leading zero for hour
+  return dt.toFormat(useSeconds ? 'H:mm:ss' : 'H:mm');
 };
+
+// Use Luxon to render a month name in the rule’s timezone; strict-en expects lower case.
+const monthName = (tz: string, month: number): string =>
+  DateTime.fromObject({ year: 2000, month, day: 1 }, { zone: tz })
+    .toFormat('LLLL')
+    .toLowerCase();
 
 const everyWithInterval = (
   lex: FrequencyLexicon,
@@ -135,7 +123,7 @@ const withCountUntil = (phrase: string, d: RuleDescriptorRecur): string => {
       d.unit === 'ms'
         ? DateTime.fromMillis(d.until, { zone: d.tz }).toISODate()
         : DateTime.fromSeconds(d.until, { zone: d.tz }).toISODate();
-    out += ` until ${ymd}`;
+    if (ymd) out += ` until ${ymd}`;
   }
   return out;
 };
@@ -149,7 +137,8 @@ const phraseRecur = (
 
   // DAILY with time “at …”
   if (d.freq === 'daily') {
-    const tm = formatTime(
+    const tm = formatLocalTime(
+      d.tz,
       d.by.hours,
       d.by.minutes,
       d.by.seconds,
@@ -164,7 +153,8 @@ const phraseRecur = (
     if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
       const names = d.by.weekdays.map((w) => weekdayName(w.weekday));
       const onDays = joinList(names);
-      const tm = formatTime(
+      const tm = formatLocalTime(
+        d.tz,
         d.by.hours,
         d.by.minutes,
         d.by.seconds,
@@ -184,8 +174,9 @@ const phraseRecur = (
       Array.isArray(d.by.months) && d.by.months.length === 1
         ? d.by.months[0]
         : undefined;
-    if (m && MONTH_NAME_EN[m]) {
-      const tm = formatTime(
+    if (m && m >= 1 && m <= 12) {
+      const tm = formatLocalTime(
+        d.tz,
         d.by.hours,
         d.by.minutes,
         d.by.seconds,
@@ -194,7 +185,7 @@ const phraseRecur = (
       );
       if (Array.isArray(d.by.monthDays) && d.by.monthDays.length === 1) {
         return withCountUntil(
-          `${base} on ${MONTH_NAME_EN[m]} ${String(d.by.monthDays[0])}${
+          `${base} on ${monthName(d.tz, m)} ${String(d.by.monthDays[0])}${
             tm ? ` at ${tm}` : ''
           }`,
           d,
@@ -211,7 +202,7 @@ const phraseRecur = (
         if (typeof nth === 'number') {
           const o = ord(nth, opts?.ordinals ?? 'long');
           return withCountUntil(
-            `${base} in ${MONTH_NAME_EN[m]} on the ${o} ${weekdayName(
+            `${base} in ${monthName(d.tz, m)} on the ${o} ${weekdayName(
               w.weekday,
             )}${tm ? ` at ${tm}` : ''}`,
             d,
@@ -224,10 +215,11 @@ const phraseRecur = (
         .filter(
           (mm): mm is number => typeof mm === 'number' && mm >= 1 && mm <= 12,
         )
-        .map((mm) => MONTH_NAME_EN[mm]);
+        .map((mm) => monthName(d.tz, mm));
       if (months.length) {
         const inMonths = joinList(months);
-        const tm2 = formatTime(
+        const tm2 = formatLocalTime(
+          d.tz,
           d.by.hours,
           d.by.minutes,
           d.by.seconds,
@@ -255,7 +247,8 @@ const phraseRecur = (
       if (typeof nthVal === 'number') {
         const o = ord(nthVal, opts?.ordinals ?? 'long');
         const name = weekdayName(w.weekday);
-        const tm = formatTime(
+        const tm = formatLocalTime(
+          d.tz,
           d.by.hours,
           d.by.minutes,
           d.by.seconds,
