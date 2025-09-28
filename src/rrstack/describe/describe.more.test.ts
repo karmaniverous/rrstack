@@ -115,4 +115,46 @@ describe('rule descriptions (extended scenarios)', () => {
     expect(lower).toContain('on the 15');
     expect(lower).toContain('5:00');
   });
+
+  it('yearly: single month + weekday (no position) → “in april on thursday ...”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'yearly',
+        bymonth: [4],
+        byweekday: [RRule.TH],
+        byhour: [5],
+        byminute: [0],
+        bysecond: [0],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('in april');
+    expect(lower).toContain('on thursday');
+    expect(lower).toContain('5:00');
+  });
+
+  it('yearly: multiple months + weekday (no position) → “in january, april on thursday ...”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'yearly',
+        bymonth: [1, 4],
+        byweekday: [RRule.TH],
+        byhour: [5],
+        byminute: [0],
+        bysecond: [0],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    // The month names list is localized/lowercased; expect both month tokens present
+    expect(lower).toContain('in january');
+    expect(lower).toContain('april');
+    expect(lower).toContain('on thursday');
+    expect(lower).toContain('5:00');
+  });
 });

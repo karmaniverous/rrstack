@@ -212,6 +212,7 @@ const phraseRecur = (
           d,
         );
       }
+      // Weekday position (nth or setpos) → “on the third tuesday”
       if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
         const w = d.by.weekdays[0];
         const nth =
@@ -234,6 +235,17 @@ const phraseRecur = (
           );
         }
       }
+      // Weekday without position (no nth/setpos) → “in april on thursday(s)”
+      if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
+        const names = d.by.weekdays.map((w) =>
+          localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
+        );
+        const onDays = joinList(names);
+        return withCountUntil(
+          `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on ${onDays}${tm ? ` at ${tm}` : ''}`,
+          d,
+        );
+      }
     }
     if (Array.isArray(d.by.months) && d.by.months.length > 1) {
       const months = d.by.months
@@ -251,6 +263,17 @@ const phraseRecur = (
           opts?.timeFormat ?? 'hm',
           opts?.hourCycle ?? 'h23',
         );
+        // If weekday(s) provided without position, include them
+        if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
+          const names = d.by.weekdays.map((w) =>
+            localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
+          );
+          const onDays = joinList(names);
+          return withCountUntil(
+            `${base} in ${inMonths} on ${onDays}${tm2 ? ` at ${tm2}` : ''}`,
+            d,
+          );
+        }
         return withCountUntil(
           `${base} in ${inMonths}${tm2 ? ` at ${tm2}` : ''}`,
           d,
