@@ -65,7 +65,7 @@ function Harness({ json }: { json: RRStackOptions }) {
         const next: RuleJson[] = [];
         for (let i = 0; i < n; i++) {
           const idx = (seq.current = (seq.current + 1) % 24);
-          next.push(ruleAt(idx, `S${i}`));
+          next.push(ruleAt(idx, `S${String(i)}`));
         }
         rrstack.rules = next;
       }
