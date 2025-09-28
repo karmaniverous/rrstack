@@ -9,7 +9,11 @@ export type { DescribeOptions } from './rrstack/describe';
 export { describeRule } from './rrstack/describe';
 export { fromIsoDuration, toIsoDuration } from './rrstack/duration';
 // Description translators & lexicon
-export type { RuleDescriptor } from './rrstack/describe/descriptor';
+export type {
+  RuleDescriptor,
+  RuleDescriptorRecur,
+  RuleDescriptorSpan,
+} from './rrstack/describe/descriptor';
 export type {
   FrequencyAdjectiveLabels,
   FrequencyLexicon,

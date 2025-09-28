@@ -166,3 +166,5 @@ Completed (recent)
   - Set IS_REACT_ACT_ENVIRONMENT and wrapped root.render/addRule/setRules in act() to silence warnings and keep benches deterministic.
 
 - Docs(description/lexicon): export FrequencyAdjectiveLabels, FrequencyNounLabels, FrequencyLexicon, OrdinalStyle, and RuleDescriptor from the package root to include them in Typedoc; clears warnings about referenced-but-missing types.
++- Docs(description/lexicon): export RuleDescriptorRecur and RuleDescriptorSpan from the package root to include descriptor subtypes in Typedoc; clears remaining warnings referencing RuleDescriptor.
+
