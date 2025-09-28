@@ -2,9 +2,17 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.13.2](https://github.com/karmaniverous/rrstack/compare/0.13.1...0.13.2)
+
+- fix(describe): use short ordinals for BYMONTHDAY lists [`aee0761`](https://github.com/karmaniverous/rrstack/commit/aee0761870fdfa464789d1319e846c8717b33907)
+- feat(describe): lists for month-days and times; tests [`2d84eb3`](https://github.com/karmaniverous/rrstack/commit/2d84eb3322f602693c91f8fccb87dc5eefca0a3f)
+
 #### [0.13.1](https://github.com/karmaniverous/rrstack/compare/0.13.0...0.13.1)
 
+> 29 September 2025
+
 - feat(describe): yearly month(s) + weekday(s) without position [`977fc96`](https://github.com/karmaniverous/rrstack/commit/977fc96bcf61795c8ef0203368e68b6678d33894)
+- chore: release v0.13.1 [`5f2cae5`](https://github.com/karmaniverous/rrstack/commit/5f2cae591ba92b707d7e73980358dac53a521a02)
 - updated docs [`42eab8e`](https://github.com/karmaniverous/rrstack/commit/42eab8e0cc43242044ff9e42888b75aff2b4b01a)
 - test(describe): cover span includeBounds in RRStack.describeRule [`a3d9561`](https://github.com/karmaniverous/rrstack/commit/a3d95616823f933f27385b305c3f26f0560cd4c6)
 
