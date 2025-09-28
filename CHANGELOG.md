@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.13.1](https://github.com/karmaniverous/rrstack/compare/0.13.0...0.13.1)
+
+- feat(describe): yearly month(s) + weekday(s) without position [`977fc96`](https://github.com/karmaniverous/rrstack/commit/977fc96bcf61795c8ef0203368e68b6678d33894)
+- updated docs [`42eab8e`](https://github.com/karmaniverous/rrstack/commit/42eab8e0cc43242044ff9e42888b75aff2b4b01a)
+- test(describe): cover span includeBounds in RRStack.describeRule [`a3d9561`](https://github.com/karmaniverous/rrstack/commit/a3d95616823f933f27385b305c3f26f0560cd4c6)
+
 #### [0.13.0](https://github.com/karmaniverous/rrstack/compare/0.12.4...0.13.0)
+
+> 28 September 2025
 
 - docs(plan): reprioritize Next up; docs/examples first [`10f9aae`](https://github.com/karmaniverous/rrstack/commit/10f9aae3109b0550912a4aefd5416e031698544a)
 - fix(describe): add monthly BYSETPOS+weekday phrasing; resolve lints [`4739b04`](https://github.com/karmaniverous/rrstack/commit/4739b04b0b7ad4f842ea092010fa39aa0a2749b6)
@@ -10,6 +18,7 @@ All notable changes to this project will be documented in this file. Dates are d
 - docs: extract requirements; refactor dev plan; trim project prompt [`dad62a9`](https://github.com/karmaniverous/rrstack/commit/dad62a9979912f3a5b795ca91be4781514d60ba8)
 - feat(tests): add BENCH-gated perf suite; fix lint in translator [`bb98cfa`](https://github.com/karmaniverous/rrstack/commit/bb98cfa08df02cbcdec306fce2c8f2161d426641)
 - refactor(describe): use Luxon for date/time formatting; keep composition-only [`46da672`](https://github.com/karmaniverous/rrstack/commit/46da672cfd86e2ea663d7276e6112862b0b198f0)
+- chore: release v0.13.0 [`ad74033`](https://github.com/karmaniverous/rrstack/commit/ad7403350473499640845579aafbb86df7fd8ccf)
 - fix(describe): accept null in asArray and satisfy template literal lint [`d3aca4d`](https://github.com/karmaniverous/rrstack/commit/d3aca4df45582cb14df10bfc7a50505281648b94)
 - perf(bench): add monthly closed and yearly count-limited bounds cases [`79556c6`](https://github.com/karmaniverous/rrstack/commit/79556c6a0f051fbd8c86f049e0a253038c1829b3)
 - bench: add Node-only mutator benches; split React add bench [`d5d05bd`](https://github.com/karmaniverous/rrstack/commit/d5d05bd7211c43debe2a77f696dbe1632b1f8c7a)
