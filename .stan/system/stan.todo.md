@@ -6,86 +6,53 @@ Last updated: 2025-09-28 (UTC)
 
 Completed (recent)
 
-- Requirements: integrate a detailed plan for pluggable rule descriptions
-  (descriptor/AST + translators) and reusable frequency lexicon exports, with
-  configuration points, exports, and acceptance criteria. Updated dev plan with
-  prioritized implementation steps.
-- Tests(describe): validate that weekday position (“third Tuesday”) and time
-  (“5:00”, “9:00”) appear in rule descriptions (describeRule/describeCompiledRule).
+- Requirements: integrate a detailed plan for pluggable rule descriptions (descriptor/AST + translators) and reusable frequency lexicon exports, with configuration points, exports, and acceptance criteria. Updated dev plan with prioritized implementation steps.
+- Tests(describe): validate that weekday position (“third Tuesday”) and time (“5:00”, “9:00”) appear in rule descriptions (describeRule/describeCompiledRule).
 
-- Fix(typecheck/lint): handle null values in rrule option arrays and satisfy
-  template‑expression lint
-  - asArray helper now accepts null (rrule Options fields may be number |
-    number[] | null), resolving TS2345 in describe.ts.
-  - toOrdinal now string‑coerces numeric template literal (restrict‑template‑
-    expressions), clearing the ESLint error.
+- Fix(typecheck/lint): handle null values in rrule option arrays and satisfy template‑expression lint
+  - asArray helper now accepts null (rrule Options fields may be number | number[] | null), resolving TS2345 in describe.ts.
+  - toOrdinal now string‑coerces numeric template literal (restrict‑template‑ expressions), clearing the ESLint error.
+
+- Fix(describe): monthly bysetpos + weekday phrasing and lint cleanups
+  - strict-en translator now uses BYSETPOS when weekday lacks an explicit nth, yielding “on the <ordinal> <weekday>” (e.g., “third tuesday”).
+  - Address lints: remove unused import in describe.ts; replace enum switch with a numeric map; avoid unnecessary nullish checks and coerce interval to string in templates.
 
 - Feat(describe): minimal strict‑en phrasing to satisfy tests
   - Implemented a targeted, internal description path for:
     - DAILY rules with time → “every day at h:mm”,
     - MONTHLY rules with bysetpos + single weekday → “every month on the <ordinal> <weekday> [at h:mm]”.
   - Fallback remains rrule.toText() for other patterns.
-  - No public translator/lexicon API yet; this is a conservative step to make
-    tests pass without changing the broader surface or docs.
+  - No public translator/lexicon API yet; this is a conservative step to make tests pass without changing the broader surface or docs.
   - Kept includeTimeZone/includeBounds behavior unchanged.
-  - Next: complete the planned descriptor/translator architecture and frequency
-    lexicon exports, then migrate describeRule/describeCompiledRule to use the
-    pluggable translator by default (strict‑en), preserving current wording for
-    existing scenarios.
+  - Next: complete the planned descriptor/translator architecture and frequency lexicon exports, then migrate describeRule/describeCompiledRule to use the pluggable translator by default (strict‑en), preserving current wording for existing scenarios.
 
-- Feat(core): add RRStack.formatInstant(t, opts?) to format an instant using
-  the stack’s configured timezone and timeUnit. Defaults to ISO (suppressing
-  milliseconds); supports { format?: string; locale?: string } via Luxon.  Added unit tests for ms/s and a custom format string.
+- Feat(core): add RRStack.formatInstant(t, opts?) to format an instant using the stack’s configured timezone and timeUnit. Defaults to ISO (suppressing milliseconds); supports { format?: string; locale?: string } via Luxon. Added unit tests for ms/s and a custom format string.
 
-- Feat(core): add DescribeOptions.formatTimeZone to customize the timezone
-  label in rule descriptions. Applied in describeCompiledRule for both recurring
-  and span rules when includeTimeZone is true. Added tests for recurring and  span paths.
+- Feat(core): add DescribeOptions.formatTimeZone to customize the timezone label in rule descriptions. Applied in describeCompiledRule for both recurring and span rules when includeTimeZone is true. Added tests for recurring and span paths.
 
-- Feat(core/react): allow rrstack.addRule() to be called with no arguments.
-  Defaults to an active, open-ended span rule: `{ effect: 'active', options: {} }`.
-  Updated both core RRStack.addRule and the React façade to mirror behavior.
-  Added a unit test covering the no-arg case.
-- Docs: align React hooks to single-options signatures across README and
-  Handbook; update bullets and examples for:
-  - useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?,
-    renderDebounce?, logger? }) → { rrstack, version, flushChanges,
-    flushMutations, cancelMutations, flushRender }  - useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?,
-    resetKey? }) → { selection, version, flushRender }
+- Feat(core/react): allow rrstack.addRule() to be called with no arguments. Defaults to an active, open-ended span rule: `{ effect: 'active', options: {} }`. Updated both core RRStack.addRule and the React façade to mirror behavior. Added a unit test covering the no-arg case.
+- Docs: align React hooks to single-options signatures across README and Handbook; update bullets and examples for:
+  - useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? }) → { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender } - useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? }) → { selection, version, flushRender }
 - Docs: fix installation/JSON Schema code fences in README.
-- Docs: add “Span rules” and “Baseline (defaultEffect)” sections to Handbook
-  Overview; add baseline section to Algorithms page.
+- Docs: add “Span rules” and “Baseline (defaultEffect)” sections to Handbook Overview; add baseline section to Algorithms page.
 - React hooks:
-  - Add shared UseRRStackBaseProps (renderDebounce, logger, resetKey) and
-    UseRRStackBaseOutput (version, flushRender) to keep hook APIs aligned.
+  - Add shared UseRRStackBaseProps (renderDebounce, logger, resetKey) and UseRRStackBaseOutput (version, flushRender) to keep hook APIs aligned.
   - UseRRStackProps/Output now extend the shared base types (no behavior change).
   - useRRStackSelector:
-    - Switch to single options-object signature:
-      { rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? }.
+    - Switch to single options-object signature: { rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? }.
     - Return { selection, version, flushRender } to match useRRStack naming.
-    - Support renderDebounce with identical semantics to useRRStack (trailing
-      always true; optional leading; default 50 ms via shared constants).
+    - Support renderDebounce with identical semantics to useRRStack (trailing always true; optional leading; default 50 ms via shared constants).
     - Logger parity (init/reset/mutate/flushRender) via shared createLogger.
-- Tests(react): align useRRStack tests to new single-options signature
-  ({ json, onChange?, ... }); update selector usage; resolves TS2554/TS2345.
+- Tests(react): align useRRStack tests to new single-options signature ({ json, onChange?, ... }); update selector usage; resolves TS2554/TS2345.
 - Perf(core): 100× faster effective-bounds
-  - Open-end detection is now O(1), purely by stack inspection (no far-future
-    rrule scans). The cascade is open-ended iff the last open-ended candidate
-    is an active source (active open span, infinite active recurrence with any
-    start, or baseline active). A blackout open-ended span closes the future.
-  - Latest bound computation is finite/local. It derives a finite cutoff from
-    the last open-ended blackout span (if present) and only inspects finite
-    contributors (spans, count-limited recurrences, until-limited recurrences).
-  - getEffectiveBounds now computes earliest → open-end → latest; emptiness is
-    decided without probing the far future.
+  - Open-end detection is now O(1), purely by stack inspection (no far-future rrule scans). The cascade is open-ended iff the last open-ended candidate is an active source (active open span, infinite active recurrence with any start, or baseline active). A blackout open-ended span closes the future.
+  - Latest bound computation is finite/local. It derives a finite cutoff from the last open-ended blackout span (if present) and only inspects finite contributors (spans, count-limited recurrences, until-limited recurrences).
+  - getEffectiveBounds now computes earliest → open-end → latest; emptiness is decided without probing the far future.
   - Latest end details:
-    - Short-circuit to the finite probe when the cascade is active immediately
-      before it (probe is the latest end).
-    - In recurrence backstep, use strict e > cursor to avoid skipping the final
-      day when end == probe.
-    - If the bounded reverse sweep finds no earlier transition, return the probe.- Docs(handbook/react): ensure examples include changeDebounce, mutateDebounce,
-      and renderDebounce with inline explanations across examples.
-- Docs(handbook): add “Algorithms (deep dive)” page covering isActiveAt,
-  getSegments, classifyRange, and getEffectiveBounds.
+    - Short-circuit to the finite probe when the cascade is active immediately before it (probe is the latest end).
+    - In recurrence backstep, use strict e > cursor to avoid skipping the final day when end == probe.
+    - If the bounded reverse sweep finds no earlier transition, return the probe.- Docs(handbook/react): ensure examples include changeDebounce, mutateDebounce, and renderDebounce with inline explanations across examples.
+- Docs(handbook): add “Algorithms (deep dive)” page covering isActiveAt, getSegments, classifyRange, and getEffectiveBounds.
 - Docs(handbook/react): add debounced form control examples (controlled and uncontrolled); enumerate useRRStack options and outputs.- Policy(project): record “never bump package version or edit CHANGELOG.md” in stan.project.md (release workflow owns them).
 - Feat(react): replace apply/applyDebounce with mutateDebounce (proxy/staging) - All rrstack mutators/assignments are staged and committed once per window. - Add flushMutations()/cancelMutations(); staged reads overlay rules/timezone; queries remain compiled-only until commit.
 - API rename: debounce → changeDebounce; flush() → flushChanges().
@@ -93,12 +60,9 @@ Completed (recent)
 - Feat(react): renderDebounce simplified (final paint always; optional leading).
 - Docs: README/Handbook updated with new options/helpers and staged-vs-compiled notes.
 - Chore(tests): follow-up pending to adapt or extend tests for mutateDebounce semantics.
-- Chore(lint): replace unsafe any[] spread in normalizeOptions with
-  RuleLiteSchema-based coercion to RuleJson[].
-- Fix(types): coalesce defaulted optionals in normalizeOptions (timeUnit,
-  defaultEffect, rules) to satisfy RRStackOptionsNormalized (TS-safe).
-- Fix(schema gen): preserve 'rules' as optional with default in generator
-  (extend) so the JSON Schema only requires 'timezone'.- Feat(schema): make all defaulted top-level properties optional (timeUnit, defaultEffect, rules) and regenerate JSON Schema (only 'timezone' required).
+- Chore(lint): replace unsafe any[] spread in normalizeOptions with RuleLiteSchema-based coercion to RuleJson[].
+- Fix(types): coalesce defaulted optionals in normalizeOptions (timeUnit, defaultEffect, rules) to satisfy RRStackOptionsNormalized (TS-safe).
+- Fix(schema gen): preserve 'rules' as optional with default in generator (extend) so the JSON Schema only requires 'timezone'.- Feat(schema): make all defaulted top-level properties optional (timeUnit, defaultEffect, rules) and regenerate JSON Schema (only 'timezone' required).
 - Tests: add segment and classifyRange cases under defaultEffect baseline to exercise streaming and classification with a baseline.
 - Docs: README “JSON Shapes and Types” now includes defaultEffect with a brief baseline semantics note.- Chore(lint): escape '>' in TSDoc for baselineEffect to clear tsdoc/syntax warnings.
 - Fix(core): include defaultEffect when freezing updated options in RRStack setters (timezone, rules, updateOptions) and refine baselineEffect to satisfy lint (no-unnecessary-condition).
@@ -112,21 +76,14 @@ Completed (recent)
   - No behavior changes to core scheduling algorithms.
 
 - Fix(react): remove stray file at b/src/react/mutateFacade.ts (erroneous path).
-- Fix(react): complete src/react/mutateFacade.ts to resolve parser error and
-  align with staging/commit semantics (RefObject, typed spreads, top/bottom/set).
+- Fix(react): complete src/react/mutateFacade.ts to resolve parser error and align with staging/commit semantics (RefObject, typed spreads, top/bottom/set).
 
 - Tests(react): migrate useRRStack tests to new API/semantics:
   - debounce → changeDebounce; flush() → flushChanges().
   - Leading debounce now includes a final trailing autosave; expectations updated.
-  - Harden tests against dev double-invocation of effects (React 18/19):
-    guard rrstack.addRule bursts in useEffect with once flags to avoid
-    duplicate mutations during mount in test environment.
-- Docs: update README and handbook/react.md to reflect changeDebounce /
-  mutateDebounce / renderDebounce and new helpers (flushChanges,
-  flushMutations, cancelMutations, flushRender). Note staged vs compiled
-  behavior and migration notes.
-- Lint: address prefer-nullish-coalescing in useRRStack.ts (use ??= for
-  singleton initializations of debouncers/managers).
+  - Harden tests against dev double-invocation of effects (React 18/19): guard rrstack.addRule bursts in useEffect with once flags to avoid duplicate mutations during mount in test environment.
+- Docs: update README and handbook/react.md to reflect changeDebounce / mutateDebounce / renderDebounce and new helpers (flushChanges, flushMutations, cancelMutations, flushRender). Note staged vs compiled behavior and migration notes.
+- Lint: address prefer-nullish-coalescing in useRRStack.ts (use ??= for singleton initializations of debouncers/managers).
 
 ---
 
@@ -224,9 +181,7 @@ A. Decompose useRRStack (keep hook < ~200 LOC)
   7. react/useRRStack.ts — thin orchestrator wiring modules; returns { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }.
 - Prefer existing helpers (changeEmitter, renderBump, mutateFacade) where they align; migrate/rename into hooks/\* to match the plan.
 
-  re-run knip to confirm no unused files remain under src/react. The orchestrator
-  now consumes the extracted modules; hooks files should no longer be reported
-  as unused.
+  re-run knip to confirm no unused files remain under src/react. The orchestrator now consumes the extracted modules; hooks files should no longer be reported as unused.
 
 B. Update exports and fix type surfaces
 
@@ -244,19 +199,18 @@ D. Docs
 - Handbook: document option shapes, defaults, staged-vs-compiled behavior, migration notes (0.11.0).
 - Bounds: document probe-free open-end detection and finite latest-end strategy.
 
+E. Description & frequency lexicon (immediate) (Top priority; implement before other refactors unless blocked)
 
-E. Description & frequency lexicon (immediate)
-   (Top priority; implement before other refactors unless blocked)
-
-1) Descriptor (AST) builder
+1. Descriptor (AST) builder
    - New: src/rrstack/describe/descriptor.ts
    - buildRuleDescriptor(compiled: CompiledRule) => RuleDescriptor
    - Normalize lists; convert rrule Weekday to { weekday: 1..7, nth?: number }.
    - Include clamps, count/until, wkst when present.
 
-2) strict-en translator
+2. strict-en translator
    - New: src/rrstack/describe/translate.strict.en.ts
-   - export strictEnTranslator(desc, opts)   - Helpers:
+   - export strictEnTranslator(desc, opts)
+   - Helpers:
      - ordinal strings (long/short), last= -1
      - weekday/month names
      - list formatting (and/commas)
@@ -266,14 +220,14 @@ E. Description & frequency lexicon (immediate)
      - interval === 1 → noun: “every year/month/week/day/hour/minute/second”
      - interval > 1 → “every N {plural(noun)}” using pluralizer
 
-3) Frequency lexicon exports
+3. Frequency lexicon exports
    - New: src/rrstack/describe/lexicon.ts
    - Types: FrequencyAdjectiveLabels, FrequencyNounLabels, FrequencyLexicon
    - Constants: FREQUENCY_ADJECTIVE_EN, FREQUENCY_NOUN_EN, FREQUENCY_LEXICON_EN
    - UI helper: toFrequencyOptions(labels?: FrequencyAdjectiveLabels)
    - Re-export from package root.
 
-4) Wiring and options
+4. Wiring and options
    - Update src/rrstack/describe.ts:
      - compile → descriptor → translator (resolved by precedence)
      - Default translator: strict-en with EN lexicons
@@ -281,14 +235,14 @@ E. Description & frequency lexicon (immediate)
    - Extend DescribeOptions with translator / translatorOptions.
    - Optionally extend RRStackOptions with instance-level describe?: { translator?: id|fn; translatorOptions?: TranslatorOptions } (do not serialize functions).
 
-5) Tests
+5. Tests
    - Fix current failures (ensure “third” and “9:00” appear).
-   - Add table tests for interval 1 vs > 1, nth weekday (incl. last), BYSETPOS lists,
-     count vs until, timeFormat/hourCycle variants, multiple constraints.
+   - Add table tests for interval 1 vs > 1, nth weekday (incl. last), BYSETPOS lists, count vs until, timeFormat/hourCycle variants, multiple constraints.
 
-6) Docs
+6. Docs
    - README/Handbook: “Descriptions: pluggable translators” and “Frequency labels for UI”.
    - Document exports and config usage; note that translator functions are not serialized.
 
 Status:
-- Phase 0 (minimal): DONE — daily time and monthly nth-weekday phrasing for tests; full descriptor/translator work remains.
+
+- Phase 0 (minimal): DONE — daily time and monthly nth-weekday phrasing for tests; full descriptor/translator work remains.

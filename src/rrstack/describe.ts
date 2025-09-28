@@ -18,7 +18,6 @@ import {
   strictEnTranslator,
   type TranslatorOptions,
 } from './describe/translate.strict.en';
-import { Weekday } from './rrule.runtime';
 import type {
   DurationParts,
   RuleJson,

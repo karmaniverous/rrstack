@@ -15,7 +15,7 @@ export type DescribeTranslator = (
   opts?: TranslatorOptions,
 ) => string;
 
-const ORD_LONG: Record<number, string> = {
+const ORD_LONG: Partial<Record<number, string>> = {
   1: 'first',
   2: 'second',
   3: 'third',
@@ -23,7 +23,7 @@ const ORD_LONG: Record<number, string> = {
   5: 'fifth',
   [-1]: 'last',
 };
-const ORD_SHORT: Record<number, string> = {
+const ORD_SHORT: Partial<Record<number, string>> = {
   1: '1st',
   2: '2nd',
   3: '3rd',
@@ -42,8 +42,10 @@ const weekdayName = (w: 1 | 2 | 3 | 4 | 5 | 6 | 7): string =>
     'sunday',
   ][w - 1];
 
-const ord = (n: number, style: OrdinalStyle): string =>
-  (style === 'short' ? ORD_SHORT[n] : ORD_LONG[n]) ?? `${String(n)}th`;
+const ord = (n: number, style: OrdinalStyle): string => {
+  const dic = style === 'short' ? ORD_SHORT : ORD_LONG;
+  return dic[n] ?? `${String(n)}th`;
+};
 
 const mergeLexicon = (
   base: FrequencyLexicon,
@@ -93,11 +95,11 @@ const everyWithInterval = (
   interval: number,
 ): string => {
   if (interval === 1) return `every ${lex.noun[freq]}`;
-  const plural = (lex.pluralize ?? ((n, k) => (k === 1 ? n : `${n}s`)))(
-    lex.noun[freq],
-    interval,
-  );
-  return `every ${interval} ${plural}`;
+  // Normalize pluralizer locally to avoid no-unnecessary-condition on ??
+  let pl = lex.pluralize as ((noun: string, n: number) => string) | undefined;
+  if (!pl) pl = (n, k) => (k === 1 ? n : `${n}s`);
+  const plural = pl(lex.noun[freq], interval);
+  return `every ${String(interval)} ${plural}`;
 };
 
 const phraseRecur = (
@@ -118,12 +120,18 @@ const phraseRecur = (
     );
     return tm ? `${base} at ${tm}` : base;
   }
-  // MONTHLY  single weekday with nth → “on the <ordinal> <weekday>”
+  // MONTHLY: single weekday with ordinal position
   if (d.freq === 'monthly') {
     if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
       const w = d.by.weekdays[0];
+      let nthVal: number | undefined = undefined;
       if (typeof w.nth === 'number') {
-        const o = ord(w.nth, opts?.ordinals ?? 'long');
+        nthVal = w.nth;
+      } else if (Array.isArray(d.by.setpos) && d.by.setpos.length === 1) {
+        nthVal = d.by.setpos[0];
+      }
+      if (typeof nthVal === 'number') {
+        const o = ord(nthVal, opts?.ordinals ?? 'long');
         const name = weekdayName(w.weekday);
         const tm = formatTime(
           d.by.hours,

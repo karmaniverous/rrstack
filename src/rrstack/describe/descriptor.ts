@@ -54,26 +54,17 @@ const toUnitEpoch = (d: Date, tz: string, unit: UnixTimeUnit): number =>
 const asArray = <T>(v: T | T[] | null | undefined): T[] =>
   v == null ? [] : Array.isArray(v) ? v : [v];
 
-const freqToStr = (n: number): FrequencyStr => {
-  switch (n) {
-    case Frequency.YEARLY:
-      return 'yearly';
-    case Frequency.MONTHLY:
-      return 'monthly';
-    case Frequency.WEEKLY:
-      return 'weekly';
-    case Frequency.DAILY:
-      return 'daily';
-    case Frequency.HOURLY:
-      return 'hourly';
-    case Frequency.MINUTELY:
-      return 'minutely';
-    case Frequency.SECONDLY:
-      return 'secondly';
-    default:
-      return 'daily';
-  }
+const FREQ_NUM_TO_STR: Record<number, FrequencyStr> = {
+  [Frequency.YEARLY]: 'yearly',
+  [Frequency.MONTHLY]: 'monthly',
+  [Frequency.WEEKLY]: 'weekly',
+  [Frequency.DAILY]: 'daily',
+  [Frequency.HOURLY]: 'hourly',
+  [Frequency.MINUTELY]: 'minutely',
+  [Frequency.SECONDLY]: 'secondly',
 };
+
+const freqToStr = (n: number): FrequencyStr => FREQ_NUM_TO_STR[n] ?? 'daily';
 
 const asDurationParts = (r: CompiledRecurRule): DurationParts => {
   const o = r.duration.toObject();
