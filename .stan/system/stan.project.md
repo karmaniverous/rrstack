@@ -1,350 +1,68 @@
-# RRStack — Project Requirements (repo-specific)
+# RRStack — Project‑specific Assistant Instructions
 
 Last updated: 2025-09-28 (UTC)
 
-Purpose
+Scope
 
-- Capture durable, repository-specific requirements for RRStack. This file governs design and implementation across iterations. Short-term work items live in stan.todo.md.
+- This file contains project-specific assistant behavior guidelines for RRStack.
+- Durable product requirements live in stan.requirements.md.
+- Repo‑agnostic policies and response format are governed by .stan/system/stan.system.md.
 
-Targets and runtime
+Release discipline (hard rule)
 
-- Library runs in both Node and browsers.
-- Pure library surface (no I/O side effects); suitable for UI, workers, and server.
-- ESM/CJS bundles provided via Rollup; types included.
-
-Public API (core types and shapes)
-
-Observability (mutation notifications)
-
-- RRStack exposes minimal mutation signals for React (or any observer) without
-  wrapping its control surface:
-  - subscribe(listener: (self: RRStack) => void): () => void
-  - unsubscribe via the returned function.
-  - Notify exactly once after successful state changes (post-compile), for:
-    - timezone setter, rules setter, updateOptions
-    - convenience mutators (addRule/removeRule/swap/up/down/top/bottom), which
-      delegate to rules setter to avoid double notifications.
-  - Constructor initialization does not notify.
-
-Continuous (span) rules
-
-- RRStack supports span rules for continuous coverage (no RRULE enumeration):
-  - options.freq omitted ⇒ span rule (continuous across `[starts, ends)`).
-  - duration MUST be omitted for spans.
-  - Either side may be open (start/end undefined).
-  - Spans participate in the cascade identically to recurring rules; later rules
-    override earlier coverage at covered instants.
-  - No legacy alias: `freq` must be omitted for spans. The value `'continuous'`
-    is not accepted.
-  - Validation:
-    - if freq present ⇒ duration is required and strictly > 0,
-    - if freq absent ⇒ duration must be omitted.
-  - Compiler/runtime:
-    - compileRule emits `CompiledRule` union: `{ kind: 'recur' | 'span', ... }`
-    - span rules carry `start?`, `end?` in configured unit; no RRULE instance. - Queries:
-    - coverage, segments, bounds, and describe paths treat spans as first-class.
-    - describe: “Active/Blackout continuously [from …; until …] (timezone …)”.
-
-Public API (core types and shapes)
-
-Observability (mutation notifications)
-
-- RRStack exposes minimal mutation signals for React (or any observer) without
-  wrapping its control surface:
-  - subscribe(listener: (self: RRStack) => void): () => void
-  - unsubscribe via the returned function.
-  - Notify exactly once after successful state changes (post-compile), for:
-    - timezone setter, rules setter, updateOptions
-    - convenience mutators (addRule/removeRule/swap/up/down/top/bottom), which
-      delegate to rules setter to avoid double notifications.
-  - Constructor initialization does not notify.
-
-- Interfaces (prefer interfaces; extend where useful; use utility types sparingly):
-  - RRStackOptions (constructor input AND serialized output)
-    - version?: string (optional; ignored by constructor; written by toJson) - timezone: string (validated at runtime; narrowed internally)
-    - timeUnit?: 'ms' | 's' (default 'ms')
-    - rules?: RuleJson[] (default [])
-  - RRStackOptionsNormalized (stored on the instance; frozen)
-    - extends Omit<RRStackOptions, 'timeUnit' | 'rules' | 'timezone'>
-    - timeUnit: 'ms' | 's'
-    - rules: RuleJson[]
-    - timezone: TimeZoneId (branded, validated string)
-
-Options, mutability, and setters
-
-- The instance exposes a single authoritative options object:
-  - public readonly options: RRStackOptionsNormalized
-  - options is normalized (defaults applied) and frozen.
-  - There are NO separate class fields for timezone or rules; they live in options.
-- Setters (property-style) and batch update:
-  - get timezone(): string; set timezone(tz: string) — validates, freezes new options, recompiles (single pass).
-  - get rules(): readonly RuleJson[]; set rules(next: RuleJson[]) — minimal “rule-lite” validation, freeze, recompile.
-  - get timeUnit(): 'ms' | 's' — immutable; no setter (changing unit would re-interpret all timestamps).
-  - updateOptions(partial: Pick<RRStackOptions, 'timezone' | 'rules'>): void — batch changes with one recompile.
-  - Convenience rule mutators (addRule/swap/up/down/top/bottom) remain and delegate to rules update.
-
-Units and domain (no internal ms canonicalization)
-
-- All public inputs/outputs (and internal algorithms) operate in the configured unit end-to-end.
-- timeUnit semantics:
-  - 'ms': millisecond timestamps (Date.now()) with Luxon millisecond methods.
-  - 's': integer seconds; RRULE starts are already second-granular; ends are rounded up to the next integer second to honor [start, end) and avoid boundary false negatives.
-- Domain bounds:
-  - Eliminate EPOCH\_\*\_MS constants entirely.
-  - Internal helpers (not exported):
-    - domainMin(unit) = 0
-    - domainMax(unit):
-      - ms: 8_640_000_000_000_000 (approx max JS Date)
-      - s: Math.floor(8_640_000_000_000_000 / 1000) = 8_640_000_000_000
-
-Timezone validation and typing (dependency-driven)
-
-- Validate timezone strings at all entry points (constructor, fromJson, setters) using Luxon:
-  - IANAZone.isValidZone(tz) is the primary check.
-  - Error messages note that validity depends on ICU/Intl data available to the host environment.
-- Narrow timezone to a branded type after validation:
-  - TimeZoneId is a zod-branded string; stored in RRStackOptionsNormalized and RRStackJson.
-- Provide helpers:
-  - RRStack.isValidTimeZone(tz: string): boolean
-  - RRStack.asTimeZoneId(tz: string): TimeZoneId (validated/branded)
-- Note: Intl.supportedValuesOf('timeZone') may be present in modern browsers and can improve error messaging, but Luxon remains the source of truth.
-
-Core algorithms and behavior
-
-- isActiveAt(t: number): instantStatus — point query in the configured unit.
-- getSegments(from?: number, to?: number): Iterable<{ start: number; end: number; status: instantStatus }>
-  - Streaming, memory-bounded k-way merge over per-rule boundary streams (starts/ends), using a min-heap.
-  - No default output cap; accept an optional per-call limit with explicit throw if exceeded (no silent truncation).
-- classifyRange(from: number, to: number): rangeStatus — derived via a lightweight scan over getSegments for the requested window.
-- getEffectiveBounds(): { start?: number; end?: number; empty: boolean }
-  - Independent of getSegments (and works with undefined start/end).
-  - Earliest bound: min-heap of rrule.after() candidate starts across active rules; probe a small forward window to confirm cascaded activation; terminate on first success.
-  - Latest bound: mirror with max-heap and rrule.before() probing backward.
-  - Open-sided detection based on domainMin/unit and domainMax/unit with targeted coverage probes.
-- now(): number — returns current time in configured unit (ms or s).
-
-Compilation and coverage (module split)
-
-- No internal conversion to ms; compile and coverage operate in the configured unit.
-- Module layout:
-  - compile.ts — unit-aware; returns CompiledRule { tz, unit, … }.
-  - coverage/
-    - time.ts — unit-aware Date/DateTime conversions; add-duration; horizons; day lengths.
-    - patterns.ts — local structural matching helpers (daily and monthly/yearly).
-    - enumerate.ts — per-rule enumeration horizons and lazy occurrence generation.
-    - coverage.ts — ruleCoversInstant orchestration.
-  - sweep.ts — streaming merge for segments; unit-aware; no EPOCH\_\* usage.
-
-Validation policy (zod)
-
-- Use zod minimally for:
-  - RRStackOptions parsing (constructor).
-  - Setter/mutation “rule-lite” checks (effect literal, options.freq string, starts/ends finite if present); full RRULE Options validation remains in compile.
-
-Version handling (persistence only)
-
-- Version is only needed at serialization:
-  - toJson writes the current package version injected at build time as a constant (e.g., **RRSTACK_VERSION** replaced by Rollup).
-  - The constructor accepts RRStackOptions with an optional version key and ignores it. Future transforms may be added in the constructor without changing the public shape.
-
-React adapter (subpath export)
-
-- Provide a tiny React adapter at subpath export "./react". No re-implementation
-  of the RRStack control surface; hooks observe RRStack directly:
-  - useRRStack(json: RRStackOptions, onChange?: (s: RRStack) => void, opts?: {
-    resetKey?: string | number,
-    debounce?: number | { delay: number; leading?: boolean; trailing?: boolean },
-    logger?: boolean | ((e: { type: 'init' | 'reset' | 'mutate' | 'flush', rrstack: RRStack}) => void),
-    }): { rrstack: RRStack; version: number; flush: () => void }
-    - resetKey: rebuild instance intentionally when the record changes.
-    - debounce: debounce policy for onChange (default trailing-only).
-    - logger: true => console.debug; function => custom sink; falsy => silent.
-    - flush(): fires any pending trailing onChange immediately.
-  - useRRStackSelector(rrstack: RRStack, selector: (s: RRStack) => T, isEqual?: (a: T, b: T) => boolean): T
-    - Recomputes selector on RRStack mutations; only re-renders when isEqual is false (Object.is by default).
-
-Packaging
-
-- Add subpath export "./react" with CJS/ESM and types.
-- Mark "react" as a peerDependency (>=18); include react and @types/react as
-  devDependencies for type-check/build only. Ensure bundler externalizes
-  dependencies and peerDependencies (existing Rollup config already does this).
+- Do NOT bump the package version or edit CHANGELOG.md in normal patches.
+- Versioning and changelog updates are owned by the release workflow (release-it + auto-changelog).
 
 Generated artifacts policy
 
-- Artifacts under assets/ (e.g., assets/rrstackconfig.schema.json) are generated by scripts and must not be edited manually.
-- To update schema artifacts, run the generator (npm run schema) and commit the resulting files; do not hand-edit assets/.
-  Changelog policy
+- assets/rrstackconfig.schema.json is generated by scripts/gen-schema.ts.
+- Do not hand-edit generated artifacts; run the generator and commit the results.
 
-- Ensure CHANGELOG.md includes ALL commits by configuring auto-changelog in package.json:
-  - "auto-changelog": { "output": "CHANGELOG.md", "unreleased": true, "commitLimit": false, "hideCredit": true }
-  - Release step runs: npx auto-changelog -p
+Packaging and build
 
-Release discipline (assistant policy)
+- Respect the existing Rollup config:
+  - Treat Node built-ins and both dependencies and peerDependencies as external (including deep subpaths).
+  - Use @rollup/plugin-replace to inject **RRSTACK_VERSION** (browser-safe).
+  - Emit CJS and ESM bundles and .d.ts (main/module/types in package.json).
+- Keep the subpath export ./react stable (ESM+CJS+types).
 
-- Do NOT bump the package version or edit CHANGELOG.md in patches.
-- Versioning and changelog updates are owned by the release workflow
-  (release-it + auto-changelog). Assistant patches must leave package.json
-  "version" and CHANGELOG.md untouched.
+Library purity and surfaces
 
-Documentation
+- Core library: pure (no I/O side effects). Suitable for Node/browsers/workers.
+- React adapter: keep hooks thin; RRStack remains the single source of truth.
 
-- README documents:
-  - Unified RRStackOptions shape (with optional version).
-  - timeUnit semantics ('ms' vs 's'); seconds rounding behavior.
-  - Timezone validation and environment note (Luxon/ICU).
-  - Property-style setters and batch update.
-  - Streaming segments and bounds behavior.
-  - Browser/worker guidance for long windows (yield to UI or use Worker).
+Coding & structure
 
-Non-functional requirements
+- Prefer small, cohesive modules; use the ~300 LOC guidance. If a module must exceed it, propose a split plan in stan.todo.md before further changes.
+- Co‑locate tests with modules (foo.ts ↔ foo.test.ts). Exercise happy paths and representative error paths.
+- Follow house style: Prettier formatting + ESLint rules in repo; keep imports sorted.
 
-- Performance: streaming algorithms are memory-bounded; avoid precomputing large occurrence sets; heap merges scale with actual overlaps.
-- Determinism: comparisons use half-open intervals [start, end); 's' mode rounds end upward to avoid boundary false negatives.
-- Immutability: options are frozen; mutators perform immutable updates and recompile exactly once per call.
+Documentation cadence (gating)
 
-Out of scope (for now)
+- When emitting code or changing tests/docs, update .stan/system/stan.todo.md in the same turn with a succinct “Next up” and a short “Completed (recent)” entry.
 
-- Changing timeUnit on an existing instance (re-interpretation) — not supported; construct a new instance instead.
-- Full RRULE Options schema validation via zod — compile remains the authoritative validator.
+Algorithmic guardrails
 
-Rule descriptions — pluggable translator and frequency lexicon
+- Maintain DST/timezone correctness via Luxon.
+- Preserve half‑open interval semantics [start, end); in 's' mode, end rounding up is required to avoid boundary false negatives.
+- Keep getSegments streaming and memory-bounded; expose { limit } and throw on overflow (no silent truncation).
+- Keep getEffectiveBounds probe-free for open-end detection; latest-bound uses finite/local reverse sweeps only.
 
-Goal
+Assistant ergonomics (this repo)
 
-- Provide deterministic, complete, local rule descriptions without relying on rrule.toText.
-- Support pluggable translators with sensible defaults and UI-aligned label exports.
+- Do not modify .stan/system/stan.system.md; propose durable behavior changes here (stan.project.md) or in stan.requirements.md as appropriate.
+- Respect BENCH-gated performance tests: do not enable them in CI; keep them deterministic when BENCH is set locally.
+- For React hooks, preserve staged-vs-compiled semantics:
+  - rrstack.rules/timezone/toJson reflect staged values before commit.
+  - Queries reflect last committed compiled state until commit.
+- When adding new translator behavior for descriptions, update acceptance tests and keep strict-en defaults stable for existing scenarios.
 
-Descriptor (AST)
+Environment
 
-- Build a normalized, JSON-friendly descriptor from CompiledRule (no rrule objects leak through).
-- Shape:
-  - Base
-    - kind: 'span' | 'recur'
-    - effect: 'active' | 'blackout'
-    - tz: string
-    - unit: 'ms' | 's'
-    - clamps?: { starts?: number; ends?: number } // epoch in configured unit
-  - Span
-    - kind: 'span'
-  - Recurrence
-    - kind: 'recur'
-    - freq: FrequencyStr
-    - interval: number (default 1)
-    - duration: DurationParts
-    - by:
-      - months?: number[] (1..12)
-      - monthDays?: number[] (±1..±31)
-      - yearDays?: number[] (±1..±366)
-      - weekNos?: number[] (±1..±53)
-      - weekdays?: Array<{ weekday: 1..7; nth?: number /_ ±1..±5; -1=last _/ }>
-      - hours?: number[]; minutes?: number[]; seconds?: number[]
-      - setpos?: number[]
-      - wkst?: 1..7
-    - count?: number
-    - until?: number // inclusive of a start at that instant (RRULE semantics)
+- Node >= 20; happy-dom test environment for React; Vitest for tests.
+- ICU/Intl availability may vary across environments; always validate IANA time zones at runtime.
 
-Translators (pluggable)
+References
 
-- type DescribeTranslator = (desc: RuleDescriptor, opts: TranslatorOptions) => string
-- TranslatorOptions:
-  - frequency?: Partial<FrequencyLexicon> // merged over defaults
-  - timeFormat?: 'hm' | 'hms' | 'auto' // default 'hm' → “9:00”
-  - hourCycle?: 'h23' | 'h12' // default 'h23'
-  - ordinals?: 'long' | 'short' // default 'long' (third vs 3rd)
-  - includeTimeZone?: boolean (default true)
-  - includeBounds?: boolean (default false)
-  - formatTimeZone?: (tzId: string) => string
-  - includeWkst?: boolean (default smart: only when wkst changes semantics)
-- Built-ins:
-  - strict-en (default):
-    - Complete and literal; always includes constraints.
-    - Interval phrasing:
-      - interval === 1 → noun form: “every year / month / week / day / hour / minute / second”
-      - interval > 1 → “every N {plural(noun)}” using pluralizer
-    - Nth weekday: “on the 3rd Tuesday”; last: “on the last Friday”
-    - Time of day: “at 9:00” (hm) or “at 9:00:15” (hms) per timeFormat
-    - BYSETPOS when needed: “select the 1st and 3rd occurrence”
-    - COUNT/UNTIL appended; UNTIL is inclusive of a start (documented semantics)
-  - pretty-en (optional later): idiomatic compressions (e.g., weekdays/weekends).
-
-Frequency lexicon (labels usable by translator and UI)
-
-- Types:
-  - type FrequencyAdjectiveLabels = Record<FrequencyStr, string>
-  - type FrequencyNounLabels = Record<FrequencyStr, string>
-  - type FrequencyLexicon = {
-    adjective: FrequencyAdjectiveLabels;
-    noun: FrequencyNounLabels;
-    pluralize?: (noun: string, n: number) => string; // default adds “s”
-    }
-- Default English (exported):
-  - FREQUENCY_ADJECTIVE_EN: {
-    yearly: 'yearly', monthly: 'monthly', weekly: 'weekly', daily: 'daily',
-    hourly: 'hourly', minutely: 'minutely', secondly: 'secondly'
-    }
-  - FREQUENCY_NOUN_EN: {
-    yearly: 'year', monthly: 'month', weekly: 'week', daily: 'day',
-    hourly: 'hour', minutely: 'minute', secondly: 'second'
-    }
-  - FREQUENCY_LEXICON_EN: { adjective, noun, pluralize }
-- UI helper:
-  - toFrequencyOptions(labels?: FrequencyAdjectiveLabels)
-    → Array<{ value: FrequencyStr; label: string }>, ordered
-- Rationale for adjective+noun:
-  - Interval phrasing requires countable nouns; single-interval reads naturally as nouns too (“every month/day”).
-  - Keeping both supports non-English overrides and consistent translator phrasing.
-
-Configuration and injection
-
-- Per-instance (optional) in RRStackOptions:
-  - describe?: {
-    translator?: DescribeTranslator | 'strict-en' | 'pretty-en';
-    translatorOptions?: TranslatorOptions;
-    }
-- Per-call override (DescribeOptions):
-  - translator?: DescribeTranslator | 'strict-en' | 'pretty-en'
-  - translatorOptions?: TranslatorOptions
-  - includeTimeZone/includeBounds/formatTimeZone pass-through to translatorOptions
-- Precedence: per-call → instance default → library default (strict-en + EN lexicons)
-
-Public helpers (unchanged entry points; now powered by translator)
-
-- describeRule(
-  rule: RuleJson,
-  timezone: TimeZoneId,
-  unit: UnixTimeUnit,
-  opts?: DescribeOptions & {
-  translator?: DescribeTranslator | 'strict-en' | 'pretty-en';
-  translatorOptions?: TranslatorOptions;
-  },
-  ): string
-- RRStack.prototype.describeRule(
-  index: number,
-  opts?: DescribeOptions & {
-  translator?: DescribeTranslator | 'strict-en' | 'pretty-en';
-  translatorOptions?: TranslatorOptions;
-  },
-  ): string
-
-Persistence
-
-- Translator functions are not serialized.
-- TranslatorOptions may be partially serializable (e.g., textual frequency overrides) but are not required to be persisted; initial scope: instance-only config is acceptable.
-
-Exports (top-level API additions)
-
-- Types: FrequencyAdjectiveLabels, FrequencyNounLabels, FrequencyLexicon, DescribeTranslator, TranslatorOptions
-- Constants: FREQUENCY_ADJECTIVE_EN, FREQUENCY_NOUN_EN, FREQUENCY_LEXICON_EN
-- Helper: toFrequencyOptions(labels?)
-
-Acceptance and tests for descriptions
-
-- The default strict-en output must satisfy:
-  - Monthly 3rd Tuesday at 05:00 includes “third”, “tuesday”, and “5:00”.
-  - Daily at 09:00 includes “9:00” (not just “9”).
-- Table-driven cases:
-  - interval 1 vs > 1 phrasing,
-  - nth/weekdays (positive and “last” via -1),
-  - mixed constraints (months, setpos),
-  - count vs until, hourCycle/timeFormat variants.
+- Product requirements: .stan/system/stan.requirements.md
+- System prompt (response format, patch rules): .stan/system/stan.system.md
