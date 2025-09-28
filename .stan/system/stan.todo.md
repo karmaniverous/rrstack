@@ -9,15 +9,23 @@ Next up (near‑term, prioritized)
 1. Perf & profiling (BENCH gated; resume now)
    - Extend micro‑bench coverage - monthly “nth weekday” open/closed; yearly bymonthday; count‑limited recurrences; blackout overlays and tie‑at‑boundary for latest‑end reverse sweep.
    - Developer docs - short section (Handbook → Algorithms) describing how to run BENCH and interpret ops/s.
+   - Handbook → Performance: how to run benches, read ops/s, environment variance caveats; include brief addRule guidance (batching vs growth).
    - Optional - consider tinybench only if richer stats are needed; explore an internal diagnostic knob (test builds) for probe/backstep counters.
    - Added in this iteration: • getEffectiveBounds: daily count-limited (finite series) and reverse-sweep stress (ambiguous pre-pass). • Overlay scenario (active + blackout slice): getSegments/classifyRange over 1-day window. • getEffectiveBounds: monthly nth-weekday (closed-sided) and yearly bymonthday (count-limited).
    - Next: • Consider parameterized horizons or table-driven benches for families (daily/monthly/yearly). • Capture perf snapshots across Node versions to a markdown table in docs (manual for now).
+   - Node-only mutator benches (no React): isolate RRStack mutator costs (addRule/removeRule/swap/up/down/top/bottom) without act()/render overhead.
+   - Add an “add-replace” bench that holds rule count constant (replace last/index) to compare fairly with growing addRule.
+   - Compare addRule immediate vs staged (mutateDebounce enabled); document the delta; include flushMutations/flushChanges path in benches.
+   - Parameterize bounds benches (e.g., monthly intervals, window widths); optionally table‑drive scenarios.
+   - React mutators: added benches for removeRule, swap, up, down, top, bottom to compare façade operation costs. Note: addRule appears slower primarily because the bench grows the rules array (full recompile cost scales with array length) and commits each mutation immediately (no staging).
+
 2. Docs & examples (priority)
    - Handbook/README: “Descriptions: pluggable translators” with examples covering:
      - Daily at time, weekly multiple days, monthly nth weekday (incl. last), monthly by‑month‑day,
      - Yearly with single and multiple months,
      - COUNT/UNTIL phrasing, hourCycle/timeFormat/ordinals/locale options,
      - Frequency lexicon usage (custom labels) and toFrequencyOptions for UI.
+   - Note default includeTimeZone=false (opt‑in) and when to include it.
    - Brief “how to choose translator” note; point to strict‑en defaults and translatorOptions.
    - Defer Typedoc warning cleanup (e.g., WeekdayPos visibility) until later.
 
@@ -31,6 +39,7 @@ Next up (near‑term, prioritized)
    - Extend micro‑bench coverage - monthly “nth weekday” open/closed; yearly bymonthday; count‑limited recurrences; blackout overlays and tie‑at‑boundary for latest‑end reverse sweep.
    - Developer docs - short section (Handbook → Algorithms) describing how to run BENCH and interpret ops/s.
    - Optional - consider tinybench only if richer stats are needed; explore an internal diagnostic knob (test builds) for probe/backstep counters.
+   - Optional CI: on‑demand bench job to archive results; simple markdown snapshot per Node version for reference.
 
 Backlog / DX
 

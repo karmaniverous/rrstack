@@ -38,6 +38,12 @@ interface HookBenchApi {
   toJson: () => void;
   flushMutations: () => void;
   flushChanges: () => void;
+  removeRule: () => void;
+  swap: () => void;
+  up: () => void;
+  down: () => void;
+  top: () => void;
+  bottom: () => void;
 }
 
 let api: HookBenchApi | undefined;
@@ -46,6 +52,16 @@ function Harness({ json }: { json: RRStackOptions }) {
   // Keep benches deterministic: no debouncers by default (immediate commit).
   const { rrstack, flushMutations, flushChanges } = useRRStack({ json });
   const seq = React.useRef(0);
+
+  const ensureCount = React.useCallback(
+    (n: number) => {
+      while (rrstack.rules.length < n) {
+        const idx = (seq.current = (seq.current + 1) % 24);
+        rrstack.addRule(ruleAt(idx));
+      }
+    },
+    [rrstack],
+  );
 
   React.useEffect(() => {
     api = {
@@ -62,8 +78,37 @@ function Harness({ json }: { json: RRStackOptions }) {
       },
       flushMutations,
       flushChanges,
+      removeRule: () => {
+        if (rrstack.rules.length === 0) {
+          ensureCount(1);
+        }
+        const last = rrstack.rules.length - 1;
+        if (last >= 0) rrstack.removeRule(last);
+      },
+      swap: () => {
+        ensureCount(2);
+        rrstack.swap(0, rrstack.rules.length - 1);
+      },
+      up: () => {
+        ensureCount(3);
+        const last = rrstack.rules.length - 1;
+        rrstack.up(last);
+      },
+      down: () => {
+        ensureCount(3);
+        rrstack.down(0);
+      },
+      top: () => {
+        ensureCount(3);
+        const last = rrstack.rules.length - 1;
+        rrstack.top(last);
+      },
+      bottom: () => {
+        ensureCount(3);
+        rrstack.bottom(0);
+      },
     };
-  }, [rrstack, flushMutations, flushChanges]);
+  }, [rrstack, flushMutations, flushChanges, ensureCount]);
 
   return null;
 }
@@ -92,5 +137,42 @@ describe('React hooks (useRRStack) — vitest bench', () => {
 
   bench('useRRStack: toJson (with staged overlay support)', () => {
     api!.toJson();
+  });
+
+  // Additional mutators
+  bench('useRRStack: façade removeRule', () => {
+    React.act(() => {
+      api!.removeRule();
+    });
+  });
+
+  bench('useRRStack: façade swap', () => {
+    React.act(() => {
+      api!.swap();
+    });
+  });
+
+  bench('useRRStack: façade up', () => {
+    React.act(() => {
+      api!.up();
+    });
+  });
+
+  bench('useRRStack: façade down', () => {
+    React.act(() => {
+      api!.down();
+    });
+  });
+
+  bench('useRRStack: façade top', () => {
+    React.act(() => {
+      api!.top();
+    });
+  });
+
+  bench('useRRStack: façade bottom', () => {
+    React.act(() => {
+      api!.bottom();
+    });
   });
 });
