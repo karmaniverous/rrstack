@@ -90,6 +90,57 @@ const formatLocalTime = (
   return dt.toFormat(useSeconds ? 'H:mm:ss' : 'H:mm');
 };
 
+// Build a list of local times when multiple values are present.
+// Supported shapes:
+// - multiple hours + single minute/second (e.g., 9:00 and 17:00)
+// - single hour + multiple minutes (e.g., 9:00 and 9:30)
+// Falls back to a single formatted time otherwise.
+const formatLocalTimeList = (
+  tz: string,
+  hours?: number[],
+  minutes?: number[],
+  seconds?: number[],
+  tf: 'hm' | 'hms' | 'auto' = 'hm',
+  hc: 'h23' | 'h12' = 'h23',
+): string | undefined => {
+  const hs = Array.isArray(hours)
+    ? hours
+    : typeof hours === 'number'
+      ? [hours]
+      : [];
+  const ms = Array.isArray(minutes)
+    ? minutes
+    : typeof minutes === 'number'
+      ? [minutes]
+      : [];
+  const ss = Array.isArray(seconds)
+    ? seconds
+    : typeof seconds === 'number'
+      ? [seconds]
+      : [];
+
+  const m = ms.length > 0 ? ms[0] : 0;
+  const s = ss.length > 0 ? ss[0] : 0;
+
+  // multiple hours with fixed minute/second
+  if (hs.length > 1 && ms.length <= 1 && ss.length <= 1) {
+    const parts = hs
+      .map((h) => formatLocalTime(tz, [h], [m], [s], tf, hc)!)
+      .filter(Boolean);
+    return parts.length ? joinList(parts) : undefined;
+  }
+
+  // single hour with multiple minutes (one second value)
+  if (hs.length === 1 && ms.length > 1 && ss.length <= 1) {
+    const parts = ms
+      .map((mm) => formatLocalTime(tz, [hs[0]], [mm], [s], tf, hc)!)
+      .filter(Boolean);
+    return parts.length ? joinList(parts) : undefined;
+  }
+
+  return formatLocalTime(tz, hs, ms, ss, tf, hc);
+};
+
 // Localized month name in the rule’s timezone (LLLL), lowercased by default.
 const monthName = (
   tz: string,
@@ -131,6 +182,12 @@ const everyWithInterval = (
   return `every ${String(interval)} ${plural}`;
 };
 
+// Render list of month-days as ordinals
+const ordinalsList = (days: number[], style: OrdinalStyle): string => {
+  const items = days.map((d) => ord(d, style));
+  return joinList(items);
+};
+
 // Append COUNT / UNTIL phrasing to the produced sentence.
 const withCountUntil = (phrase: string, d: RuleDescriptorRecur): string => {
   let out = phrase;
@@ -157,7 +214,7 @@ const phraseRecur = (
 
   // DAILY with time “at …”
   if (d.freq === 'daily') {
-    const tm = formatLocalTime(
+    const tm = formatLocalTimeList(
       d.tz,
       d.by.hours,
       d.by.minutes,
@@ -175,7 +232,7 @@ const phraseRecur = (
         localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
       );
       const onDays = joinList(names);
-      const tm = formatLocalTime(
+      const tm = formatLocalTimeList(
         d.tz,
         d.by.hours,
         d.by.minutes,
@@ -188,16 +245,17 @@ const phraseRecur = (
   }
 
   // YEARLY:
-  // - BYMONTH + BYMONTHDAY => “on july 20”
-  // - BYMONTH + (weekday nth or BYSETPOS+weekday) => “in july on the third tuesday”
-  // - Multiple months => “in january, march and july …”
+  // - BYMONTH + BYMONTHDAY (single/multiple) => “in july on the 5th” / “on the 1st, 15th and 28th”
+  // - BYMONTH + (weekday nth or BYSETPOS) => “in july on the third tuesday”
+  // - BYMONTH + weekday(s) (no position) => “in july on tuesday(s)”
+  // - Multiple months => “in january, march and july …” (+ optional weekday(s) / monthdays)
   if (d.freq === 'yearly') {
     const m =
       Array.isArray(d.by.months) && d.by.months.length === 1
         ? d.by.months[0]
         : undefined;
     if (m && m >= 1 && m <= 12) {
-      const tm = formatLocalTime(
+      const tm = formatLocalTimeList(
         d.tz,
         d.by.hours,
         d.by.minutes,
@@ -211,6 +269,19 @@ const phraseRecur = (
           `${base} on ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} ${dayStr}${tm ? ` at ${tm}` : ''}`,
           d,
         );
+      }
+      // Multiple month-days (e.g., 1st, 15th, 28th)
+      if (Array.isArray(d.by.monthDays) && d.by.monthDays.length > 1) {
+        const days = d.by.monthDays.filter(
+          (n): n is number => typeof n === 'number',
+        );
+        if (days.length > 0) {
+          const ords = ordinalsList(days, opts?.ordinals ?? 'long');
+          return withCountUntil(
+            `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on the ${ords}${tm ? ` at ${tm}` : ''}`,
+            d,
+          );
+        }
       }
       // Weekday position (nth or setpos) → “on the third tuesday”
       if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
@@ -235,7 +306,7 @@ const phraseRecur = (
           );
         }
       }
-      // Weekday without position (no nth/setpos) → “in april on thursday(s)”
+      // Weekday(s) without position (no nth/setpos) → “in july on tuesday(s)”
       if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
         const names = d.by.weekdays.map((w) =>
           localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
@@ -255,7 +326,7 @@ const phraseRecur = (
         .map((mm) => monthName(d.tz, mm, opts?.locale, opts?.lowercase));
       if (months.length) {
         const inMonths = joinList(months);
-        const tm2 = formatLocalTime(
+        const tm2 = formatLocalTimeList(
           d.tz,
           d.by.hours,
           d.by.minutes,
@@ -263,7 +334,20 @@ const phraseRecur = (
           opts?.timeFormat ?? 'hm',
           opts?.hourCycle ?? 'h23',
         );
-        // If weekday(s) provided without position, include them
+        // Multiple month-days: “in jan, apr on the 2nd and 15th …”
+        if (Array.isArray(d.by.monthDays) && d.by.monthDays.length > 1) {
+          const days = d.by.monthDays.filter(
+            (n): n is number => typeof n === 'number',
+          );
+          if (days.length > 0) {
+            const ords = ordinalsList(days, opts?.ordinals ?? 'long');
+            return withCountUntil(
+              `${base} in ${inMonths} on the ${ords}${tm2 ? ` at ${tm2}` : ''}`,
+              d,
+            );
+          }
+        }
+        // Weekday(s) without position
         if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
           const names = d.by.weekdays.map((w) =>
             localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
@@ -282,14 +366,14 @@ const phraseRecur = (
     }
   }
 
-  // MONTHLY: single weekday with ordinal position
+  // MONTHLY
   if (d.freq === 'monthly') {
-    // Case: BYMONTHDAY (single) — “every month on the 15th …”
+    // BYMONTHDAY (single)
     if (Array.isArray(d.by.monthDays) && d.by.monthDays.length === 1) {
       const dayRaw = d.by.monthDays[0];
       // Use ordinal helper; “15th” for general n; maps [-1] to “last” if ever present
       const dayLabel = ord(dayRaw, opts?.ordinals ?? 'short');
-      const tm = formatLocalTime(
+      const tm = formatLocalTimeList(
         d.tz,
         d.by.hours,
         d.by.minutes,
@@ -303,7 +387,29 @@ const phraseRecur = (
       );
     }
 
-    // Case: BYWEEKDAY with nth or BYSETPOS — “every month on the third tuesday …”
+    // Multiple BYMONTHDAY
+    if (Array.isArray(d.by.monthDays) && d.by.monthDays.length > 1) {
+      const days = d.by.monthDays.filter(
+        (n): n is number => typeof n === 'number',
+      );
+      if (days.length > 0) {
+        const ords = ordinalsList(days, opts?.ordinals ?? 'long');
+        const tm = formatLocalTimeList(
+          d.tz,
+          d.by.hours,
+          d.by.minutes,
+          d.by.seconds,
+          opts?.timeFormat ?? 'hm',
+          opts?.hourCycle ?? 'h23',
+        );
+        return withCountUntil(
+          `${base} on the ${ords}${tm ? ` at ${tm}` : ''}`,
+          d,
+        );
+      }
+    }
+
+    // BYWEEKDAY with nth or BYSETPOS — “every month on the third tuesday …”
     if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
       const w = d.by.weekdays[0];
       let nthVal: number | undefined = undefined;
@@ -320,7 +426,7 @@ const phraseRecur = (
           opts?.locale,
           opts?.lowercase,
         );
-        const tm = formatLocalTime(
+        const tm = formatLocalTimeList(
           d.tz,
           d.by.hours,
           d.by.minutes,

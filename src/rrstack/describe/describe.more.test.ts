@@ -151,10 +151,70 @@ describe('rule descriptions (extended scenarios)', () => {
     };
     const text = describeRule(rule, tz, 'ms');
     const lower = text.toLowerCase();
-    // The month names list is localized/lowercased; expect both month tokens present
     expect(lower).toContain('in january');
     expect(lower).toContain('april');
     expect(lower).toContain('on thursday');
     expect(lower).toContain('5:00');
+  });
+
+  it('daily with multiple times: “at 9:00 and 17:00”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'daily',
+        byhour: [9, 17],
+        byminute: [0],
+        bysecond: [0],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('every day');
+    expect(lower).toContain('9:00');
+    expect(lower).toContain('17:00');
+    expect(lower).toContain(' at ');
+  });
+
+  it('monthly with multiple BYMONTHDAY: “on the 1st, 15th and 28th …”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { minutes: 30 },
+      options: {
+        freq: 'monthly',
+        bymonthday: [1, 15, 28],
+        byhour: [5],
+        byminute: [0],
+        bysecond: [0],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('every month');
+    expect(lower).toContain('on the 1st');
+    expect(lower).toContain('15th');
+    expect(lower).toContain('28th');
+    expect(lower).toContain('5:00');
+  });
+
+  it('yearly (single month) with multiple BYMONTHDAY: “in february on the 2nd and 15th …”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'yearly',
+        bymonth: [2],
+        bymonthday: [2, 15],
+        byhour: [6],
+        byminute: [0],
+        bysecond: [0],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('in february');
+    expect(lower).toContain('on the 2nd');
+    expect(lower).toContain('15th');
+    expect(lower).toContain('6:00');
   });
 });

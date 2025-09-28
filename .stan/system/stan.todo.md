@@ -178,6 +178,13 @@ Completed (recent)
   - Multiple months: “in january, april … on thursday …”
   - Time-of-day appended when present.
 
+- Describe(strict-en): enumerate multiple BYMONTHDAY and times
+  - Monthly/yearly: render “on the 1st, 15th and 28th …” for BYMONTHDAY lists.
+  - Time-of-day: render lists like “at 9:00 and 17:00” when BYHOUR or BYMINUTE
+    contains multiple values (common shapes). Falls back to a single time for
+    mixed/complex shapes.
+  - Tests added under describe.more.test.ts.
+
 - Tests(describe): add RRStack.describeRule span + includeBounds coverage (ms and 's' units).
   - Confirms that “Active continuously [from …; until …]” appears when includeBounds=true
     and starts/ends are present on span rules.
