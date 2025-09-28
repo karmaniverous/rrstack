@@ -46,7 +46,7 @@ function bench(
   const opsPerSec = (iters / (ms || 1)) * 1000;
 
   console.log(
-    `[bench] ${label}: ${iters} iters in ${ms.toFixed(2)} ms → ${opsPerSec.toFixed(0)} ops/s`,
+    `[bench] ${label}: ${String(iters)} iters in ${ms.toFixed(2)} ms → ${opsPerSec.toFixed(0)} ops/s`,
   );
   return { label, iters, ms, opsPerSec };
 }
@@ -80,7 +80,8 @@ describe('perf (sanity, always-on): baseline + single rule shapes', () => {
     });
     const b = s.getEffectiveBounds();
     expect(b.empty).toBe(false);
-    expect(typeof b.start === 'number' || b.start === undefined).toBe(true);
+    // For this shape we expect a concrete first occurrence and an open end.
+    expect(typeof b.start).toBe('number');
     expect(b.end).toBeUndefined();
   });
 });
@@ -88,11 +89,12 @@ describe('perf (sanity, always-on): baseline + single rule shapes', () => {
 benchDescribe('perf (BENCH=1): baseline + single-rule combinations', () => {
   it('getEffectiveBounds — baseline active (no rules)', () => {
     const s = new RRStack({ timezone: 'UTC', defaultEffect: 'active' });
-    bench('getEffectiveBounds (baseline active)', () => {
+    const r = bench('getEffectiveBounds (baseline active)', () => {
       const b = s.getEffectiveBounds();
       // light assert to keep the optimizer honest
       if (b.empty) throw new Error('unexpected empty');
     });
+    expect(r.iters).toBe(ITERS);
   });
 
   it('getEffectiveBounds — single daily active (open end)', () => {
@@ -112,10 +114,11 @@ benchDescribe('perf (BENCH=1): baseline + single-rule combinations', () => {
       defaultEffect: 'active',
       rules: [rule],
     });
-    bench('getEffectiveBounds (daily open-end)', () => {
+    const r = bench('getEffectiveBounds (daily open-end)', () => {
       const b = s.getEffectiveBounds();
       if (b.end !== undefined) throw new Error('expected open end');
     });
+    expect(r.iters).toBe(ITERS);
   });
 
   it('getEffectiveBounds — single daily active (closed 30-day window)', () => {
@@ -138,10 +141,11 @@ benchDescribe('perf (BENCH=1): baseline + single-rule combinations', () => {
       defaultEffect: 'active',
       rules: [rule],
     });
-    bench('getEffectiveBounds (daily closed-sided 30d)', () => {
+    const r = bench('getEffectiveBounds (daily closed-sided 30d)', () => {
       const b = s.getEffectiveBounds();
       if (b.end === undefined) throw new Error('expected finite end');
     });
+    expect(r.iters).toBe(ITERS);
   });
 
   it('isActiveAt — baseline active', () => {
@@ -150,10 +154,11 @@ benchDescribe('perf (BENCH=1): baseline + single-rule combinations', () => {
     const samples: number[] = [];
     for (let i = 0; i < 100; i++) samples.push(day + i * 3600 * 1000);
     let idx = 0;
-    bench('isActiveAt (baseline active)', () => {
+    const r = bench('isActiveAt (baseline active)', () => {
       const t = samples[idx++ % samples.length];
       if (!s.isActiveAt(t)) throw new Error('expected active');
     });
+    expect(r.iters).toBe(ITERS);
   });
 
   it('getSegments — single daily active over a day', () => {
@@ -175,7 +180,7 @@ benchDescribe('perf (BENCH=1): baseline + single-rule combinations', () => {
     const day = Date.UTC(2024, 0, 10);
     const from = day + 0 * 3600 * 1000;
     const to = day + 24 * 3600 * 1000;
-    bench('getSegments (daily rule; 1-day window)', () => {
+    const r = bench('getSegments (daily rule; 1-day window)', () => {
       // consume the iterator (tiny)
       let acc = 0;
       for (const seg of s.getSegments(from, to)) {
@@ -184,6 +189,7 @@ benchDescribe('perf (BENCH=1): baseline + single-rule combinations', () => {
       // retain a trivial dependency
       if (acc <= 0) throw new Error('unexpected empty accumulation');
     });
+    expect(r.iters).toBe(ITERS);
   });
 
   it('classifyRange — daily active hour vs baseline active', () => {
@@ -205,9 +211,10 @@ benchDescribe('perf (BENCH=1): baseline + single-rule combinations', () => {
     const day = Date.UTC(2024, 0, 10);
     const from = day + 4 * 3600 * 1000;
     const to = day + 6 * 3600 * 1000;
-    bench('classifyRange (daily hour + baseline active)', () => {
+    const r = bench('classifyRange (daily hour + baseline active)', () => {
       const status = s.classifyRange(from, to);
       if (status !== 'partial') throw new Error('expected partial');
     });
+    expect(r.iters).toBe(ITERS);
   });
 });
