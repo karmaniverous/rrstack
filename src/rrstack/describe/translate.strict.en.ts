@@ -10,6 +10,10 @@ export interface TranslatorOptions {
   timeFormat?: 'hm' | 'hms' | 'auto';
   hourCycle?: 'h23' | 'h12';
   ordinals?: OrdinalStyle;
+  /** Optional BCP‑47 locale for labels (Luxon setLocale). Defaults to runtime locale. */
+  locale?: string;
+  /** Lowercase labels (strict style). Defaults to true. */
+  lowercase?: boolean;
 }
 
 export type DescribeTranslator = (
@@ -41,16 +45,8 @@ const joinList = (items: string[]): string =>
       ? `${items[0]} and ${items[1]}`
       : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 
-const weekdayName = (w: 1 | 2 | 3 | 4 | 5 | 6 | 7): string =>
-  [
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-    'sunday',
-  ][w - 1];
+const maybeLower = (s: string, lower: boolean | undefined): string =>
+  lower === false ? s : s.toLowerCase();
 
 const ord = (n: number, style: OrdinalStyle): string => {
   const dic = style === 'short' ? ORD_SHORT : ORD_LONG;
@@ -94,11 +90,34 @@ const formatLocalTime = (
   return dt.toFormat(useSeconds ? 'H:mm:ss' : 'H:mm');
 };
 
-// Use Luxon to render a month name in the rule’s timezone; strict-en expects lower case.
-const monthName = (tz: string, month: number): string =>
-  DateTime.fromObject({ year: 2000, month, day: 1 }, { zone: tz })
-    .toFormat('LLLL')
-    .toLowerCase();
+// Localized month name in the rule’s timezone (LLLL), lowercased by default.
+const monthName = (
+  tz: string,
+  month: number,
+  locale?: string,
+  lowercase = true,
+): string => {
+  let dt = DateTime.fromObject({ year: 2000, month, day: 1 }, { zone: tz });
+  if (locale) dt = dt.setLocale(locale);
+  const s = dt.toFormat('LLLL');
+  return maybeLower(s, lowercase);
+};
+
+// Localized weekday name (cccc) from a fixed Monday reference week; 1..7 = Mon..Sun.
+const localWeekdayName = (
+  tz: string,
+  weekday: 1 | 2 | 3 | 4 | 5 | 6 | 7,
+  locale?: string,
+  lowercase = true,
+): string => {
+  // 2020‑11‑02 is a Monday
+  let dt = DateTime.fromObject(
+    { year: 2020, month: 11, day: 2 },
+    { zone: tz },
+  ).plus({ days: weekday - 1 });
+  if (locale) dt = dt.setLocale(locale);
+  return maybeLower(dt.toFormat('cccc'), lowercase);
+};
 
 const everyWithInterval = (
   lex: FrequencyLexicon,
@@ -151,7 +170,9 @@ const phraseRecur = (
   // WEEKLY: list weekdays “on monday, wednesday and friday”
   if (d.freq === 'weekly') {
     if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
-      const names = d.by.weekdays.map((w) => weekdayName(w.weekday));
+      const names = d.by.weekdays.map((w) =>
+        localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
+      );
       const onDays = joinList(names);
       const tm = formatLocalTime(
         d.tz,
@@ -184,10 +205,9 @@ const phraseRecur = (
         opts?.hourCycle ?? 'h23',
       );
       if (Array.isArray(d.by.monthDays) && d.by.monthDays.length === 1) {
+        const dayStr = String(d.by.monthDays[0]);
         return withCountUntil(
-          `${base} on ${monthName(d.tz, m)} ${String(d.by.monthDays[0])}${
-            tm ? ` at ${tm}` : ''
-          }`,
+          `${base} on ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} ${dayStr}${tm ? ` at ${tm}` : ''}`,
           d,
         );
       }
@@ -201,10 +221,14 @@ const phraseRecur = (
               : undefined;
         if (typeof nth === 'number') {
           const o = ord(nth, opts?.ordinals ?? 'long');
+          const name = localWeekdayName(
+            d.tz,
+            w.weekday,
+            opts?.locale,
+            opts?.lowercase,
+          );
           return withCountUntil(
-            `${base} in ${monthName(d.tz, m)} on the ${o} ${weekdayName(
-              w.weekday,
-            )}${tm ? ` at ${tm}` : ''}`,
+            `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on the ${o} ${name}${tm ? ` at ${tm}` : ''}`,
             d,
           );
         }
@@ -215,7 +239,7 @@ const phraseRecur = (
         .filter(
           (mm): mm is number => typeof mm === 'number' && mm >= 1 && mm <= 12,
         )
-        .map((mm) => monthName(d.tz, mm));
+        .map((mm) => monthName(d.tz, mm, opts?.locale, opts?.lowercase));
       if (months.length) {
         const inMonths = joinList(months);
         const tm2 = formatLocalTime(
@@ -246,7 +270,12 @@ const phraseRecur = (
       }
       if (typeof nthVal === 'number') {
         const o = ord(nthVal, opts?.ordinals ?? 'long');
-        const name = weekdayName(w.weekday);
+        const name = localWeekdayName(
+          d.tz,
+          w.weekday,
+          opts?.locale,
+          opts?.lowercase,
+        );
         const tm = formatLocalTime(
           d.tz,
           d.by.hours,
