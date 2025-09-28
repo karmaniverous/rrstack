@@ -9,6 +9,13 @@ Completed (recent)
 - Requirements: integrate a detailed plan for pluggable rule descriptions (descriptor/AST + translators) and reusable frequency lexicon exports, with configuration points, exports, and acceptance criteria. Updated dev plan with prioritized implementation steps.
 - Tests(describe): validate that weekday position (“third Tuesday”) and time (“5:00”, “9:00”) appear in rule descriptions (describeRule/describeCompiledRule).
 
+- Feat(describe): COUNT/UNTIL phrasing and YEARLY multi‑month lists
+  - Append “for N occurrences” when COUNT is present.
+  - Append “until YYYY‑MM‑DD” (inclusive start semantics) using descriptor tz/unit.
+  - YEARLY with multiple BYMONTH values now yields “in january, march and july …”.
+  - Retain existing daily/weekly/monthly/yearly patterns and time formatting.
+  - No public API changes; translator remains strict‑en by default with options.
+
 - Feat(describe): weekly and yearly phrasing; list join; lint fix
   - WEEKLY: “on monday, wednesday and friday [at h:mm]” when BYWEEKDAY present.
   - YEARLY:

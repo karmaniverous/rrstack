@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon';
+
 import type { RuleDescriptor, RuleDescriptorRecur } from './descriptor';
 import { FREQUENCY_LEXICON_EN, type FrequencyLexicon } from './lexicon';
 
@@ -122,6 +124,22 @@ const everyWithInterval = (
   return `every ${String(interval)} ${plural}`;
 };
 
+// Append COUNT / UNTIL phrasing to the produced sentence.
+const withCountUntil = (phrase: string, d: RuleDescriptorRecur): string => {
+  let out = phrase;
+  if (typeof d.count === 'number' && d.count > 0) {
+    out += ` for ${d.count} occurrence${d.count === 1 ? '' : 's'}`;
+  }
+  if (typeof d.until === 'number') {
+    const ymd =
+      d.unit === 'ms'
+        ? DateTime.fromMillis(d.until, { zone: d.tz }).toISODate()
+        : DateTime.fromSeconds(d.until, { zone: d.tz }).toISODate();
+    out += ` until ${ymd}`;
+  }
+  return out;
+};
+
 const phraseRecur = (
   d: RuleDescriptorRecur,
   opts?: TranslatorOptions,
@@ -138,7 +156,7 @@ const phraseRecur = (
       opts?.timeFormat ?? 'hm',
       opts?.hourCycle ?? 'h23',
     );
-    return tm ? `${base} at ${tm}` : base;
+    return withCountUntil(tm ? `${base} at ${tm}` : base, d);
   }
 
   // WEEKLY: list weekdays “on monday, wednesday and friday”
@@ -153,13 +171,14 @@ const phraseRecur = (
         opts?.timeFormat ?? 'hm',
         opts?.hourCycle ?? 'h23',
       );
-      return `${base} on ${onDays}${tm ? ` at ${tm}` : ''}`;
+      return withCountUntil(`${base} on ${onDays}${tm ? ` at ${tm}` : ''}`, d);
     }
   }
 
   // YEARLY:
   // - BYMONTH + BYMONTHDAY => “on july 20”
   // - BYMONTH + (weekday nth or BYSETPOS+weekday) => “in july on the third tuesday”
+  // - Multiple months => “in january, march and july …”
   if (d.freq === 'yearly') {
     const m =
       Array.isArray(d.by.months) && d.by.months.length === 1
@@ -174,9 +193,12 @@ const phraseRecur = (
         opts?.hourCycle ?? 'h23',
       );
       if (Array.isArray(d.by.monthDays) && d.by.monthDays.length === 1) {
-        return `${base} on ${MONTH_NAME_EN[m]} ${String(d.by.monthDays[0])}${
-          tm ? ` at ${tm}` : ''
-        }`;
+        return withCountUntil(
+          `${base} on ${MONTH_NAME_EN[m]} ${String(d.by.monthDays[0])}${
+            tm ? ` at ${tm}` : ''
+          }`,
+          d,
+        );
       }
       if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
         const w = d.by.weekdays[0];
@@ -188,10 +210,34 @@ const phraseRecur = (
               : undefined;
         if (typeof nth === 'number') {
           const o = ord(nth, opts?.ordinals ?? 'long');
-          return `${base} in ${MONTH_NAME_EN[m]} on the ${o} ${weekdayName(
-            w.weekday,
-          )}${tm ? ` at ${tm}` : ''}`;
+          return withCountUntil(
+            `${base} in ${MONTH_NAME_EN[m]} on the ${o} ${weekdayName(
+              w.weekday,
+            )}${tm ? ` at ${tm}` : ''}`,
+            d,
+          );
         }
+      }
+    }
+    if (Array.isArray(d.by.months) && d.by.months.length > 1) {
+      const months = d.by.months
+        .filter(
+          (mm): mm is number => typeof mm === 'number' && mm >= 1 && mm <= 12,
+        )
+        .map((mm) => MONTH_NAME_EN[mm]);
+      if (months.length) {
+        const inMonths = joinList(months);
+        const tm2 = formatTime(
+          d.by.hours,
+          d.by.minutes,
+          d.by.seconds,
+          opts?.timeFormat ?? 'hm',
+          opts?.hourCycle ?? 'h23',
+        );
+        return withCountUntil(
+          `${base} in ${inMonths}${tm2 ? ` at ${tm2}` : ''}`,
+          d,
+        );
       }
     }
   }
@@ -216,12 +262,15 @@ const phraseRecur = (
           opts?.timeFormat ?? 'hm',
           opts?.hourCycle ?? 'h23',
         );
-        return `${base} on the ${o} ${name}${tm ? ` at ${tm}` : ''}`;
+        return withCountUntil(
+          `${base} on the ${o} ${name}${tm ? ` at ${tm}` : ''}`,
+          d,
+        );
       }
     }
   }
   // Fallback: base only (further constraints can be added incrementally)
-  return base;
+  return withCountUntil(base, d);
 };
 
 export const strictEnTranslator: DescribeTranslator = (
