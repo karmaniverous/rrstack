@@ -1,10 +1,6 @@
 # RRStack
 
-[![npm version](https://img.shields.io/npm/v/@karmaniverous/rrstack.svg)](https://www.npmjs.com/package/@karmaniverous/rrstack)
-![Node Current](https://img.shields.io/node/v/@karmaniverous/rrstack) <!-- TYPEDOC_EXCLUDE -->
-[![docs](https://img.shields.io/badge/docs-website-blue)](https://docs.karmanivero.us/rrstack)
-[![changelog](https://img.shields.io/badge/changelog-latest-blue.svg)](https://github.com/karmaniverous/rrstack/tree/main/CHANGELOG.md)<!-- /TYPEDOC_EXCLUDE -->
-[![license](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](https://github.com/karmaniverous/rrstack/tree/main/LICENSE.md)
+[![npm version](https://img.shields.io/npm/v/@karmaniverous/rrstack.svg)](https://www.npmjs.com/package/@karmaniverous/rrstack) ![Node Current](https://img.shields.io/node/v/@karmaniverous/rrstack) <!-- TYPEDOC_EXCLUDE --> [![docs](https://img.shields.io/badge/docs-website-blue)](https://docs.karmanivero.us/rrstack) [![changelog](https://img.shields.io/badge/changelog-latest-blue.svg)](https://github.com/karmaniverous/rrstack/tree/main/CHANGELOG.md)<!-- /TYPEDOC_EXCLUDE --> [![license](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](https://github.com/karmaniverous/rrstack/tree/main/LICENSE.md)
 
 Timezone-aware RRULE stacking engine for Node/TypeScript.
 
@@ -18,14 +14,12 @@ RRStack lets you compose a prioritized stack of time-based rules (using the batt
 
 ## Continuous (span) rules
 
-Not every schedule needs a recurrence. RRStack supports “span” rules for
-continuous coverage bounded by optional clamps:
+Not every schedule needs a recurrence. RRStack supports “span” rules for continuous coverage bounded by optional clamps:
 
 - Omit `options.freq` to declare a span rule.
 - Omit `duration` (required for spans).
 - Coverage is continuous across `[starts, ends)`; either side may be open.
-- Spans participate in the cascade just like recurring rules; later rules still
-  override earlier ones.
+- Spans participate in the cascade just like recurring rules; later rules still override earlier ones.
 
 Example (active span; Jan 10 05:00–07:00 UTC):
 
@@ -56,6 +50,7 @@ pnpm add @karmaniverous/rrstack
 
 - ESM and CJS consumers are supported.
 - TypeScript typings are included.
+
 ## Quick Start
 
 ```ts
@@ -281,9 +276,7 @@ A JSON Schema for the serialized RRStack options (constructor input) is generate
 Generation details:
 
 - The schema is produced by scripts/gen-schema.ts using zod-to-json-schema.
-- DurationParts positivity is enforced by adding an anyOf that requires at
-  least one of the fields (years|months|weeks|days|hours|minutes|seconds) to
-  be an integer with minimum 1.
+- DurationParts positivity is enforced by adding an anyOf that requires at least one of the fields (years|months|weeks|days|hours|minutes|seconds) to be an integer with minimum 1.
 
 Baseline (defaultEffect)
 
@@ -302,21 +295,17 @@ console.log(RRSTACK_CONFIG_SCHEMA.$schema, 'RRStackOptions schema loaded');
 ```
 
 ## React hooks
-RRStack ships a tiny React adapter at the subpath `@karmaniverous/rrstack/react`. The hooks
-observe a live RRStack instance without re‑wrapping its control surface (RRStack remains the
-single source of truth).
 
-- `useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? })`
-  → `{ rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }`
-- `useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? })`
-  → `{ selection, version, flushRender }` (re‑renders only when selection changes).
+RRStack ships a tiny React adapter at the subpath `@karmaniverous/rrstack/react`. The hooks observe a live RRStack instance without re‑wrapping its control surface (RRStack remains the single source of truth).
+
+- `useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? })` → `{ rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }`
+- `useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? })` → `{ selection, version, flushRender }` (re‑renders only when selection changes).
 
 Debounce knobs (trailing is always true)
+
 - `changeDebounce`: coalesce autosave (`onChange`) calls.
-- `mutateDebounce`: coalesce frequent UI → `rrstack` edits (e.g., typing). Mutations are staged
-  (rules/timezone) and committed once per window.
-- `renderDebounce`: coalesce version bumps from rrstack notifications to reduce repaint churn
-  (optional leading paint).
+- `mutateDebounce`: coalesce frequent UI → `rrstack` edits (e.g., typing). Mutations are staged (rules/timezone) and committed once per window.
+- `renderDebounce`: coalesce version bumps from rrstack notifications to reduce repaint churn (optional leading paint).
 
 Helpers
 
@@ -327,12 +316,9 @@ Helpers
 
 Staged vs compiled (mutateDebounce)
 
-- Reads of `rrstack.rules` and `rrstack.timezone` reflect staged values prior to
-  commit.
+- Reads of `rrstack.rules` and `rrstack.timezone` reflect staged values prior to commit.
 - `toJson()` also overlays staged values.
-- Queries (`isActiveAt`, `getSegments`, etc.) continue to reflect the last committed compiled state
-  until a commit occurs.
-Example (debounced autosave + staged edits)
+- Queries (`isActiveAt`, `getSegments`, etc.) continue to reflect the last committed compiled state until a commit occurs. Example (debounced autosave + staged edits)
 
 ```tsx
 import { useRRStack } from '@karmaniverous/rrstack/react';
@@ -358,7 +344,8 @@ function Editor({ json }: { json: RRStackOptions }) {
 
   // Use `version` to memoize heavy derived values (e.g., segments)
 
-  return (    <button
+  return (
+    <button
       onClick={() => {
         // Optionally force a commit + autosave now
         flushMutations();
@@ -371,8 +358,8 @@ function Editor({ json }: { json: RRStackOptions }) {
 }
 ```
 
-See “Handbook → React” for full details (options, staged vs compiled behavior, examples):
-https://docs.karmanivero.us/rrstack
+See “Handbook → React” for full details (options, staged vs compiled behavior, examples): https://docs.karmanivero.us/rrstack
+
 ## Rule description helpers
 
 Build a human-readable string describing a rule’s cadence using rrule’s toText(), augmented with effect and duration.
@@ -439,10 +426,7 @@ fromIsoDuration('P2W'); // { weeks: 2 }
 
 Performance note
 
-- The iterator is streaming and memory-bounded, but the number of segments can
-  grow large when many rules overlap across long windows. For very large windows
-  or real-time UI, prefer chunking by day/week and use the limit option to
-  guard enumeration.
+- The iterator is streaming and memory-bounded, but the number of segments can grow large when many rules overlap across long windows. For very large windows or real-time UI, prefer chunking by day/week and use the limit option to guard enumeration.
 
 ## Open-ended bounds example
 
@@ -505,32 +489,19 @@ const b = stack.getEffectiveBounds(); // { start: 2024-01-10T05:00Z, end: undefi
 ## Bounds and clamp semantics
 
 - Cascade and ties
-  - Later rules override earlier rules at covered instants. If a blackout and
-    an active rule both start at the same instant, the later rule in the list
-    wins for that instant (and its duration).
+  - Later rules override earlier ones at covered instants. If a blackout and an active rule both start at the same instant, the later rule in the list wins for that instant (and its duration).
 
 - Domain clamps (starts/ends)
-  - RRStack maps `options.starts` to RRULE `dtstart` and `options.ends` to
-    RRULE `until`. RRULE’s `until` is inclusive of the last start; i.e., a
-    start that is exactly equal to `until` may still occur. Plan clamps with
-    this inclusive behavior in mind.
-  - Intervals produced by RRStack are evaluated as half‑open `[start, end)`.
-    In `'s'` timeUnit mode, RRStack rounds computed ends up to the next integer
-    second to avoid boundary false negatives.
+  - RRStack maps `options.starts` to RRULE `dtstart` and `options.ends` to RRULE `until`. RRULE’s `until` is inclusive of the last start; i.e., a start that is exactly equal to `until` may still occur. Plan clamps with this inclusive behavior in mind.
+  - Intervals produced by RRStack are evaluated as half‑open `[start, end)`. In `'s'` timeUnit mode, RRStack rounds computed ends up to the next integer second to avoid boundary false negatives.
 
 - getEffectiveBounds
-  - `start` is the first instant the cascade is active (omitted when the
-    cascade is open‑start and already active from the domain minimum).
-  - `end` is the last instant after which the cascade is not active anymore.
-    For open‑ended coverage, `end` is omitted (`undefined`).
-  - Internally, the latest bound is determined relative to a far‑future probe:
-    for closed schedules, this yields the last finite active end; for truly
-    open‑ended actives, `end` remains `undefined`.
+  - `start` is the first instant the cascade is active (omitted when the cascade is open‑start and already active from the domain minimum).
+  - `end` is the last instant after which the cascade is not active anymore. For open‑ended coverage, `end` is omitted (`undefined`).
+  - Internally, the latest bound is determined relative to a far‑future probe: for closed schedules, this yields the last finite active end; for truly open‑ended actives, `end` remains `undefined`.
 
 - Time zones and DST
-  - All coverage (including end arithmetic) is computed in the rule’s IANA time
-    zone. In `'s'` mode, duration spans remain exact integer seconds across DST
-    transitions (e.g., 3600 seconds for a 1‑hour rule).
+  - All coverage (including end arithmetic) is computed in the rule’s IANA time zone. In `'s'` mode, duration spans remain exact integer seconds across DST transitions (e.g., 3600 seconds for a 1‑hour rule).
 
 ## Version handling
 

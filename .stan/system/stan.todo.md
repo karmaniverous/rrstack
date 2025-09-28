@@ -170,17 +170,10 @@ E. Description & frequency lexicon (see “Next up” #1)
 
 Completed (recent)
 
-- Perf(bench, node-only): add mutator micro‑benches under
-  src/rrstack/perf.mutators.bench.ts with fixed pre‑states:
-  add first (0→1), add second (1→2), remove last (1→0), swap(0,last),
-  up(last), down(0), top(last), bottom(0).
-- Perf(bench, react): replace single “addRule (immediate)” bench with two
-  benches that add the first rule and the second rule respectively, so results
-  align with Node-only mutator benches and fixed pre‑states.
+- Perf(bench, node-only): add mutator micro‑benches under src/rrstack/perf.mutators.bench.ts with fixed pre‑states: add first (0→1), add second (1→2), remove last (1→0), swap(0,last), up(last), down(0), top(last), bottom(0).
+- Perf(bench, react): replace single “addRule (immediate)” bench with two benches that add the first rule and the second rule respectively, so results align with Node-only mutator benches and fixed pre‑states.
 
-- Fix(lint): coerce numeric template expression in
-  src/react/perf.react.bench.ts (shrink label) to String(i) to satisfy
-  @typescript-eslint/restrict-template-expressions.
+- Fix(lint): coerce numeric template expression in src/react/perf.react.bench.ts (shrink label) to String(i) to satisfy @typescript-eslint/restrict-template-expressions.
 - Perf(tests): add BENCH-gated micro-benchmarks for core algorithms (baseline active; daily open-ended; daily closed 30d; light isActiveAt/getSegments/classifyRange); skipped by default; sanity asserts always run.
 - Fix(lint): coerce numeric template expressions to string in strict-en translator (restrict-template-expressions).
 - Feat(describe): derive localized weekday/month names via Luxon; options for locale/lowercase; strict-en remains lower-case default.

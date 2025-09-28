@@ -20,6 +20,8 @@ Key capabilities
 - Range classification: active | blackout | partial
 - Effective bounds (open-sided detection): getEffectiveBounds()
 - Human-friendly descriptions (rrule.toText + effect/duration)
+- Pluggable descriptions via translators (built-in “strict-en”); boolean options
+  default to false — includeTimeZone is opt-in
 
 Quick start
 

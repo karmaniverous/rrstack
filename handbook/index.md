@@ -4,6 +4,8 @@ children:
   - ./overview.md
   - ./algorithms.md
   - ./react.md
+  - ./descriptions.md
+  - ./performance.md
 ---
 
 # RRStack Handbook
@@ -35,3 +37,9 @@ workflows, patterns, and integration points.
   - useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?,
     resetKey? }) — returns { selection, version, flushRender } with minimal
     re-renders
+
+- Descriptions
+
+  Pluggable translators for human-friendly rule descriptions (strict-en
+  included), translator options (time format, hour cycle, ordinals, locale),
+  and examples for common cadences.
