@@ -1,3 +1,4 @@
+import { RRule } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
 import { RRStack } from './';
@@ -157,6 +158,34 @@ benchDescribe('perf (BENCH=1): baseline + single-rule combinations', () => {
     const r = bench('isActiveAt (baseline active)', () => {
       const t = samples[idx++ % samples.length];
       if (!s.isActiveAt(t)) throw new Error('expected active');
+    });
+    expect(r.iters).toBe(ITERS);
+  });
+
+  it('getEffectiveBounds — monthly 3rd Tuesday (open end)', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'monthly',
+        bysetpos: 3,
+        byweekday: [RRule.TU],
+        byhour: [5],
+        byminute: [0],
+        bysecond: [0],
+        // anchor cadence from a known month; open end
+        starts: Date.UTC(2024, 0, 1, 0, 0, 0),
+      },
+    };
+    const s = new RRStack({
+      timezone: 'UTC',
+      // blackout baseline ensures earliest is finite while end remains open
+      defaultEffect: 'blackout',
+      rules: [rule],
+    });
+    const r = bench('getEffectiveBounds (monthly 3rd Tue open-end)', () => {
+      const b = s.getEffectiveBounds();
+      if (b.end !== undefined) throw new Error('expected open end');
     });
     expect(r.iters).toBe(ITERS);
   });
