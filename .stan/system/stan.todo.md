@@ -165,4 +165,8 @@ Completed (recent)
     • getSegments: daily rule over 1-day window.
     • classifyRange: daily hour + baseline active.
   - Benchmarks are isolated from unit tests and run with `npm run bench`.
+
+- Fix(bench/react): wrap hook updates in act and enable act env
+  - Set IS_REACT_ACT_ENVIRONMENT and wrapped root.render/addRule/setRules in act()
+    to silence warnings and keep benches deterministic.
 

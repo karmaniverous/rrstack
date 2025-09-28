@@ -19,6 +19,11 @@ import { useRRStack } from './useRRStack';
   }
 })();
 
+// React 18/19: mark environment as act-enabled for benches to avoid warnings.
+(
+  globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
+
 // Tiny rule factory for quick façade operations
 const ruleAt = (h: number, label?: string): RuleJson => ({
   effect: 'active',
@@ -68,15 +73,21 @@ const container = document.createElement('div');
 document.body.appendChild(container);
 const root = createRoot(container);
 const baseJson: RRStackOptions = { timezone: 'UTC', rules: [] };
-root.render(React.createElement(Harness, { json: baseJson }));
+React.act(() => {
+  root.render(React.createElement(Harness, { json: baseJson }));
+});
 
 describe('React hooks (useRRStack) — vitest bench', () => {
   bench('useRRStack: façade addRule (immediate)', () => {
-    api!.addRule();
+    React.act(() => {
+      api!.addRule();
+    });
   });
 
   bench('useRRStack: façade rules setter (bulk replace)', () => {
-    api!.setRules();
+    React.act(() => {
+      api!.setRules();
+    });
   });
 
   bench('useRRStack: toJson (with staged overlay support)', () => {
