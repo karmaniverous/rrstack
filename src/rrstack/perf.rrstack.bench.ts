@@ -69,6 +69,80 @@ const monthlyNth = new RRStack({
   rules: [monthlyNthRule],
 });
 
+// Count-limited daily (finite probe path)
+const dailyCountRule: RuleJson = {
+  effect: 'active',
+  duration: { hours: 1 },
+  options: {
+    freq: 'daily',
+    byhour: [5],
+    byminute: [0],
+    bysecond: [0],
+    starts: Date.UTC(2024, 0, 10, 0, 0, 0),
+    count: 30, // finite series
+  },
+};
+const dailyCountLimited = new RRStack({
+  timezone: 'UTC',
+  defaultEffect: 'blackout',
+  rules: [dailyCountRule],
+});
+
+// Reverse-sweep stress (ambiguous pre-pass; blackout + later active on probe day)
+// Mirrors bounds.more.test "backward fallback path"
+const probeStarts = Date.UTC(2090, 0, 1, 0, 0, 0);
+const probeEnds = Date.UTC(2100, 1, 1, 0, 0, 0);
+const blkProbe: RuleJson = {
+  effect: 'blackout',
+  duration: { hours: 12 },
+  options: {
+    freq: 'yearly',
+    bymonth: [1],
+    bymonthday: [1],
+    byhour: [0],
+    byminute: [0],
+    bysecond: [0],
+    starts: probeStarts,
+    ends: probeEnds,
+  },
+};
+const actProbe: RuleJson = {
+  effect: 'active',
+  duration: { hours: 6 },
+  options: {
+    freq: 'yearly',
+    bymonth: [1],
+    bymonthday: [1],
+    byhour: [0],
+    byminute: [0],
+    bysecond: [0],
+    starts: probeStarts,
+    ends: probeEnds,
+  },
+};
+const reverseSweep = new RRStack({
+  timezone: 'UTC',
+  defaultEffect: 'blackout',
+  rules: [blkProbe, actProbe],
+});
+
+// Overlay scenario: active 05:00–06:00 with blackout 05:30–05:45
+const overlayActive: RuleJson = {
+  effect: 'active',
+  duration: { hours: 1 },
+  options: { freq: 'daily', byhour: [5], byminute: [0], bysecond: [0] },
+};
+const overlayBlackout: RuleJson = {
+  effect: 'blackout',
+  duration: { minutes: 15 },
+  options: { freq: 'daily', byhour: [5], byminute: [30], bysecond: [0] },
+};
+const overlay = new RRStack({
+  timezone: 'UTC',
+  defaultEffect: 'blackout',
+  rules: [overlayActive, overlayBlackout],
+});
+
 // Baseline-active sample times for isActiveAt
 const day = Date.UTC(2024, 0, 10);
 const samples: number[] = Array.from(
@@ -103,6 +177,17 @@ describe('RRStack benchmarks (vitest bench)', () => {
     monthlyNth.getEffectiveBounds();
   });
 
+  bench('getEffectiveBounds — daily count-limited (finite series)', () => {
+    dailyCountLimited.getEffectiveBounds();
+  });
+
+  bench(
+    'getEffectiveBounds — reverse-sweep stress (ambiguous pre-pass)',
+    () => {
+      reverseSweep.getEffectiveBounds();
+    },
+  );
+
   bench('isActiveAt — baseline active', () => {
     const t = samples[idx++ % samples.length];
     baselineActive.isActiveAt(t);
@@ -120,5 +205,20 @@ describe('RRStack benchmarks (vitest bench)', () => {
 
   bench('classifyRange — daily hour + baseline active', () => {
     dailyStack.classifyRange(day + 4 * 3600 * 1000, day + 6 * 3600 * 1000);
+  });
+
+  bench(
+    'getSegments — overlay (active + blackout slice) over 1-day window',
+    () => {
+      let acc = 0;
+      for (const seg of overlay.getSegments(from, to)) {
+        acc += seg.end - seg.start;
+      }
+      if (acc < 0) throw new Error('impossible');
+    },
+  );
+
+  bench('classifyRange — overlay window', () => {
+    overlay.classifyRange(day + 5 * 3600 * 1000, day + 6 * 3600 * 1000);
   });
 });
