@@ -31,6 +31,27 @@ const ORD_SHORT: Partial<Record<number, string>> = {
   5: '5th',
   [-1]: 'last',
 };
+const MONTH_NAME_EN: Record<number, string> = {
+  1: 'january',
+  2: 'february',
+  3: 'march',
+  4: 'april',
+  5: 'may',
+  6: 'june',
+  7: 'july',
+  8: 'august',
+  9: 'september',
+  10: 'october',
+  11: 'november',
+  12: 'december',
+};
+const joinList = (items: string[]): string =>
+  items.length <= 1
+    ? (items[0] ?? '')
+    : items.length === 2
+      ? `${items[0]} and ${items[1]}`
+      : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+
 const weekdayName = (w: 1 | 2 | 3 | 4 | 5 | 6 | 7): string =>
   [
     'monday',
@@ -95,9 +116,8 @@ const everyWithInterval = (
   interval: number,
 ): string => {
   if (interval === 1) return `every ${lex.noun[freq]}`;
-  // Normalize pluralizer locally to avoid no-unnecessary-condition on ??
   let pl = lex.pluralize as ((noun: string, n: number) => string) | undefined;
-  if (!pl) pl = (n, k) => (k === 1 ? n : `${n}s`);
+  pl ??= (n, k) => (k === 1 ? n : `${n}s`);
   const plural = pl(lex.noun[freq], interval);
   return `every ${String(interval)} ${plural}`;
 };
@@ -120,6 +140,62 @@ const phraseRecur = (
     );
     return tm ? `${base} at ${tm}` : base;
   }
+
+  // WEEKLY: list weekdays “on monday, wednesday and friday”
+  if (d.freq === 'weekly') {
+    if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
+      const names = d.by.weekdays.map((w) => weekdayName(w.weekday));
+      const onDays = joinList(names);
+      const tm = formatTime(
+        d.by.hours,
+        d.by.minutes,
+        d.by.seconds,
+        opts?.timeFormat ?? 'hm',
+        opts?.hourCycle ?? 'h23',
+      );
+      return `${base} on ${onDays}${tm ? ` at ${tm}` : ''}`;
+    }
+  }
+
+  // YEARLY:
+  // - BYMONTH + BYMONTHDAY => “on july 20”
+  // - BYMONTH + (weekday nth or BYSETPOS+weekday) => “in july on the third tuesday”
+  if (d.freq === 'yearly') {
+    const m =
+      Array.isArray(d.by.months) && d.by.months.length === 1
+        ? d.by.months[0]
+        : undefined;
+    if (m && MONTH_NAME_EN[m]) {
+      const tm = formatTime(
+        d.by.hours,
+        d.by.minutes,
+        d.by.seconds,
+        opts?.timeFormat ?? 'hm',
+        opts?.hourCycle ?? 'h23',
+      );
+      if (Array.isArray(d.by.monthDays) && d.by.monthDays.length === 1) {
+        return `${base} on ${MONTH_NAME_EN[m]} ${String(d.by.monthDays[0])}${
+          tm ? ` at ${tm}` : ''
+        }`;
+      }
+      if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
+        const w = d.by.weekdays[0];
+        const nth =
+          typeof w.nth === 'number'
+            ? w.nth
+            : Array.isArray(d.by.setpos) && d.by.setpos.length === 1
+              ? d.by.setpos[0]
+              : undefined;
+        if (typeof nth === 'number') {
+          const o = ord(nth, opts?.ordinals ?? 'long');
+          return `${base} in ${MONTH_NAME_EN[m]} on the ${o} ${weekdayName(
+            w.weekday,
+          )}${tm ? ` at ${tm}` : ''}`;
+        }
+      }
+    }
+  }
+
   // MONTHLY: single weekday with ordinal position
   if (d.freq === 'monthly') {
     if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {

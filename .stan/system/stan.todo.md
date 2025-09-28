@@ -9,6 +9,13 @@ Completed (recent)
 - Requirements: integrate a detailed plan for pluggable rule descriptions (descriptor/AST + translators) and reusable frequency lexicon exports, with configuration points, exports, and acceptance criteria. Updated dev plan with prioritized implementation steps.
 - Tests(describe): validate that weekday position (“third Tuesday”) and time (“5:00”, “9:00”) appear in rule descriptions (describeRule/describeCompiledRule).
 
+- Feat(describe): weekly and yearly phrasing; list join; lint fix
+  - WEEKLY: “on monday, wednesday and friday [at h:mm]” when BYWEEKDAY present.
+  - YEARLY:
+    - “on july 20 [at h:mm]” for BYMONTH + BYMONTHDAY,
+    - “in july on the third tuesday [at h:mm]” for BYMONTH + nth weekday or BYSETPOS+weekday.
+  - Lint: use ??= for pluralizer to satisfy prefer-nullish-coalescing.
+
 - Fix(typecheck/lint): handle null values in rrule option arrays and satisfy template‑expression lint
   - asArray helper now accepts null (rrule Options fields may be number | number[] | null), resolving TS2345 in describe.ts.
   - toOrdinal now string‑coerces numeric template literal (restrict‑template‑ expressions), clearing the ESLint error.
