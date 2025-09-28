@@ -33,7 +33,8 @@ const ruleAt = (h: number, label?: string): RuleJson => ({
 });
 
 interface HookBenchApi {
-  addRule: () => void;
+  addFirstRule: () => void;
+  addSecondRule: () => void;
   setRules: () => void;
   toJson: () => void;
   flushMutations: () => void;
@@ -59,15 +60,33 @@ function Harness({ json }: { json: RRStackOptions }) {
         const idx = (seq.current = (seq.current + 1) % 24);
         rrstack.addRule(ruleAt(idx));
       }
+      if (rrstack.rules.length > n) {
+        // shrink by replacing with a fresh slice of desired size
+        const next: RuleJson[] = [];
+        for (let i = 0; i < n; i++) {
+          const idx = (seq.current = (seq.current + 1) % 24);
+          next.push(ruleAt(idx, `S${i}`));
+        }
+        rrstack.rules = next;
+      }
     },
     [rrstack],
   );
 
   React.useEffect(() => {
     api = {
-      addRule: () => {
+      addFirstRule: () => {
+        // Pre-state: 0 rules → add one
+        rrstack.rules = [];
         const idx = (seq.current = (seq.current + 1) % 24);
-        rrstack.addRule(ruleAt(idx));
+        rrstack.addRule(ruleAt(idx, 'first'));
+      },
+      addSecondRule: () => {
+        // Pre-state: 1 rule → add second
+        const i1 = (seq.current = (seq.current + 1) % 24);
+        rrstack.rules = [ruleAt(i1, 'seed')];
+        const i2 = (seq.current = (seq.current + 1) % 24);
+        rrstack.addRule(ruleAt(i2, 'second'));
       },
       setRules: () => {
         const i = (seq.current = (seq.current + 1) % 24);
@@ -123,9 +142,15 @@ React.act(() => {
 });
 
 describe('React hooks (useRRStack) — vitest bench', () => {
-  bench('useRRStack: façade addRule (immediate)', () => {
+  bench('useRRStack: façade add first rule', () => {
     React.act(() => {
-      api!.addRule();
+      api!.addFirstRule();
+    });
+  });
+
+  bench('useRRStack: façade add second rule', () => {
+    React.act(() => {
+      api!.addSecondRule();
     });
   });
 

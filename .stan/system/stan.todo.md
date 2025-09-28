@@ -13,7 +13,6 @@ Next up (near‑term, prioritized)
    - Optional - consider tinybench only if richer stats are needed; explore an internal diagnostic knob (test builds) for probe/backstep counters.
    - Added in this iteration: • getEffectiveBounds: daily count-limited (finite series) and reverse-sweep stress (ambiguous pre-pass). • Overlay scenario (active + blackout slice): getSegments/classifyRange over 1-day window. • getEffectiveBounds: monthly nth-weekday (closed-sided) and yearly bymonthday (count-limited).
    - Next: • Consider parameterized horizons or table-driven benches for families (daily/monthly/yearly). • Capture perf snapshots across Node versions to a markdown table in docs (manual for now).
-   - Node-only mutator benches (no React): isolate RRStack mutator costs (addRule/removeRule/swap/up/down/top/bottom) without act()/render overhead.
    - Add an “add-replace” bench that holds rule count constant (replace last/index) to compare fairly with growing addRule.
    - Compare addRule immediate vs staged (mutateDebounce enabled); document the delta; include flushMutations/flushChanges path in benches.
    - Parameterize bounds benches (e.g., monthly intervals, window widths); optionally table‑drive scenarios.
@@ -170,6 +169,14 @@ E. Description & frequency lexicon (see “Next up” #1)
 ---
 
 Completed (recent)
+
+- Perf(bench, node-only): add mutator micro‑benches under
+  src/rrstack/perf.mutators.bench.ts with fixed pre‑states:
+  add first (0→1), add second (1→2), remove last (1→0), swap(0,last),
+  up(last), down(0), top(last), bottom(0).
+- Perf(bench, react): replace single “addRule (immediate)” bench with two
+  benches that add the first rule and the second rule respectively, so results
+  align with Node-only mutator benches and fixed pre‑states.
 
 - Perf(tests): add BENCH-gated micro-benchmarks for core algorithms (baseline active; daily open-ended; daily closed 30d; light isActiveAt/getSegments/classifyRange); skipped by default; sanity asserts always run.
 - Fix(lint): coerce numeric template expressions to string in strict-en translator (restrict-template-expressions).
