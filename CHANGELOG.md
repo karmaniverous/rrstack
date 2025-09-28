@@ -2,8 +2,43 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.13.0](https://github.com/karmaniverous/rrstack/compare/0.12.4...0.13.0)
+
+- docs(plan): reprioritize Next up; docs/examples first [`10f9aae`](https://github.com/karmaniverous/rrstack/commit/10f9aae3109b0550912a4aefd5416e031698544a)
+- fix(describe): add monthly BYSETPOS+weekday phrasing; resolve lints [`4739b04`](https://github.com/karmaniverous/rrstack/commit/4739b04b0b7ad4f842ea092010fa39aa0a2749b6)
+- feat(describe): add descriptor/translator architecture and lexicon exports [`aa34f88`](https://github.com/karmaniverous/rrstack/commit/aa34f8809ebd78d7938e94625a4671f955a3223e)
+- docs: extract requirements; refactor dev plan; trim project prompt [`dad62a9`](https://github.com/karmaniverous/rrstack/commit/dad62a9979912f3a5b795ca91be4781514d60ba8)
+- feat(tests): add BENCH-gated perf suite; fix lint in translator [`bb98cfa`](https://github.com/karmaniverous/rrstack/commit/bb98cfa08df02cbcdec306fce2c8f2161d426641)
+- refactor(describe): use Luxon for date/time formatting; keep composition-only [`46da672`](https://github.com/karmaniverous/rrstack/commit/46da672cfd86e2ea663d7276e6112862b0b198f0)
+- fix(describe): accept null in asArray and satisfy template literal lint [`d3aca4d`](https://github.com/karmaniverous/rrstack/commit/d3aca4df45582cb14df10bfc7a50505281648b94)
+- perf(bench): add monthly closed and yearly count-limited bounds cases [`79556c6`](https://github.com/karmaniverous/rrstack/commit/79556c6a0f051fbd8c86f049e0a253038c1829b3)
+- bench: add Node-only mutator benches; split React add bench [`d5d05bd`](https://github.com/karmaniverous/rrstack/commit/d5d05bd7211c43debe2a77f696dbe1632b1f8c7a)
+- perf(bench): add monthly 3rd Tue case; docs for lexicon & BENCH [`7d5f7ef`](https://github.com/karmaniverous/rrstack/commit/7d5f7effe43a4b3292432483be8dd9f36ea28d3c)
+- fix(describe): add minimal strict-en phrasing for daily time and monthly nth-weekday [`c8048b0`](https://github.com/karmaniverous/rrstack/commit/c8048b0c97ff0d28b884a77bec1ab46d2121eaca)
+- test(bench): use blackout baseline for finite earliest start in sanity [`37a0840`](https://github.com/karmaniverous/rrstack/commit/37a08408e42edcd86b69bcbcbd32b4255e27286d)
+- test(bench): add assertions and fix lint; update plan [`a9b9d6e`](https://github.com/karmaniverous/rrstack/commit/a9b9d6e20f873a8496d7fc6b668cfb1732732bf5)
+- fix(bench): satisfy lint in perf.react.bench.ts (string coercion) [`f5ec624`](https://github.com/karmaniverous/rrstack/commit/f5ec624fa8afe35e76b979fa989eb944c32e5371)
+- docs: README + Handbook (Descriptions, Performance); defaults [`8328f59`](https://github.com/karmaniverous/rrstack/commit/8328f5957f866ca660d0c1c17aa0bc09b8f82ce6)
+- perf(bench): add count-limited, reverse-sweep, and overlay cases [`116e6ab`](https://github.com/karmaniverous/rrstack/commit/116e6abe340b943e46ee0b219e9534f677e5c51e)
+- perf(bench): add React hooks bench; remove ad‑hoc benches; fix cache/TS [`77be485`](https://github.com/karmaniverous/rrstack/commit/77be4851115ecb8a916368090e0702bfe34eb30c)
+- docs: add pluggable descriptions + frequency lexicon requirements [`565dd23`](https://github.com/karmaniverous/rrstack/commit/565dd23dc6e81687d749a16b74f795b39c20e221)
+- test(bench): integrate vitest bench; add RRStack benchmark suite [`8dba618`](https://github.com/karmaniverous/rrstack/commit/8dba618d9ef7331330682720fae26df2a1c5f6c3)
+- test(bench/react): wrap updates in act; enable act env for benches [`98ad76e`](https://github.com/karmaniverous/rrstack/commit/98ad76eed62de849a3d924bc6b6b8c342ce5c4cd)
+- docs(api): export description/lexicon types [`6a06005`](https://github.com/karmaniverous/rrstack/commit/6a060053363b381e1b7142ee24c42751597a0f40)
+- bench(react): add mutator benchmarks; explain addRule cost [`544a31f`](https://github.com/karmaniverous/rrstack/commit/544a31fcc126c304d7e0a02e40711341302ae10c)
+- docs(typedoc): export WeekdayPos to resolve warning [`ff94579`](https://github.com/karmaniverous/rrstack/commit/ff94579bd64f662e354d2663f0b0348ec7505efa)
+- docs(api): export descriptor subtypes for Typedoc [`7733693`](https://github.com/karmaniverous/rrstack/commit/773369376d48f110a1f3f55512f22cdb11f1ad86)
+- feat(describe): weekly and yearly phrasing; list join; lint fix [`3bc321a`](https://github.com/karmaniverous/rrstack/commit/3bc321ac571f819af4923d0d25ef4729d156d411)
+- feat(describe): localized weekday/month labels via Luxon (tz-aware) [`0534025`](https://github.com/karmaniverous/rrstack/commit/05340252e0e8d0214624761f9f66d73eb122a983)
+- feat(describe): add COUNT/UNTIL phrasing and yearly multi-month lists [`4f898a5`](https://github.com/karmaniverous/rrstack/commit/4f898a585be6d33c7b18b8b6e20501c1842b573b)
+- tests: ensure weekday position/time in descriptions [`44f33c7`](https://github.com/karmaniverous/rrstack/commit/44f33c77716795294a54dc9767d340a56dc361d3)
+- refactor(describe): make describe a module with index [`70bda83`](https://github.com/karmaniverous/rrstack/commit/70bda83ce2700b84aaf1b6893f8de324e0262a16)
+
 #### [0.12.4](https://github.com/karmaniverous/rrstack/compare/0.12.3...0.12.4)
 
+> 27 September 2025
+
+- chore: release v0.12.4 [`7b49f8a`](https://github.com/karmaniverous/rrstack/commit/7b49f8ad5ab956389e4b72c25898bda0bf202f5f)
 - feat: RRStack.formatInstant to format instants in stack tz/unit [`2f82fde`](https://github.com/karmaniverous/rrstack/commit/2f82fde208efc5c78dafa8d1cda87c504877cbb1)
 
 #### [0.12.3](https://github.com/karmaniverous/rrstack/compare/0.12.2...0.12.3)
