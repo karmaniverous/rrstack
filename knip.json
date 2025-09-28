@@ -4,7 +4,11 @@
   "rules": {
     "exports": "off",
     "types": "off"
-  },  "vitest": {
-    "entry": ["*/**/*.test.!(*.*)"]
+  },
+  "vitest": {
+    "entry": [
+      "*/**/*.test.!(*.*)",
+      "*/**/*.bench.!(*.*)"
+    ]
   }
 }

@@ -7,6 +7,9 @@ import { configDefaults, defineConfig } from 'vitest/config';
 //   in coverage reports (e.g., dist/**, .stan/**, docs/**).
 export default defineConfig({
   test: {
+    benchmark: {
+      include: ['**/*.bench.ts'],
+    },
     globals: true,
     environment: 'happy-dom',
     setupFiles: ['test/setup.ts'],
@@ -27,9 +30,5 @@ export default defineConfig({
         '**/rollup.config-*.mjs',
       ],
     },
-  },
-  // Discover and run micro-benchmarks with `vitest bench`
-  benchmark: {
-    include: ['src/**/*.bench.ts'],
   },
 });
