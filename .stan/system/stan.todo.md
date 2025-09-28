@@ -6,27 +6,41 @@ Last updated: 2025-09-28 (UTC)
 
 Next up (near‑term, prioritized)
 
-1. Description & frequency lexicon (complete the pluggable system)
-   - Descriptor (AST) builder • new module src/rrstack/describe/descriptor.ts • buildRuleDescriptor(compiled: CompiledRule) => RuleDescriptor • Normalize lists; convert rrule Weekday to { weekday: 1..7; nth?: ±1..±5 }. • Include clamps (unit epoch), count, until, wkst when present.
-   - strict‑en translator • new module src/rrstack/describe/translate.strict.en.ts (already present; extend as needed) • ordinal strings (long/short; last = -1), weekday/month names via Luxon, list joins, time formatting (hm/hms; h23/h12), bysetpos phrasing. • Interval phrasing: interval === 1 → noun (“every month/day”); > 1 → “every N {plural}”.
-   - Frequency lexicon exports • src/rrstack/describe/lexicon.ts — FREQUENCY\_\* constants, types, toFrequencyOptions(labels?). • Re-export from package root (constants & types exported; docs warnings cleared) — done.
-   - Wiring and options • src/rrstack/describe/index.ts — compile → descriptor → translator (respect includeTimeZone/includeBounds/formatTimeZone; expose translatorOptions). • Per-call override via DescribeOptions; instance defaults (non-serialized) remain optional.
-   - Tests • Keep acceptance: “third tuesday at 5:00” and “daily at 9:00” cases; add COUNT/UNTIL, multi‑month yearly, weekday-last, and setpos lists.
-   - Docs • README/Handbook: “Descriptions: pluggable translators” + “Frequency labels for UI”.
+1. Perf & profiling (BENCH gated; resume now)
+   - Extend micro‑bench coverage - monthly “nth weekday” open/closed; yearly bymonthday; count‑limited recurrences; blackout overlays and tie‑at‑boundary for latest‑end reverse sweep.
+   - Developer docs - short section (Handbook → Algorithms) describing how to run BENCH and interpret ops/s.
+   - Optional - consider tinybench only if richer stats are needed; explore an internal diagnostic knob (test builds) for probe/backstep counters.
 
-2. Perf & profiling (BENCH gated)
-   - Extend micro‑bench coverage • monthly “nth weekday” open/closed; yearly bymonthday; count‑limited recurrences. • blackout overlays and tie-at-boundary cases to exercise latest‑end reverse sweep.
-   - Developer docs • Add a short section (Handbook → Algorithms) describing how to run BENCH and read ops/s.
-   - Optional • Consider tinybench only if we need richer stats; otherwise keep zero‑dep. • Explore an internal diagnostic knob (test builds only) to surface probe/backstep counters for attribution.
+2. Docs & examples (priority)
+   - Handbook/README: “Descriptions: pluggable translators” with examples covering:
+     - Daily at time, weekly multiple days, monthly nth weekday (incl. last), monthly by‑month‑day,
+     - Yearly with single and multiple months,
+     - COUNT/UNTIL phrasing, hourCycle/timeFormat/ordinals/locale options,
+     - Frequency lexicon usage (custom labels) and toFrequencyOptions for UI.
+   - Brief “how to choose translator” note; point to strict‑en defaults and translatorOptions.
+   - Defer Typedoc warning cleanup (e.g., WeekdayPos visibility) until later.
 
 3. React hooks polish
-   - Re-run knip to confirm no unused files under src/react/\*\*.
-   - Ensure exports are stable and limited to { useRRStack, useRRStackSelector, types: DebounceSpec, UseRRStack\* (as needed) } — no stray experimental types.
-   - Tests • Add a couple of focused cases for mutateDebounce staging vs compiled queries and renderDebounce leading+trailing.
+   - Re‑run knip to confirm no unused files under src/react/\*\*.
+   - Ensure exports remain limited to { useRRStack, useRRStackSelector } plus minimal types (DebounceSpec, UseRRStack\* where appropriate).
+   - Tests: add focused cases for mutateDebounce staging vs compiled queries and renderDebounce leading+trailing.
+   - Add short cookbook snippets in Handbook (Editor patterns: uncontrolled vs controlled, flush\* usage).
 
-4. Docs & examples
-   - Handbook: elaborate staged‑vs‑compiled reading for rrstack.rules/timezone/toJson with mutateDebounce.
-   - Bounds section: ensure “probe‑free open‑end detection” and “finite/local latest-bound” are explained with one or two succinct scenarios.
+4. Perf & profiling (BENCH gated; resume later)
+   - Extend micro‑bench coverage - monthly “nth weekday” open/closed; yearly bymonthday; count‑limited recurrences; blackout overlays and tie‑at‑boundary for latest‑end reverse sweep.
+   - Developer docs - short section (Handbook → Algorithms) describing how to run BENCH and interpret ops/s.
+   - Optional - consider tinybench only if richer stats are needed; explore an internal diagnostic knob (test builds) for probe/backstep counters.
+
+Backlog / DX
+
+- Typedoc warnings (descriptor subtype/WeekdayPos visibility) — low priority; address with targeted export/docs entries when we polish docs.
+
+---
+
+Additional docs (bounds; staged vs compiled)
+
+- Bounds section: ensure “probe‑free open‑end detection” and “finite/local latest‑bound” are explained with one or two succinct scenarios.
+- React Handbook: staged vs compiled reads (rules/timezone/toJson overlay), with Save‑now and leading/trailing debounce discussion.
 
 5. Quality gates
    - Keep ESLint clean (notably template-expression rules in tests/bench).
@@ -159,12 +173,26 @@ Completed (recent)
   - vitest.config.ts: added benchmark.include = ['src/**/*.bench.ts'].
   - package.json: new script "bench": "vitest bench".
   - stan.config.yml: added "bench: npm run bench" after "test".
-  - New suite: src/rrstack/perf.rrstack.bench.ts • getEffectiveBounds: baseline active, daily open-end, daily 30d closed, monthly 3rd Tue open-end. • isActiveAt: baseline active (sampled). • getSegments: daily rule over 1-day window. • classifyRange: daily hour + baseline active.
+  - New suite: src/rrstack/perf.rrstack.bench.ts - getEffectiveBounds: baseline active, daily open-end, daily 30d closed, monthly 3rd Tue open-end. - isActiveAt: baseline active (sampled). - getSegments: daily rule over 1-day window. - classifyRange: daily hour + baseline active.
   - Benchmarks are isolated from unit tests and run with `npm run bench`.
 
 - Fix(bench/react): wrap hook updates in act and enable act env
   - Set IS_REACT_ACT_ENVIRONMENT and wrapped root.render/addRule/setRules in act() to silence warnings and keep benches deterministic.
 
 - Docs(description/lexicon): export FrequencyAdjectiveLabels, FrequencyNounLabels, FrequencyLexicon, OrdinalStyle, and RuleDescriptor from the package root to include them in Typedoc; clears warnings about referenced-but-missing types.
-+- Docs(description/lexicon): export RuleDescriptorRecur and RuleDescriptorSpan from the package root to include descriptor subtypes in Typedoc; clears remaining warnings referencing RuleDescriptor.
-
+
+- Docs(description/lexicon): export RuleDescriptorRecur and RuleDescriptorSpan from the package root to include descriptor subtypes in Typedoc; clears remaining warnings referencing RuleDescriptor.
+
+- Describe(strict-en): add monthly BYMONTHDAY phrasing (“every month on the 15th …”) and extend tests:
+  - COUNT/UNTIL phrasing (“for N occurrences”, “until YYYY-MM-DD”).
+  - Yearly multi-month phrasing (“in january, march and july …”).
+  - Monthly last weekday via nth(-1) (“on the last tuesday …”).
+  - Monthly BYSETPOS single case (“on the third tuesday …”).
+
+— Description & frequency lexicon wrap‑up —
+
+- Descriptor (AST) builder in place; normalized lists; Weekday → { weekday: 1..7; nth?: ±1..±5 }; clamps (unit epoch), count, until, wkst captured.
+- strict‑en translator covers: daily (time), weekly (weekday lists), monthly (nth weekday, last weekday, by‑month‑day), yearly (single/multiple months + variants), interval phrasing, COUNT/UNTIL; time formatting and ordinals configurable; locale/hourCycle supported.
+- Frequency lexicon exports provided (constants, types, toFrequencyOptions); package‑root re‑exports in place.
+- Wiring complete (compile → descriptor → translator); DescribeOptions respected; translatorOptions exposed. Acceptance tests added.
+- Remaining docs (Handbook/README) scheduled under “Docs & examples”.

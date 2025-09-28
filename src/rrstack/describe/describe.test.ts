@@ -19,7 +19,7 @@ describe('rule description helpers', () => {
   };
   it('describeCompiledRule includes effect, duration, and recurrence text', () => {
     const compiled = compileRule(rule, tz, 'ms');
-    const text = describeCompiledRule(compiled);
+    const text = describeCompiledRule(compiled, { includeTimeZone: true });
     const lower = text.toLowerCase();
     expect(lower).toContain('active');
     expect(lower).toContain('1 hour 30 minutes');

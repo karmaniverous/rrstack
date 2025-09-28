@@ -69,7 +69,7 @@ const durationToTextFromCompiled = (compiled: CompiledRecurRule): string => {
 };
 
 export interface DescribeOptions {
-  /** Append "(timezone <tz>)" — default true */
+  /** Append "(timezone <tz>)" — default false */
   includeTimeZone?: boolean;
   /** Append "[from <dtstart>; until <until>]" if clamps are present — default false */
   includeBounds?: boolean;
@@ -94,7 +94,7 @@ export const describeCompiledRule = (
   opts: DescribeOptions = {},
 ): string => {
   const {
-    includeTimeZone = true,
+    includeTimeZone = false,
     includeBounds = false,
     formatTimeZone,
   } = opts;

@@ -261,6 +261,26 @@ const phraseRecur = (
 
   // MONTHLY: single weekday with ordinal position
   if (d.freq === 'monthly') {
+    // Case: BYMONTHDAY (single) — “every month on the 15th …”
+    if (Array.isArray(d.by.monthDays) && d.by.monthDays.length === 1) {
+      const dayRaw = d.by.monthDays[0];
+      // Use ordinal helper; “15th” for general n; maps [-1] to “last” if ever present
+      const dayLabel = ord(dayRaw, opts?.ordinals ?? 'short');
+      const tm = formatLocalTime(
+        d.tz,
+        d.by.hours,
+        d.by.minutes,
+        d.by.seconds,
+        opts?.timeFormat ?? 'hm',
+        opts?.hourCycle ?? 'h23',
+      );
+      return withCountUntil(
+        `${base} on the ${dayLabel}${tm ? ` at ${tm}` : ''}`,
+        d,
+      );
+    }
+
+    // Case: BYWEEKDAY with nth or BYSETPOS — “every month on the third tuesday …”
     if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
       const w = d.by.weekdays[0];
       let nthVal: number | undefined = undefined;

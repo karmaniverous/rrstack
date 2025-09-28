@@ -255,7 +255,7 @@ export class RRStack {
    *
    * @example
    * stack.formatInstant(Date.UTC(2024, 0, 2, 5, 30, 0)); // '2024-01-02T05:30:00Z' (UTC)
-   * stack.formatInstant(ms, { format: 'yyyy-LL-dd HH:mm' }); // '2024-01-02 05:30'
+   * stack.formatInstant(ms, \{ format: 'yyyy-LL-dd HH:mm' \}); // '2024-01-02 05:30'
    */
   formatInstant(
     t: number,

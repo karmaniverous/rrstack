@@ -203,6 +203,14 @@ Non-functional requirements
 - Determinism: half-open intervals [start, end); 's' mode rounds end upward.
 - Immutability: options are frozen; mutators perform immutable updates and a single recompile per call.
 
+API conventions (boolean options)
+
+- Boolean options are named such that their default is false. Undefined (falsy) must have the same meaning as an explicit false; explicit true is opt‑in.
+- DescribeOptions defaults:
+  - includeTimeZone: false (opt‑in to append “(timezone <tz>)”).
+  - includeBounds: false (unchanged).
+- Existing code and tests should pass { includeTimeZone: true } when the timezone label is desired.
+
 Out of scope (current)
 
 - Changing timeUnit on an existing instance (construct a new instance instead).

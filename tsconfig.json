@@ -9,13 +9,10 @@
  */
 {
   "compilerOptions": {
-    // [req-2] Enable modern JS features (top-level await, named groups).
     "target": "ES2022",
     "lib": ["ES2022", "DOM"],
 
-    // [req-1] Do not type-check dependency .d.ts files (incl. node_modules).
     "skipLibCheck": true,
-    // Existing settings retained to satisfy [req-3] and [req-4].
     "allowJs": true,
     "checkJs": true,
     "esModuleInterop": true,
@@ -28,7 +25,6 @@
     "resolveJsonModule": true,
     "strict": true,
     "tsBuildInfoFile": "./.tsbuildinfo",
-    // [req-4] Test environment globals.
     "types": ["node", "vitest/globals"]
   },
   "exclude": ["coverage", "dist", "docs", "node_modules", ".stan"],
