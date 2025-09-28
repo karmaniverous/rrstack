@@ -135,7 +135,8 @@ const everyWithInterval = (
 const withCountUntil = (phrase: string, d: RuleDescriptorRecur): string => {
   let out = phrase;
   if (typeof d.count === 'number' && d.count > 0) {
-    out += ` for ${d.count} occurrence${d.count === 1 ? '' : 's'}`;
+    const c = d.count;
+    out += ` for ${String(c)} occurrence${c === 1 ? '' : 's'}`;
   }
   if (typeof d.until === 'number') {
     const ymd =
