@@ -9,7 +9,7 @@ Next up (near‑term, prioritized)
 1. Description & frequency lexicon (complete the pluggable system)
    - Descriptor (AST) builder • new module src/rrstack/describe/descriptor.ts • buildRuleDescriptor(compiled: CompiledRule) => RuleDescriptor • Normalize lists; convert rrule Weekday to { weekday: 1..7; nth?: ±1..±5 }. • Include clamps (unit epoch), count, until, wkst when present.
    - strict‑en translator • new module src/rrstack/describe/translate.strict.en.ts (already present; extend as needed) • ordinal strings (long/short; last = -1), weekday/month names via Luxon, list joins, time formatting (hm/hms; h23/h12), bysetpos phrasing. • Interval phrasing: interval === 1 → noun (“every month/day”); > 1 → “every N {plural}”.
-   - Frequency lexicon exports • src/rrstack/describe/lexicon.ts — FREQUENCY\_\* constants, types, toFrequencyOptions(labels?). • Re-export from package root (already done; ensure stable API).
+   - Frequency lexicon exports • src/rrstack/describe/lexicon.ts — FREQUENCY\_\* constants, types, toFrequencyOptions(labels?). • Re-export from package root (constants & types exported; docs warnings cleared) — done.
    - Wiring and options • src/rrstack/describe/index.ts — compile → descriptor → translator (respect includeTimeZone/includeBounds/formatTimeZone; expose translatorOptions). • Per-call override via DescribeOptions; instance defaults (non-serialized) remain optional.
    - Tests • Keep acceptance: “third tuesday at 5:00” and “daily at 9:00” cases; add COUNT/UNTIL, multi‑month yearly, weekday-last, and setpos lists.
    - Docs • README/Handbook: “Descriptions: pluggable translators” + “Frequency labels for UI”.
@@ -154,19 +154,15 @@ Completed (recent)
 - Refactor(describe): move describe.ts into describe/index.ts to establish a module entry; update internal imports; public API remains './describe'.
 - Fix(bench/sanity): make “daily open end” sanity case use baseline blackout
   - Using defaultEffect: 'active' made the cascade open-start (earliest undefined).
-  - Switched to defaultEffect: 'blackout' to assert a finite earliest start
-    while keeping the end open; leaves BENCH-gated timing unaffected.- Setup(bench): first-class vitest bench integration
+  - Switched to defaultEffect: 'blackout' to assert a finite earliest start while keeping the end open; leaves BENCH-gated timing unaffected.
+- Setup(bench): first-class vitest bench integration
   - vitest.config.ts: added benchmark.include = ['src/**/*.bench.ts'].
   - package.json: new script "bench": "vitest bench".
   - stan.config.yml: added "bench: npm run bench" after "test".
-  - New suite: src/rrstack/perf.rrstack.bench.ts
-    • getEffectiveBounds: baseline active, daily open-end, daily 30d closed, monthly 3rd Tue open-end.
-    • isActiveAt: baseline active (sampled).
-    • getSegments: daily rule over 1-day window.
-    • classifyRange: daily hour + baseline active.
+  - New suite: src/rrstack/perf.rrstack.bench.ts • getEffectiveBounds: baseline active, daily open-end, daily 30d closed, monthly 3rd Tue open-end. • isActiveAt: baseline active (sampled). • getSegments: daily rule over 1-day window. • classifyRange: daily hour + baseline active.
   - Benchmarks are isolated from unit tests and run with `npm run bench`.
 
 - Fix(bench/react): wrap hook updates in act and enable act env
-  - Set IS_REACT_ACT_ENVIRONMENT and wrapped root.render/addRule/setRules in act()
-    to silence warnings and keep benches deterministic.
-
+  - Set IS_REACT_ACT_ENVIRONMENT and wrapped root.render/addRule/setRules in act() to silence warnings and keep benches deterministic.
+
+- Docs(description/lexicon): export FrequencyAdjectiveLabels, FrequencyNounLabels, FrequencyLexicon, OrdinalStyle, and RuleDescriptor from the package root to include them in Typedoc; clears warnings about referenced-but-missing types.
