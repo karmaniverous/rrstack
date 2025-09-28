@@ -13,6 +13,19 @@ Completed (recent)
 - Tests(describe): validate that weekday position (“third Tuesday”) and time
   (“5:00”, “9:00”) appear in rule descriptions (describeRule/describeCompiledRule).
 
+- Feat(describe): minimal strict‑en phrasing to satisfy tests
+  - Implemented a targeted, internal description path for:
+    - DAILY rules with time → “every day at h:mm”,
+    - MONTHLY rules with bysetpos + single weekday → “every month on the <ordinal> <weekday> [at h:mm]”.
+  - Fallback remains rrule.toText() for other patterns.
+  - No public translator/lexicon API yet; this is a conservative step to make
+    tests pass without changing the broader surface or docs.
+  - Kept includeTimeZone/includeBounds behavior unchanged.
+  - Next: complete the planned descriptor/translator architecture and frequency
+    lexicon exports, then migrate describeRule/describeCompiledRule to use the
+    pluggable translator by default (strict‑en), preserving current wording for
+    existing scenarios.
+
 - Feat(core): add RRStack.formatInstant(t, opts?) to format an instant using
   the stack’s configured timezone and timeUnit. Defaults to ISO (suppressing
   milliseconds); supports { format?: string; locale?: string } via Luxon.  Added unit tests for ms/s and a custom format string.
@@ -236,8 +249,7 @@ E. Description & frequency lexicon (immediate)
 
 2) strict-en translator
    - New: src/rrstack/describe/translate.strict.en.ts
-   - export strictEnTranslator(desc, opts)
-   - Helpers:
+   - export strictEnTranslator(desc, opts)   - Helpers:
      - ordinal strings (long/short), last= -1
      - weekday/month names
      - list formatting (and/commas)
@@ -269,4 +281,7 @@ E. Description & frequency lexicon (immediate)
 
 6) Docs
    - README/Handbook: “Descriptions: pluggable translators” and “Frequency labels for UI”.
-   - Document exports and config usage; note that translator functions are not serialized.
+   - Document exports and config usage; note that translator functions are not serialized.
+
+Status:
+- Phase 0 (minimal): DONE — daily time and monthly nth-weekday phrasing for tests; full descriptor/translator work remains.
