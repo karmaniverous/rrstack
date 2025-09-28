@@ -86,7 +86,7 @@ const ORDINAL_EN: Record<number, string> = {
   [-1]: 'last',
 };
 
-const toOrdinal = (n: number): string => ORDINAL_EN[n] ?? `${n}th`;
+const toOrdinal = (n: number): string => ORDINAL_EN[n] ?? `${String(n)}th`;
 
 const WEEKDAY_NAME_EN: Record<number, string> = {
   // rrule Weekday.weekday: 0..6 (MO..SU)
@@ -105,8 +105,8 @@ const weekdayName = (w: unknown): string | undefined => {
   return undefined;
 };
 
-const asArray = <T>(v: T | T[] | undefined): T[] =>
-  v === undefined ? [] : Array.isArray(v) ? v : [v];
+const asArray = <T>(v: T | T[] | null | undefined): T[] =>
+  v == null ? [] : Array.isArray(v) ? v : [v];
 
 const formatTimeHM = (r: CompiledRecurRule): string | undefined => {
   const h = asArray<number>(r.options.byhour)[0];

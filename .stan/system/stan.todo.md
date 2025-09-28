@@ -13,6 +13,13 @@ Completed (recent)
 - Tests(describe): validate that weekday position (“third Tuesday”) and time
   (“5:00”, “9:00”) appear in rule descriptions (describeRule/describeCompiledRule).
 
+- Fix(typecheck/lint): handle null values in rrule option arrays and satisfy
+  template‑expression lint
+  - asArray helper now accepts null (rrule Options fields may be number |
+    number[] | null), resolving TS2345 in describe.ts.
+  - toOrdinal now string‑coerces numeric template literal (restrict‑template‑
+    expressions), clearing the ESLint error.
+
 - Feat(describe): minimal strict‑en phrasing to satisfy tests
   - Implemented a targeted, internal description path for:
     - DAILY rules with time → “every day at h:mm”,
