@@ -1,8 +1,8 @@
 import { RRule } from 'rrule';
 import { describe, expect, it } from 'vitest';
 
-import { describeRule } from './describe';
-import type { RuleJson, TimeZoneId } from './types';
+import { describeRule } from '../describe';
+import type { RuleJson, TimeZoneId } from '../types';
 
 describe('rule description: weekday position and time', () => {
   const tz = 'UTC' as unknown as TimeZoneId;

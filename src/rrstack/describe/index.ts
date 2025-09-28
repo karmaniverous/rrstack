@@ -7,23 +7,20 @@
 
 import { DateTime } from 'luxon';
 
-import type { CompiledRecurRule, CompiledRule } from './compile';
-import { compileRule } from './compile';
-import {
-  buildRuleDescriptor,
-  type RuleDescriptor,
-} from './describe/descriptor';
-import {
-  type DescribeTranslator,
-  strictEnTranslator,
-  type TranslatorOptions,
-} from './describe/translate.strict.en';
+import type { CompiledRecurRule, CompiledRule } from '../compile';
+import { compileRule } from '../compile';
 import type {
   DurationParts,
   RuleJson,
   TimeZoneId,
   UnixTimeUnit,
-} from './types';
+} from '../types';
+import { buildRuleDescriptor, type RuleDescriptor } from './descriptor';
+import {
+  type DescribeTranslator,
+  strictEnTranslator,
+  type TranslatorOptions,
+} from './translate.strict.en';
 
 const plural = (n: number, unit: string) =>
   String(n) + ' ' + unit + (n === 1 ? '' : 's');

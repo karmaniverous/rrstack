@@ -6,6 +6,10 @@ Last updated: 2025-09-28 (UTC)
 
 Completed (recent)
 
+- Refactor(describe): move describe.ts into describe/index.ts to establish a
+  proper module entry; update internal imports for the new path. Public API and
+  tests unchanged (imports of './describe' now resolve to the directory index).
+
 - Requirements: integrate a detailed plan for pluggable rule descriptions (descriptor/AST + translators) and reusable frequency lexicon exports, with configuration points, exports, and acceptance criteria. Updated dev plan with prioritized implementation steps.
 - Tests(describe): validate that weekday position (“third Tuesday”) and time (“5:00”, “9:00”) appear in rule descriptions (describeRule/describeCompiledRule).
 
