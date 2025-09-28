@@ -155,4 +155,14 @@ Completed (recent)
 - Fix(bench/sanity): make “daily open end” sanity case use baseline blackout
   - Using defaultEffect: 'active' made the cascade open-start (earliest undefined).
   - Switched to defaultEffect: 'blackout' to assert a finite earliest start
-    while keeping the end open; leaves BENCH-gated timing unaffected.
+    while keeping the end open; leaves BENCH-gated timing unaffected.- Setup(bench): first-class vitest bench integration
+  - vitest.config.ts: added benchmark.include = ['src/**/*.bench.ts'].
+  - package.json: new script "bench": "vitest bench".
+  - stan.config.yml: added "bench: npm run bench" after "test".
+  - New suite: src/rrstack/perf.rrstack.bench.ts
+    • getEffectiveBounds: baseline active, daily open-end, daily 30d closed, monthly 3rd Tue open-end.
+    • isActiveAt: baseline active (sampled).
+    • getSegments: daily rule over 1-day window.
+    • classifyRange: daily hour + baseline active.
+  - Benchmarks are isolated from unit tests and run with `npm run bench`.
+

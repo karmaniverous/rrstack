@@ -3,7 +3,7 @@ cliDefaults:
     plan: false
     sequential: true
 excludes:
-  - "*.local"
+  - '*.local'
   - CHANGELOG.md
   - docs
   - package-lock.json
@@ -11,6 +11,7 @@ scripts:
   typecheck: npm run typecheck
   lint: npm run lint:fix
   test: npm run test -- --no-color
+  bench: npm run bench -- --no-color
   build: npm run build
   docs: npm run docs -- --emit none
   knip: npm run knip

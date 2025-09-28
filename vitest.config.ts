@@ -28,4 +28,8 @@ export default defineConfig({
       ],
     },
   },
+  // Discover and run micro-benchmarks with `vitest bench`
+  benchmark: {
+    include: ['src/**/*.bench.ts'],
+  },
 });

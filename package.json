@@ -145,6 +145,7 @@
     "url": "git+https://github.com/karmaniverous/rrstack.git"
   },
   "scripts": {
+    "bench": "vitest bench",
     "build": "rimraf dist && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "changelog": "auto-changelog",
     "docs": "npm run schema && typedoc",
