@@ -170,6 +170,11 @@ E. Description & frequency lexicon (see “Next up” #1)
 
 Completed (recent)
 
+- Fix(describe/strict-en): default to short ordinals for BYMONTHDAY lists
+  (monthly/yearly) so output renders “on the 1st, 15th …” and
+  “on the 2nd and 15th …” as expected by tests and UI. Keep long
+  ordinals for weekday positions (e.g., “third tuesday”, “last tuesday”).
+
 - Perf(bench, node-only): add mutator micro‑benches under src/rrstack/perf.mutators.bench.ts with fixed pre‑states: add first (0→1), add second (1→2), remove last (1→0), swap(0,last), up(last), down(0), top(last), bottom(0).
 - Perf(bench, react): replace single “addRule (immediate)” bench with two benches that add the first rule and the second rule respectively, so results align with Node-only mutator benches and fixed pre‑states.
 

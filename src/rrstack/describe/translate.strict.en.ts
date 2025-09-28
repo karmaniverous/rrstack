@@ -276,7 +276,7 @@ const phraseRecur = (
           (n): n is number => typeof n === 'number',
         );
         if (days.length > 0) {
-          const ords = ordinalsList(days, opts?.ordinals ?? 'long');
+          const ords = ordinalsList(days, opts?.ordinals ?? 'short');
           return withCountUntil(
             `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on the ${ords}${tm ? ` at ${tm}` : ''}`,
             d,
@@ -340,7 +340,7 @@ const phraseRecur = (
             (n): n is number => typeof n === 'number',
           );
           if (days.length > 0) {
-            const ords = ordinalsList(days, opts?.ordinals ?? 'long');
+            const ords = ordinalsList(days, opts?.ordinals ?? 'short');
             return withCountUntil(
               `${base} in ${inMonths} on the ${ords}${tm2 ? ` at ${tm2}` : ''}`,
               d,
@@ -393,7 +393,7 @@ const phraseRecur = (
         (n): n is number => typeof n === 'number',
       );
       if (days.length > 0) {
-        const ords = ordinalsList(days, opts?.ordinals ?? 'long');
+        const ords = ordinalsList(days, opts?.ordinals ?? 'short');
         const tm = formatLocalTimeList(
           d.tz,
           d.by.hours,
