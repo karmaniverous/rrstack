@@ -178,6 +178,13 @@ Completed (recent)
   - Multiple months: “in january, april … on thursday …”
   - Time-of-day appended when present.
 
+- Tests(describe): add RRStack.describeRule span + includeBounds coverage (ms and 's' units).
+  - Confirms that “Active continuously [from …; until …]” appears when includeBounds=true
+    and starts/ends are present on span rules.
+  - Downstream triage notes: ensure rule edits recompile (replace rules array or use mutators) and
+    pass timestamps in the configured unit (e.g., seconds when timeUnit='s'); unit mismatch can
+    yield invalid ISO formatting and hide bounds in the description.
+
 - Fix(lint): coerce numeric template expression in src/react/perf.react.bench.ts (shrink label) to String(i) to satisfy @typescript-eslint/restrict-template-expressions.
 - Perf(tests): add BENCH-gated micro-benchmarks for core algorithms (baseline active; daily open-ended; daily closed 30d; light isActiveAt/getSegments/classifyRange); skipped by default; sanity asserts always run.
 - Fix(lint): coerce numeric template expressions to string in strict-en translator (restrict-template-expressions).
