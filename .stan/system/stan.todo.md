@@ -152,3 +152,7 @@ Completed (recent)
 - Feat(describe): derive localized weekday/month names via Luxon; options for locale/lowercase; strict-en remains lower-case default.
 - Tests(describe): validate weekday position (“third Tuesday”) and time (“5:00”, “9:00”) appear in rule descriptions.
 - Refactor(describe): move describe.ts into describe/index.ts to establish a module entry; update internal imports; public API remains './describe'.
+- Fix(bench/sanity): make “daily open end” sanity case use baseline blackout
+  - Using defaultEffect: 'active' made the cascade open-start (earliest undefined).
+  - Switched to defaultEffect: 'blackout' to assert a finite earliest start
+    while keeping the end open; leaves BENCH-gated timing unaffected.

@@ -75,7 +75,7 @@ describe('perf (sanity, always-on): baseline + single rule shapes', () => {
     };
     const s = new RRStack({
       timezone: 'UTC',
-      defaultEffect: 'active', // keep the baseline active across uncovered instants
+      defaultEffect: 'blackout', // ensure earliest start is finite (baseline doesn't make cascade open-start)
       rules: [rule],
     });
     const b = s.getEffectiveBounds();
