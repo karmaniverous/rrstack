@@ -69,6 +69,27 @@ const monthlyNth = new RRStack({
   rules: [monthlyNthRule],
 });
 
+// Monthly 3rd Tuesday (closed-sided; finite window)
+const monthlyNthClosedRule: RuleJson = {
+  effect: 'active',
+  duration: { hours: 1 },
+  options: {
+    freq: 'monthly',
+    bysetpos: 3,
+    byweekday: [RRule.TU],
+    byhour: [5],
+    byminute: [0],
+    bysecond: [0],
+    starts: Date.UTC(2024, 0, 1, 0, 0, 0),
+    ends: Date.UTC(2024, 6, 1, 0, 0, 0), // ~6 months window
+  },
+};
+const monthlyNthClosed = new RRStack({
+  timezone: 'UTC',
+  defaultEffect: 'blackout',
+  rules: [monthlyNthClosedRule],
+});
+
 // Count-limited daily (finite probe path)
 const dailyCountRule: RuleJson = {
   effect: 'active',
@@ -86,6 +107,27 @@ const dailyCountLimited = new RRStack({
   timezone: 'UTC',
   defaultEffect: 'blackout',
   rules: [dailyCountRule],
+});
+
+// Yearly bymonthday (count-limited; finite series)
+const yearlyByMonthDayCountRule: RuleJson = {
+  effect: 'active',
+  duration: { hours: 1 },
+  options: {
+    freq: 'yearly',
+    bymonth: [7],
+    bymonthday: [20],
+    byhour: [5],
+    byminute: [0],
+    bysecond: [0],
+    starts: Date.UTC(2020, 0, 1, 0, 0, 0),
+    count: 10, // finite series
+  },
+};
+const yearlyByMonthDayCount = new RRStack({
+  timezone: 'UTC',
+  defaultEffect: 'blackout',
+  rules: [yearlyByMonthDayCountRule],
 });
 
 // Reverse-sweep stress (ambiguous pre-pass; blackout + later active on probe day)
@@ -177,8 +219,16 @@ describe('RRStack benchmarks (vitest bench)', () => {
     monthlyNth.getEffectiveBounds();
   });
 
+  bench('getEffectiveBounds — monthly 3rd Tuesday (closed-sided)', () => {
+    monthlyNthClosed.getEffectiveBounds();
+  });
+
   bench('getEffectiveBounds — daily count-limited (finite series)', () => {
     dailyCountLimited.getEffectiveBounds();
+  });
+
+  bench('getEffectiveBounds — yearly bymonthday (count-limited)', () => {
+    yearlyByMonthDayCount.getEffectiveBounds();
   });
 
   bench(

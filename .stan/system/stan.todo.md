@@ -10,9 +10,8 @@ Next up (near‑term, prioritized)
    - Extend micro‑bench coverage - monthly “nth weekday” open/closed; yearly bymonthday; count‑limited recurrences; blackout overlays and tie‑at‑boundary for latest‑end reverse sweep.
    - Developer docs - short section (Handbook → Algorithms) describing how to run BENCH and interpret ops/s.
    - Optional - consider tinybench only if richer stats are needed; explore an internal diagnostic knob (test builds) for probe/backstep counters.
-   - Added in this iteration: • getEffectiveBounds: daily count-limited (finite series) and reverse-sweep stress (ambiguous pre-pass). • Overlay scenario (active + blackout slice): getSegments/classifyRange over 1-day window.
-   - Next: • Add benches for monthly nth-weekday (closed) and yearly bymonthday finite rooms; consider parameterized horizons. • Capture perf snapshots across Node versions to a markdown table in docs (manual for now).
-
+   - Added in this iteration: • getEffectiveBounds: daily count-limited (finite series) and reverse-sweep stress (ambiguous pre-pass). • Overlay scenario (active + blackout slice): getSegments/classifyRange over 1-day window. • getEffectiveBounds: monthly nth-weekday (closed-sided) and yearly bymonthday (count-limited).
+   - Next: • Consider parameterized horizons or table-driven benches for families (daily/monthly/yearly). • Capture perf snapshots across Node versions to a markdown table in docs (manual for now).
 2. Docs & examples (priority)
    - Handbook/README: “Descriptions: pluggable translators” with examples covering:
      - Daily at time, weekly multiple days, monthly nth weekday (incl. last), monthly by‑month‑day,
