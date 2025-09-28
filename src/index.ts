@@ -13,6 +13,7 @@ export type {
   RuleDescriptor,
   RuleDescriptorRecur,
   RuleDescriptorSpan,
+  WeekdayPos,
 } from './rrstack/describe/descriptor';
 export type {
   FrequencyAdjectiveLabels,
