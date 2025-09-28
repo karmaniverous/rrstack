@@ -1,6 +1,6 @@
 # RRStack — Project Requirements (repo-specific)
 
-Last updated: 2025-09-21 (UTC)
+Last updated: 2025-09-28 (UTC)
 
 Purpose
 
@@ -69,24 +69,6 @@ Observability (mutation notifications)
     - timeUnit: 'ms' | 's'
     - rules: RuleJson[]
     - timezone: TimeZoneId (branded, validated string)
-
-Human-readable rule descriptions
-
-- Provide helpers that leverage rrule's toText():
-  - describeRule(
-    rule: RuleJson,
-    timezone: TimeZoneId,
-    unit: UnixTimeUnit,
-    opts?: { includeTimeZone?: boolean; includeBounds?: boolean },
-    ): string
-  - RRStack.prototype.describeRule(
-    index: number,
-    opts?: { includeTimeZone?: boolean; includeBounds?: boolean },
-    ): string
-
-- JSON persistence
-  - toJson(): RRStackOptions — writes version as a build-time injected constant; does not import package.json at runtime (browser-friendly).
-  - The constructor accepts RRStackOptions; version is ignored (reserved for future transforms). No RRStack.fromJson() API.
 
 Options, mutability, and setters
 
@@ -225,3 +207,144 @@ Out of scope (for now)
 
 - Changing timeUnit on an existing instance (re-interpretation) — not supported; construct a new instance instead.
 - Full RRULE Options schema validation via zod — compile remains the authoritative validator.
+
+Rule descriptions — pluggable translator and frequency lexicon
+
+Goal
+
+- Provide deterministic, complete, local rule descriptions without relying on rrule.toText.
+- Support pluggable translators with sensible defaults and UI-aligned label exports.
+
+Descriptor (AST)
+
+- Build a normalized, JSON-friendly descriptor from CompiledRule (no rrule objects leak through).
+- Shape:
+  - Base
+    - kind: 'span' | 'recur'
+    - effect: 'active' | 'blackout'
+    - tz: string
+    - unit: 'ms' | 's'
+    - clamps?: { starts?: number; ends?: number } // epoch in configured unit
+  - Span
+    - kind: 'span'
+  - Recurrence
+    - kind: 'recur'
+    - freq: FrequencyStr
+    - interval: number (default 1)
+    - duration: DurationParts
+    - by:
+      - months?: number[] (1..12)
+      - monthDays?: number[] (±1..±31)
+      - yearDays?: number[] (±1..±366)
+      - weekNos?: number[] (±1..±53)
+      - weekdays?: Array<{ weekday: 1..7; nth?: number /_ ±1..±5; -1=last _/ }>
+      - hours?: number[]; minutes?: number[]; seconds?: number[]
+      - setpos?: number[]
+      - wkst?: 1..7
+    - count?: number
+    - until?: number // inclusive of a start at that instant (RRULE semantics)
+
+Translators (pluggable)
+
+- type DescribeTranslator = (desc: RuleDescriptor, opts: TranslatorOptions) => string
+- TranslatorOptions:
+  - frequency?: Partial<FrequencyLexicon> // merged over defaults
+  - timeFormat?: 'hm' | 'hms' | 'auto' // default 'hm' → “9:00”
+  - hourCycle?: 'h23' | 'h12' // default 'h23'
+  - ordinals?: 'long' | 'short' // default 'long' (third vs 3rd)
+  - includeTimeZone?: boolean (default true)
+  - includeBounds?: boolean (default false)
+  - formatTimeZone?: (tzId: string) => string
+  - includeWkst?: boolean (default smart: only when wkst changes semantics)
+- Built-ins:
+  - strict-en (default):
+    - Complete and literal; always includes constraints.
+    - Interval phrasing:
+      - interval === 1 → noun form: “every year / month / week / day / hour / minute / second”
+      - interval > 1 → “every N {plural(noun)}” using pluralizer
+    - Nth weekday: “on the 3rd Tuesday”; last: “on the last Friday”
+    - Time of day: “at 9:00” (hm) or “at 9:00:15” (hms) per timeFormat
+    - BYSETPOS when needed: “select the 1st and 3rd occurrence”
+    - COUNT/UNTIL appended; UNTIL is inclusive of a start (documented semantics)
+  - pretty-en (optional later): idiomatic compressions (e.g., weekdays/weekends).
+
+Frequency lexicon (labels usable by translator and UI)
+
+- Types:
+  - type FrequencyAdjectiveLabels = Record<FrequencyStr, string>
+  - type FrequencyNounLabels = Record<FrequencyStr, string>
+  - type FrequencyLexicon = {
+    adjective: FrequencyAdjectiveLabels;
+    noun: FrequencyNounLabels;
+    pluralize?: (noun: string, n: number) => string; // default adds “s”
+    }
+- Default English (exported):
+  - FREQUENCY_ADJECTIVE_EN: {
+    yearly: 'yearly', monthly: 'monthly', weekly: 'weekly', daily: 'daily',
+    hourly: 'hourly', minutely: 'minutely', secondly: 'secondly'
+    }
+  - FREQUENCY_NOUN_EN: {
+    yearly: 'year', monthly: 'month', weekly: 'week', daily: 'day',
+    hourly: 'hour', minutely: 'minute', secondly: 'second'
+    }
+  - FREQUENCY_LEXICON_EN: { adjective, noun, pluralize }
+- UI helper:
+  - toFrequencyOptions(labels?: FrequencyAdjectiveLabels)
+    → Array<{ value: FrequencyStr; label: string }>, ordered
+- Rationale for adjective+noun:
+  - Interval phrasing requires countable nouns; single-interval reads naturally as nouns too (“every month/day”).
+  - Keeping both supports non-English overrides and consistent translator phrasing.
+
+Configuration and injection
+
+- Per-instance (optional) in RRStackOptions:
+  - describe?: {
+    translator?: DescribeTranslator | 'strict-en' | 'pretty-en';
+    translatorOptions?: TranslatorOptions;
+    }
+- Per-call override (DescribeOptions):
+  - translator?: DescribeTranslator | 'strict-en' | 'pretty-en'
+  - translatorOptions?: TranslatorOptions
+  - includeTimeZone/includeBounds/formatTimeZone pass-through to translatorOptions
+- Precedence: per-call → instance default → library default (strict-en + EN lexicons)
+
+Public helpers (unchanged entry points; now powered by translator)
+
+- describeRule(
+  rule: RuleJson,
+  timezone: TimeZoneId,
+  unit: UnixTimeUnit,
+  opts?: DescribeOptions & {
+  translator?: DescribeTranslator | 'strict-en' | 'pretty-en';
+  translatorOptions?: TranslatorOptions;
+  },
+  ): string
+- RRStack.prototype.describeRule(
+  index: number,
+  opts?: DescribeOptions & {
+  translator?: DescribeTranslator | 'strict-en' | 'pretty-en';
+  translatorOptions?: TranslatorOptions;
+  },
+  ): string
+
+Persistence
+
+- Translator functions are not serialized.
+- TranslatorOptions may be partially serializable (e.g., textual frequency overrides) but are not required to be persisted; initial scope: instance-only config is acceptable.
+
+Exports (top-level API additions)
+
+- Types: FrequencyAdjectiveLabels, FrequencyNounLabels, FrequencyLexicon, DescribeTranslator, TranslatorOptions
+- Constants: FREQUENCY_ADJECTIVE_EN, FREQUENCY_NOUN_EN, FREQUENCY_LEXICON_EN
+- Helper: toFrequencyOptions(labels?)
+
+Acceptance and tests for descriptions
+
+- The default strict-en output must satisfy:
+  - Monthly 3rd Tuesday at 05:00 includes “third”, “tuesday”, and “5:00”.
+  - Daily at 09:00 includes “9:00” (not just “9”).
+- Table-driven cases:
+  - interval 1 vs > 1 phrasing,
+  - nth/weekdays (positive and “last” via -1),
+  - mixed constraints (months, setpos),
+  - count vs until, hourCycle/timeFormat variants.

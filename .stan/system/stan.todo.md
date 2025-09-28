@@ -1,11 +1,15 @@
 # RRStack — Requirements and Development Plan
 
-Last updated: 2025-09-27 (UTC)
+Last updated: 2025-09-28 (UTC)
 
 ## This document captures requirements, architecture, contracts, and the implementation plan for RRStack. It will be kept current across iterations.
 
 Completed (recent)
 
+- Requirements: integrate a detailed plan for pluggable rule descriptions
+  (descriptor/AST + translators) and reusable frequency lexicon exports, with
+  configuration points, exports, and acceptance criteria. Updated dev plan with
+  prioritized implementation steps.
 - Tests(describe): validate that weekday position (“third Tuesday”) and time
   (“5:00”, “9:00”) appear in rule descriptions (describeRule/describeCompiledRule).
 
@@ -220,3 +224,49 @@ D. Docs
 - Handbook: document option shapes, defaults, staged-vs-compiled behavior, migration notes (0.11.0).
 - Bounds: document probe-free open-end detection and finite latest-end strategy.
 
+
+E. Description & frequency lexicon (immediate)
+   (Top priority; implement before other refactors unless blocked)
+
+1) Descriptor (AST) builder
+   - New: src/rrstack/describe/descriptor.ts
+   - buildRuleDescriptor(compiled: CompiledRule) => RuleDescriptor
+   - Normalize lists; convert rrule Weekday to { weekday: 1..7, nth?: number }.
+   - Include clamps, count/until, wkst when present.
+
+2) strict-en translator
+   - New: src/rrstack/describe/translate.strict.en.ts
+   - export strictEnTranslator(desc, opts)
+   - Helpers:
+     - ordinal strings (long/short), last= -1
+     - weekday/month names
+     - list formatting (and/commas)
+     - time formatting (hm/hms; h23/h12)
+     - setpos phrasing (“select the 1st and 3rd occurrence” when needed)
+   - Interval phrasing:
+     - interval === 1 → noun: “every year/month/week/day/hour/minute/second”
+     - interval > 1 → “every N {plural(noun)}” using pluralizer
+
+3) Frequency lexicon exports
+   - New: src/rrstack/describe/lexicon.ts
+   - Types: FrequencyAdjectiveLabels, FrequencyNounLabels, FrequencyLexicon
+   - Constants: FREQUENCY_ADJECTIVE_EN, FREQUENCY_NOUN_EN, FREQUENCY_LEXICON_EN
+   - UI helper: toFrequencyOptions(labels?: FrequencyAdjectiveLabels)
+   - Re-export from package root.
+
+4) Wiring and options
+   - Update src/rrstack/describe.ts:
+     - compile → descriptor → translator (resolved by precedence)
+     - Default translator: strict-en with EN lexicons
+     - Respect includeTimeZone/includeBounds/formatTimeZone via TranslatorOptions
+   - Extend DescribeOptions with translator / translatorOptions.
+   - Optionally extend RRStackOptions with instance-level describe?: { translator?: id|fn; translatorOptions?: TranslatorOptions } (do not serialize functions).
+
+5) Tests
+   - Fix current failures (ensure “third” and “9:00” appear).
+   - Add table tests for interval 1 vs > 1, nth weekday (incl. last), BYSETPOS lists,
+     count vs until, timeFormat/hourCycle variants, multiple constraints.
+
+6) Docs
+   - README/Handbook: “Descriptions: pluggable translators” and “Frequency labels for UI”.
+   - Document exports and config usage; note that translator functions are not serialized.
