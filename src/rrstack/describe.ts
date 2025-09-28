@@ -9,7 +9,16 @@ import { DateTime } from 'luxon';
 
 import type { CompiledRecurRule, CompiledRule } from './compile';
 import { compileRule } from './compile';
-import { Frequency, Weekday } from './rrule.runtime';
+import {
+  buildRuleDescriptor,
+  type RuleDescriptor,
+} from './describe/descriptor';
+import {
+  type DescribeTranslator,
+  strictEnTranslator,
+  type TranslatorOptions,
+} from './describe/translate.strict.en';
+import { Weekday } from './rrule.runtime';
 import type {
   DurationParts,
   RuleJson,
@@ -74,76 +83,11 @@ export interface DescribeOptions {
    * `(timezone formatTimeZone(tzId))` instead of the raw tz id.
    */
   formatTimeZone?: (tzId: string) => string;
+  /** Optional translator override ('strict-en' or custom) */
+  translator?: 'strict-en' | DescribeTranslator;
+  /** Options for the translator. */
+  translatorOptions?: TranslatorOptions;
 }
-
-// Helpers for basic “strict‑en” phrasing used to satisfy immediate tests.
-const ORDINAL_EN: Record<number, string> = {
-  1: 'first',
-  2: 'second',
-  3: 'third',
-  4: 'fourth',
-  5: 'fifth',
-  [-1]: 'last',
-};
-
-const toOrdinal = (n: number): string => ORDINAL_EN[n] ?? `${String(n)}th`;
-
-const WEEKDAY_NAME_EN: Record<number, string> = {
-  // rrule Weekday.weekday: 0..6 (MO..SU)
-  0: 'monday',
-  1: 'tuesday',
-  2: 'wednesday',
-  3: 'thursday',
-  4: 'friday',
-  5: 'saturday',
-  6: 'sunday',
-};
-
-const weekdayName = (w: unknown): string | undefined => {
-  if (w instanceof Weekday) return WEEKDAY_NAME_EN[w.weekday];
-  if (typeof w === 'number') return WEEKDAY_NAME_EN[w];
-  return undefined;
-};
-
-const asArray = <T>(v: T | T[] | null | undefined): T[] =>
-  v == null ? [] : Array.isArray(v) ? v : [v];
-
-const formatTimeHM = (r: CompiledRecurRule): string | undefined => {
-  const h = asArray<number>(r.options.byhour)[0];
-  if (typeof h !== 'number') return undefined;
-  const mRaw = asArray<number>(r.options.byminute)[0] ?? 0;
-  const hStr = String(h);
-  const mStr = String(mRaw).padStart(2, '0');
-  return `${hStr}:${mStr}`;
-};
-
-/**
- * Minimal strict-en recurrence phrasing to satisfy tests, with fallback to
- * rrule.toText() for general cases.
- */
-const describeRecurMinimal = (r: CompiledRecurRule): string => {
-  const freq = r.options.freq;
-  // Daily: “every day [at h:mm]”
-  if (freq === Frequency.DAILY) {
-    const tm = formatTimeHM(r);
-    return tm ? `every day at ${tm}` : 'every day';
-  }
-  // Monthly + bysetpos + single weekday: “every month on the <ordinal> <weekday> [at h:mm]”
-  if (freq === Frequency.MONTHLY) {
-    const setpos = asArray<number>(r.options.bysetpos);
-    const wdays = asArray<unknown>(r.options.byweekday);
-    if (setpos.length === 1 && wdays.length === 1) {
-      const ord = toOrdinal(setpos[0]);
-      const wd = weekdayName(wdays[0]);
-      if (wd) {
-        const tm = formatTimeHM(r);
-        return `every month on the ${ord} ${wd}${tm ? ` at ${tm}` : ''}`;
-      }
-    }
-  }
-  // Fallback: defer to rrule’s toText()
-  return r.rrule.toText();
-};
 
 /**
  * Build a plain-language description of a compiled rule.
@@ -191,8 +135,12 @@ export const describeCompiledRule = (
   }
   const recur = compiled;
   const durText = durationToTextFromCompiled(recur);
-  // Use minimal strict-en phrasing for key cases; otherwise fallback to rrule.toText().
-  const recurText = describeRecurMinimal(recur);
+  const descriptor: RuleDescriptor = buildRuleDescriptor(recur);
+  const tx: DescribeTranslator =
+    typeof opts.translator === 'function'
+      ? opts.translator
+      : strictEnTranslator;
+  const recurText = tx(descriptor, opts.translatorOptions);
   let s = `${effect} for ${durText}: ${recurText}`;
   if (includeTimeZone) {
     const tzLabel = formatTimeZone ? formatTimeZone(recur.tz) : recur.tz;

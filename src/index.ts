@@ -8,6 +8,17 @@ export { RRStack } from './rrstack';
 export type { DescribeOptions } from './rrstack/describe';
 export { describeRule } from './rrstack/describe';
 export { fromIsoDuration, toIsoDuration } from './rrstack/duration';
+// Description translators & lexicon
+export {
+  FREQUENCY_ADJECTIVE_EN,
+  FREQUENCY_LEXICON_EN,
+  FREQUENCY_NOUN_EN,
+  toFrequencyOptions,
+} from './rrstack/describe/lexicon';
+export type {
+  DescribeTranslator,
+  TranslatorOptions,
+} from './rrstack/describe/translate.strict.en';
 export { RRSTACK_CONFIG_SCHEMA } from './rrstack/RRStack.schema';
 export type {
   DurationParts,
