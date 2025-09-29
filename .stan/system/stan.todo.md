@@ -170,6 +170,12 @@ E. Description & frequency lexicon (see “Next up” #1)
 
 Completed (recent)
 
+- Tests(describe): add coverage for positioned weekday “or” phrasing
+  - Monthly and yearly (single/multiple/no months) with nth/BYSETPOS use
+    “on the third tuesday or wednesday …” and Oxford-comma “or” lists.
+  - Multi-month + multi-weekday + BYSETPOS renders both month and weekday
+    lists with “or”.
+  - Multiple nth positions for the same weekday (“first or third tuesday”).
 - Feat(describe/strict-en): “positioned weekday” lists with natural “or”
   - Monthly: multiple weekdays + nth/BYSETPOS → “every month on the third
     tuesday or wednesday …”

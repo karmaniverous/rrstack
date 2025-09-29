@@ -217,4 +217,118 @@ describe('rule descriptions (extended scenarios)', () => {
     expect(lower).toContain('15th');
     expect(lower).toContain('6:00');
   });
+
+  it('monthly: multiple weekdays with nth → “every month on the third tuesday or wednesday …”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'monthly',
+        byweekday: [RRule.TU.nth(3), RRule.WE.nth(3)],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('every month');
+    expect(lower).toContain('on the third tuesday or wednesday');
+  });
+
+  it('monthly: multiple weekdays with BYSETPOS → “every month on the third tuesday or wednesday …”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'monthly',
+        byweekday: [RRule.TU, RRule.WE],
+        bysetpos: [3],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('every month');
+    expect(lower).toContain('on the third tuesday or wednesday');
+  });
+
+  it('yearly, single month: multiple weekdays with nth → “every year in july on the third tuesday or wednesday …”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'yearly',
+        bymonth: [7],
+        byweekday: [RRule.TU.nth(3), RRule.WE.nth(3)],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('every year in july');
+    expect(lower).toContain('on the third tuesday or wednesday');
+  });
+
+  it('yearly, single month: multiple weekdays with BYSETPOS → “every year in july on the third tuesday or wednesday …”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'yearly',
+        bymonth: [7],
+        byweekday: [RRule.TU, RRule.WE],
+        bysetpos: [3],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('every year in july');
+    expect(lower).toContain('on the third tuesday or wednesday');
+  });
+
+  it('yearly, multiple months + multiple weekdays + BYSETPOS → proper “or” lists for months and weekdays', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'yearly',
+        bymonth: [1, 2, 4], // january, february, april
+        byweekday: [RRule.TU, RRule.WE, RRule.TH],
+        bysetpos: [3], // third
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    // Months use Oxford comma with "or"
+    expect(lower).toContain('in january, february, or april');
+    // Weekdays use Oxford comma with "or"
+    expect(lower).toContain('on the third tuesday, wednesday, or thursday');
+  });
+
+  it('yearly, no months: multiple weekdays with nth → “every year on the third tuesday or wednesday …”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'yearly',
+        byweekday: [RRule.TU.nth(3), RRule.WE.nth(3)],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('every year');
+    expect(lower).toContain('on the third tuesday or wednesday');
+  });
+
+  it('multiple nth for same weekday (monthly): “on the first or third tuesday …”', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'monthly',
+        byweekday: [RRule.TU],
+        bysetpos: [1, 3],
+      },
+    };
+    const text = describeRule(rule, tz, 'ms');
+    const lower = text.toLowerCase();
+    expect(lower).toContain('every month');
+    expect(lower).toContain('on the first or third tuesday');
+  });
 });
