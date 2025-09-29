@@ -48,6 +48,15 @@ const joinList = (items: string[]): string =>
 const maybeLower = (s: string, lower: boolean | undefined): string =>
   lower === false ? s : s.toLowerCase();
 
+// Join with a chosen conjunction ('and' | 'or'); use Oxford comma for > 2 items.
+const joinListConj = (items: string[], conj: 'and' | 'or' = 'and'): string => {
+  if (items.length <= 1) return items[0] ?? '';
+  if (items.length === 2) return `${items[0]} ${conj} ${items[1]}`;
+  const head = items.slice(0, -1).join(', ');
+  const tail = items[items.length - 1] ?? '';
+  return `${head}, ${conj} ${tail}`;
+};
+
 const ord = (n: number, style: OrdinalStyle): string => {
   const dic = style === 'short' ? ORD_SHORT : ORD_LONG;
   return dic[n] ?? `${String(n)}th`;
@@ -249,6 +258,7 @@ const phraseRecur = (
   // - BYMONTH + (weekday nth or BYSETPOS) => “in july on the third tuesday”
   // - BYMONTH + weekday(s) (no position) => “in july on tuesday(s)”
   // - Multiple months => “in january, march and july …” (+ optional weekday(s) / monthdays)
+  // - Position-aware “or” lists for months/weekdays when nth/setpos is present
   if (d.freq === 'yearly') {
     const m =
       Array.isArray(d.by.months) && d.by.months.length === 1
@@ -283,34 +293,30 @@ const phraseRecur = (
           );
         }
       }
-      // Weekday position (nth or setpos) → “on the third tuesday”
-      if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
-        const w = d.by.weekdays[0];
-        const nth =
-          typeof w.nth === 'number'
-            ? w.nth
-            : Array.isArray(d.by.setpos) && d.by.setpos.length === 1
-              ? d.by.setpos[0]
-              : undefined;
-        if (typeof nth === 'number') {
-          const o = ord(nth, opts?.ordinals ?? 'long');
-          const name = localWeekdayName(
-            d.tz,
-            w.weekday,
-            opts?.locale,
-            opts?.lowercase,
-          );
-          return withCountUntil(
-            `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on the ${o} ${name}${tm ? ` at ${tm}` : ''}`,
-            d,
-          );
-        }
-      }
-      // Weekday(s) without position (no nth/setpos) → “in july on tuesday(s)”
+      // Weekdays (positioned or not)
       if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
         const names = d.by.weekdays.map((w) =>
           localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
         );
+        const setpos = Array.isArray(d.by.setpos)
+          ? d.by.setpos.filter((n): n is number => typeof n === 'number')
+          : [];
+        const nthFromW = d.by.weekdays
+          .map((w) => w.nth)
+          .filter((n): n is number => typeof n === 'number');
+        const nthUnique = Array.from(new Set<number>([...setpos, ...nthFromW]));
+        if (nthUnique.length > 0) {
+          const nthText = joinListConj(
+            nthUnique.map((n) => ord(n, opts?.ordinals ?? 'long')),
+            'or',
+          );
+          const wkText = joinListConj(names, 'or');
+          return withCountUntil(
+            `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on the ${nthText} ${wkText}${tm ? ` at ${tm}` : ''}`,
+            d,
+          );
+        }
+        // No position → simple weekday list
         const onDays = joinList(names);
         return withCountUntil(
           `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on ${onDays}${tm ? ` at ${tm}` : ''}`,
@@ -330,7 +336,8 @@ const phraseRecur = (
         )
         .map((mm) => monthName(d.tz, mm, opts?.locale, opts?.lowercase));
       if (months.length) {
-        const inMonths = joinList(months);
+        const inMonthsAnd = joinList(months);
+        const inMonthsOr = joinListConj(months, 'or');
         const tm2 = formatLocalTimeList(
           d.tz,
           d.by.hours,
@@ -347,47 +354,44 @@ const phraseRecur = (
           if (days.length > 0) {
             const ords = ordinalsList(days, opts?.ordinals ?? 'short');
             return withCountUntil(
-              `${base} in ${inMonths} on the ${ords}${tm2 ? ` at ${tm2}` : ''}`,
+              `${base} in ${inMonthsAnd} on the ${ords}${tm2 ? ` at ${tm2}` : ''}`,
               d,
             );
           }
         }
-        // Single weekday with position (BYSETPOS or Weekday.n) → “in <months> on the <nth> <weekday>”
-        if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
-          const w = d.by.weekdays[0];
-          const nth =
-            typeof w.nth === 'number'
-              ? w.nth
-              : Array.isArray(d.by.setpos) && d.by.setpos.length === 1
-                ? d.by.setpos[0]
-                : undefined;
-          if (typeof nth === 'number') {
-            const o = ord(nth, opts?.ordinals ?? 'long');
-            const name = localWeekdayName(
-              d.tz,
-              w.weekday,
-              opts?.locale,
-              opts?.lowercase,
-            );
-            return withCountUntil(
-              `${base} in ${inMonths} on the ${o} ${name}${tm2 ? ` at ${tm2}` : ''}`,
-              d,
-            );
-          }
-        }
-        // Weekday(s) without position
+        // Weekdays (positioned or not)
         if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
           const names = d.by.weekdays.map((w) =>
             localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
           );
+          const setpos = Array.isArray(d.by.setpos)
+            ? d.by.setpos.filter((n): n is number => typeof n === 'number')
+            : [];
+          const nthFromW = d.by.weekdays
+            .map((w) => w.nth)
+            .filter((n): n is number => typeof n === 'number');
+          const nthUnique = Array.from(
+            new Set<number>([...setpos, ...nthFromW]),
+          );
+          if (nthUnique.length > 0) {
+            const nthText = joinListConj(
+              nthUnique.map((n) => ord(n, opts?.ordinals ?? 'long')),
+              'or',
+            );
+            const wkText = joinListConj(names, 'or');
+            return withCountUntil(
+              `${base} in ${inMonthsOr} on the ${nthText} ${wkText}${tm2 ? ` at ${tm2}` : ''}`,
+              d,
+            );
+          }
           const onDays = joinList(names);
           return withCountUntil(
-            `${base} in ${inMonths} on ${onDays}${tm2 ? ` at ${tm2}` : ''}`,
+            `${base} in ${inMonthsAnd} on ${onDays}${tm2 ? ` at ${tm2}` : ''}`,
             d,
           );
         }
         return withCountUntil(
-          `${base} in ${inMonths}${tm2 ? ` at ${tm2}` : ''}`,
+          `${base} in ${inMonthsAnd}${tm2 ? ` at ${tm2}` : ''}`,
           d,
         );
       }
@@ -402,31 +406,27 @@ const phraseRecur = (
         opts?.timeFormat ?? 'hm',
         opts?.hourCycle ?? 'h23',
       );
-      if (d.by.weekdays.length === 1) {
-        const w = d.by.weekdays[0];
-        const nth =
-          typeof (w as { nth?: number }).nth === 'number'
-            ? (w as { nth: number }).nth
-            : Array.isArray(d.by.setpos) && d.by.setpos.length === 1
-              ? d.by.setpos[0]
-              : undefined;
-        if (typeof nth === 'number') {
-          const o = ord(nth, opts?.ordinals ?? 'long');
-          const name = localWeekdayName(
-            d.tz,
-            w.weekday,
-            opts?.locale,
-            opts?.lowercase,
-          );
-          return withCountUntil(
-            `${base} on the ${o} ${name}${tm3 ? ` at ${tm3}` : ''}`,
-            d,
-          );
-        }
-      }
       const names = d.by.weekdays.map((w) =>
         localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
       );
+      const setpos = Array.isArray(d.by.setpos)
+        ? d.by.setpos.filter((n): n is number => typeof n === 'number')
+        : [];
+      const nthFromW = d.by.weekdays
+        .map((w) => w.nth)
+        .filter((n): n is number => typeof n === 'number');
+      const nthUnique = Array.from(new Set<number>([...setpos, ...nthFromW]));
+      if (nthUnique.length > 0) {
+        const nthText = joinListConj(
+          nthUnique.map((n) => ord(n, opts?.ordinals ?? 'long')),
+          'or',
+        );
+        const wkText = joinListConj(names, 'or');
+        return withCountUntil(
+          `${base} on the ${nthText} ${wkText}${tm3 ? ` at ${tm3}` : ''}`,
+          d,
+        );
+      }
       const onDays = joinList(names);
       return withCountUntil(
         `${base} on ${onDays}${tm3 ? ` at ${tm3}` : ''}`,
@@ -478,36 +478,40 @@ const phraseRecur = (
       }
     }
 
-    // BYWEEKDAY with nth or BYSETPOS — “every month on the third tuesday …”
-    if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
-      const w = d.by.weekdays[0];
-      let nthVal: number | undefined = undefined;
-      if (typeof w.nth === 'number') {
-        nthVal = w.nth;
-      } else if (Array.isArray(d.by.setpos) && d.by.setpos.length === 1) {
-        nthVal = d.by.setpos[0];
-      }
-      if (typeof nthVal === 'number') {
-        const o = ord(nthVal, opts?.ordinals ?? 'long');
-        const name = localWeekdayName(
-          d.tz,
-          w.weekday,
-          opts?.locale,
-          opts?.lowercase,
+    // BYWEEKDAY (positioned or not)
+    if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
+      const setpos = Array.isArray(d.by.setpos)
+        ? d.by.setpos.filter((n): n is number => typeof n === 'number')
+        : [];
+      const nthFromW = d.by.weekdays
+        .map((w) => w.nth)
+        .filter((n): n is number => typeof n === 'number');
+      const nthUnique = Array.from(new Set<number>([...setpos, ...nthFromW]));
+      const names = d.by.weekdays.map((w) =>
+        localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
+      );
+      const tm = formatLocalTimeList(
+        d.tz,
+        d.by.hours,
+        d.by.minutes,
+        d.by.seconds,
+        opts?.timeFormat ?? 'hm',
+        opts?.hourCycle ?? 'h23',
+      );
+      if (nthUnique.length > 0) {
+        const nthText = joinListConj(
+          nthUnique.map((n) => ord(n, opts?.ordinals ?? 'long')),
+          'or',
         );
-        const tm = formatLocalTimeList(
-          d.tz,
-          d.by.hours,
-          d.by.minutes,
-          d.by.seconds,
-          opts?.timeFormat ?? 'hm',
-          opts?.hourCycle ?? 'h23',
-        );
+        const wkText = joinListConj(names, 'or');
         return withCountUntil(
-          `${base} on the ${o} ${name}${tm ? ` at ${tm}` : ''}`,
+          `${base} on the ${nthText} ${wkText}${tm ? ` at ${tm}` : ''}`,
           d,
         );
       }
+      // No position → simple weekday list (retain "and" behavior here)
+      const onDays = joinList(names);
+      return withCountUntil(`${base} on ${onDays}${tm ? ` at ${tm}` : ''}`, d);
     }
   }
   // Fallback: base only (further constraints can be added incrementally)

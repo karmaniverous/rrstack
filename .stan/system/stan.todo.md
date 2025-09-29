@@ -170,6 +170,18 @@ E. Description & frequency lexicon (see “Next up” #1)
 
 Completed (recent)
 
+- Feat(describe/strict-en): “positioned weekday” lists with natural “or”
+  - Monthly: multiple weekdays + nth/BYSETPOS → “every month on the third
+    tuesday or wednesday …”
+  - Yearly, single month: multiple weekdays + nth/BYSETPOS → “every year in
+    july on the third tuesday or wednesday …”
+  - Yearly, multiple months: multiple months + multiple weekdays + nth/BYSETPOS
+    → “every year in january, february, or april on the third tuesday,
+    wednesday, or thursday …”
+  - Yearly, no months: multiple weekdays + nth/BYSETPOS → “every year on the
+    third tuesday or wednesday …”
+  - Multiple nth for same weekday supported (e.g., “on the first or third
+    tuesday …”).
 - Fix(describe/bounds): only include “[from …; until …]” in descriptions
   when explicit clamps are present. Suppress synthesized dtstart (domain
   anchor) so open‑start rules do not show “from 1970…”.
