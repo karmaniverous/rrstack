@@ -2,9 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.13.3](https://github.com/karmaniverous/rrstack/compare/0.13.2...0.13.3)
+
+- fix(react): useRRStack tolerates null/undefined json [`0bc18c9`](https://github.com/karmaniverous/rrstack/commit/0bc18c9983942424bcbebcb745abc5a956d0727e)
+
 #### [0.13.2](https://github.com/karmaniverous/rrstack/compare/0.13.1...0.13.2)
 
+> 29 September 2025
+
 - fix(describe): use short ordinals for BYMONTHDAY lists [`aee0761`](https://github.com/karmaniverous/rrstack/commit/aee0761870fdfa464789d1319e846c8717b33907)
+- chore: release v0.13.2 [`7742370`](https://github.com/karmaniverous/rrstack/commit/77423705bd671a797f87bdbfceea201a50e07af4)
 - feat(describe): lists for month-days and times; tests [`2d84eb3`](https://github.com/karmaniverous/rrstack/commit/2d84eb3322f602693c91f8fccb87dc5eefca0a3f)
 
 #### [0.13.1](https://github.com/karmaniverous/rrstack/compare/0.13.0...0.13.1)
