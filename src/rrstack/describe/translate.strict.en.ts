@@ -317,6 +317,11 @@ const phraseRecur = (
           d,
         );
       }
+      // Single month only (no month-days/weekday constraints)
+      return withCountUntil(
+        `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)}${tm ? ` at ${tm}` : ''}`,
+        d,
+      );
     }
     if (Array.isArray(d.by.months) && d.by.months.length > 1) {
       const months = d.by.months
@@ -347,6 +352,29 @@ const phraseRecur = (
             );
           }
         }
+        // Single weekday with position (BYSETPOS or Weekday.n) → “in <months> on the <nth> <weekday>”
+        if (Array.isArray(d.by.weekdays) && d.by.weekdays.length === 1) {
+          const w = d.by.weekdays[0];
+          const nth =
+            typeof w.nth === 'number'
+              ? w.nth
+              : Array.isArray(d.by.setpos) && d.by.setpos.length === 1
+                ? d.by.setpos[0]
+                : undefined;
+          if (typeof nth === 'number') {
+            const o = ord(nth, opts?.ordinals ?? 'long');
+            const name = localWeekdayName(
+              d.tz,
+              w.weekday,
+              opts?.locale,
+              opts?.lowercase,
+            );
+            return withCountUntil(
+              `${base} in ${inMonths} on the ${o} ${name}${tm2 ? ` at ${tm2}` : ''}`,
+              d,
+            );
+          }
+        }
         // Weekday(s) without position
         if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
           const names = d.by.weekdays.map((w) =>
@@ -363,6 +391,47 @@ const phraseRecur = (
           d,
         );
       }
+    }
+    // No months configured, but weekdays present (yearly): reflect weekdays.
+    if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
+      const tm3 = formatLocalTimeList(
+        d.tz,
+        d.by.hours,
+        d.by.minutes,
+        d.by.seconds,
+        opts?.timeFormat ?? 'hm',
+        opts?.hourCycle ?? 'h23',
+      );
+      if (d.by.weekdays.length === 1) {
+        const w = d.by.weekdays[0];
+        const nth =
+          typeof (w as { nth?: number }).nth === 'number'
+            ? (w as { nth: number }).nth
+            : Array.isArray(d.by.setpos) && d.by.setpos.length === 1
+              ? d.by.setpos[0]
+              : undefined;
+        if (typeof nth === 'number') {
+          const o = ord(nth, opts?.ordinals ?? 'long');
+          const name = localWeekdayName(
+            d.tz,
+            w.weekday,
+            opts?.locale,
+            opts?.lowercase,
+          );
+          return withCountUntil(
+            `${base} on the ${o} ${name}${tm3 ? ` at ${tm3}` : ''}`,
+            d,
+          );
+        }
+      }
+      const names = d.by.weekdays.map((w) =>
+        localWeekdayName(d.tz, w.weekday, opts?.locale, opts?.lowercase),
+      );
+      const onDays = joinList(names);
+      return withCountUntil(
+        `${base} on ${onDays}${tm3 ? ` at ${tm3}` : ''}`,
+        d,
+      );
     }
   }
 

@@ -170,6 +170,15 @@ E. Description & frequency lexicon (see “Next up” #1)
 
 Completed (recent)
 
+- Fix(describe/bounds): only include “[from …; until …]” in descriptions
+  when explicit clamps are present. Suppress synthesized dtstart (domain
+  anchor) so open‑start rules do not show “from 1970…”.
+
+- Feat(describe/strict-en, yearly fallbacks):
+  - Single BYMONTH with no other constraints → “every year in <month>”.
+  - BYWEEKDAY without BYMONTH → “every year on <weekday(s)>”.
+  These complete coverage for simple yearly shapes that previously
+  fell back to “every year” with no details.
 - Fix(react/useRRStack): make hook robust to null/undefined json by falling back to a safe default ({ timezone: 'UTC', rules: [] }). Added tests covering null and undefined inputs.
 
 - Fix(describe/strict-en): default to short ordinals for BYMONTHDAY lists (monthly/yearly) so output renders “on the 1st, 15th …” and “on the 2nd and 15th …” as expected by tests and UI. Keep long ordinals for weekday positions (e.g., “third tuesday”, “last tuesday”).

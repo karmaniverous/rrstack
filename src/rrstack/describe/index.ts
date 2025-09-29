@@ -157,8 +157,14 @@ export const describeCompiledRule = (
             suppressMilliseconds: true,
           })
         : undefined;
-    const from = fmt((recur.options as { dtstart?: Date | null }).dtstart);
-    const until = fmt((recur.options as { until?: Date | null }).until);
+    // Show "from" only when the rule had an explicit starts clamp.
+    const from = !recur.isOpenStart
+      ? fmt((recur.options as { dtstart?: Date | null }).dtstart)
+      : undefined;
+    // Show "until" only when the rule had an explicit ends clamp.
+    const until = !recur.isOpenEnd
+      ? fmt((recur.options as { until?: Date | null }).until)
+      : undefined;
     if (from || until) {
       s += ' [';
       if (from) s += `from ${from}`;
