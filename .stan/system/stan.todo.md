@@ -170,10 +170,9 @@ E. Description & frequency lexicon (see “Next up” #1)
 
 Completed (recent)
 
-- Fix(describe/strict-en): default to short ordinals for BYMONTHDAY lists
-  (monthly/yearly) so output renders “on the 1st, 15th …” and
-  “on the 2nd and 15th …” as expected by tests and UI. Keep long
-  ordinals for weekday positions (e.g., “third tuesday”, “last tuesday”).
+- Fix(react/useRRStack): make hook robust to null/undefined json by falling back to a safe default ({ timezone: 'UTC', rules: [] }). Added tests covering null and undefined inputs.
+
+- Fix(describe/strict-en): default to short ordinals for BYMONTHDAY lists (monthly/yearly) so output renders “on the 1st, 15th …” and “on the 2nd and 15th …” as expected by tests and UI. Keep long ordinals for weekday positions (e.g., “third tuesday”, “last tuesday”).
 
 - Perf(bench, node-only): add mutator micro‑benches under src/rrstack/perf.mutators.bench.ts with fixed pre‑states: add first (0→1), add second (1→2), remove last (1→0), swap(0,last), up(last), down(0), top(last), bottom(0).
 - Perf(bench, react): replace single “addRule (immediate)” bench with two benches that add the first rule and the second rule respectively, so results align with Node-only mutator benches and fixed pre‑states.
@@ -185,17 +184,12 @@ Completed (recent)
 
 - Describe(strict-en): enumerate multiple BYMONTHDAY and times
   - Monthly/yearly: render “on the 1st, 15th and 28th …” for BYMONTHDAY lists.
-  - Time-of-day: render lists like “at 9:00 and 17:00” when BYHOUR or BYMINUTE
-    contains multiple values (common shapes). Falls back to a single time for
-    mixed/complex shapes.
+  - Time-of-day: render lists like “at 9:00 and 17:00” when BYHOUR or BYMINUTE contains multiple values (common shapes). Falls back to a single time for mixed/complex shapes.
   - Tests added under describe.more.test.ts.
 
 - Tests(describe): add RRStack.describeRule span + includeBounds coverage (ms and 's' units).
-  - Confirms that “Active continuously [from …; until …]” appears when includeBounds=true
-    and starts/ends are present on span rules.
-  - Downstream triage notes: ensure rule edits recompile (replace rules array or use mutators) and
-    pass timestamps in the configured unit (e.g., seconds when timeUnit='s'); unit mismatch can
-    yield invalid ISO formatting and hide bounds in the description.
+  - Confirms that “Active continuously [from …; until …]” appears when includeBounds=true and starts/ends are present on span rules.
+  - Downstream triage notes: ensure rule edits recompile (replace rules array or use mutators) and pass timestamps in the configured unit (e.g., seconds when timeUnit='s'); unit mismatch can yield invalid ISO formatting and hide bounds in the description.
 
 - Fix(lint): coerce numeric template expression in src/react/perf.react.bench.ts (shrink label) to String(i) to satisfy @typescript-eslint/restrict-template-expressions.
 - Perf(tests): add BENCH-gated micro-benchmarks for core algorithms (baseline active; daily open-ended; daily closed 30d; light isActiveAt/getSegments/classifyRange); skipped by default; sanity asserts always run.

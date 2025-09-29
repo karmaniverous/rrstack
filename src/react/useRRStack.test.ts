@@ -302,4 +302,36 @@ describe('useRRStack (react)', () => {
     app.unmount();
     vi.useRealTimers();
   });
+
+  it('accepts null json (falls back to UTC with empty rules)', () => {
+    function NullView({ json }: { json: RRStackOptions | null }) {
+      const { rrstack } = useRRStack({ json });
+      return React.createElement('div', {
+        'data-tz': rrstack.timezone,
+        'data-count': String(rrstack.rules.length),
+      });
+    }
+    const app = mount(React.createElement(NullView, { json: null }));
+    const div = app.container.querySelector('div')!;
+    expect(div.getAttribute('data-tz')).toBe('UTC');
+    expect(div.getAttribute('data-count')).toBe('0');
+    app.unmount();
+  });
+
+  it('accepts undefined json (falls back to UTC with empty rules)', () => {
+    function UndefView() {
+      // intentionally omit json
+
+      const { rrstack } = useRRStack({ json: undefined });
+      return React.createElement('div', {
+        'data-tz': rrstack.timezone,
+        'data-count': String(rrstack.rules.length),
+      });
+    }
+    const app = mount(React.createElement(UndefView));
+    const div = app.container.querySelector('div')!;
+    expect(div.getAttribute('data-tz')).toBe('UTC');
+    expect(div.getAttribute('data-count')).toBe('0');
+    app.unmount();
+  });
 });
