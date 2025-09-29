@@ -2,9 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.13.4](https://github.com/karmaniverous/rrstack/compare/0.13.3...0.13.4)
+
+- fix(describe): yearly fallbacks and bounds clamp display [`32511bf`](https://github.com/karmaniverous/rrstack/commit/32511bf290dbbec6a62d6206229ed0abfb95e363)
+- test(describe): cover “or”-joined positioned weekdays and multi-nth [`f2ac4ed`](https://github.com/karmaniverous/rrstack/commit/f2ac4edb183e5a4644a286c4584a5304d08cff62)
+- feat(describe): “or”-joined positioned weekdays and multi-nth [`01bc071`](https://github.com/karmaniverous/rrstack/commit/01bc07106797a5cd8cbbc426378b66cf2f99b2ec)
+
 #### [0.13.3](https://github.com/karmaniverous/rrstack/compare/0.13.2...0.13.3)
 
+> 29 September 2025
+
 - fix(react): useRRStack tolerates null/undefined json [`0bc18c9`](https://github.com/karmaniverous/rrstack/commit/0bc18c9983942424bcbebcb745abc5a956d0727e)
+- chore: release v0.13.3 [`94471de`](https://github.com/karmaniverous/rrstack/commit/94471deaaedc35f9974c7285db9bd2d59d68e08a)
 
 #### [0.13.2](https://github.com/karmaniverous/rrstack/compare/0.13.1...0.13.2)
 
