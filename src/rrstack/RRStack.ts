@@ -53,7 +53,7 @@ export class RRStack {
 
   /**
    * Normalized, frozen options. Mutate via {@link timezone}, {@link rules},
-   * or {@link updateOptions}.   */
+   * or {@link update}.   */
   public readonly options: RRStackOptionsNormalized;
 
   private compiled: CompiledRule[] = [];
@@ -293,10 +293,11 @@ export class RRStack {
     const fromUnit = this.options.timeUnit;
     const toUnit: UnixTimeUnit = partial.timeUnit ?? fromUnit;
     const unitChanged = toUnit !== fromUnit;
+    let unitNotice: Notice | undefined;
 
     const pt = policy.onTimeUnitChange ?? 'warn';
     if (unitChanged) {
-      const n: Notice = {
+      unitNotice = {
         kind: 'timeUnitChange',
         level: pt === 'error' ? 'error' : pt === 'warn' ? 'warn' : 'info',
         from: fromUnit,
@@ -305,15 +306,11 @@ export class RRStack {
       };
       // Decide early exit on error
       if (pt === 'error') {
-        n.action = 'rejected';
-        emit(n);
+        unitNotice.action = 'rejected';
+        emit(unitNotice);
         throw new Error('update: timeUnit change rejected by policy');
       }
-      // Defer emit until we know which path (convert vs incoming rules)
-      // We'll complete fields below.
-      // Keep for later emission after we set action/converted counts.
-      // We'll store and push at the end.
-      var unitNotice = n;
+      // Defer emit until we know which path (convert vs incoming rules).
     }
 
     const nextTz =
@@ -326,7 +323,7 @@ export class RRStack {
     if (partial.rules !== undefined) {
       // Replace with incoming; assume already in the new unit.
       nextRules = Object.freeze([...partial.rules]);
-      if (unitChanged && unitNotice) {
+      if (unitNotice) {
         unitNotice.action = 'acceptedIncomingRules';
         unitNotice.replacedRuleCount = nextRules.length;
       }
@@ -357,7 +354,7 @@ export class RRStack {
       });
     this.recompile();
 
-    if (unitChanged && unitNotice) emit(unitNotice);
+    if (unitNotice) emit(unitNotice);
     return notices;
   }
   // Helpers -------------------------------------------------------------------

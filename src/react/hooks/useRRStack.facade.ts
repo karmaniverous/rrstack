@@ -1,7 +1,7 @@
 import type { RefObject } from 'react';
 
 import type { RRStack } from '../../rrstack/RRStack';
-import type { RRStackOptions, RuleJson } from '../../rrstack/types';
+import type { RuleJson } from '../../rrstack/types';
 import type { MutateManager } from './useRRStack.mutate';
 
 export const createRRStackFacade = (
