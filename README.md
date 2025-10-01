@@ -147,8 +147,8 @@ stack.rules: ReadonlyArray<RuleJson>    // getter
 stack.rules = [/* ... */]               // setter (validates and recompiles)
 stack.timeUnit: 'ms' | 's'              // getter (immutable)
 
-// Batch update
-stack.updateOptions({ timezone?: string, rules?: RuleJson[] }): void
+// JSON ingestion (batch update)
+stack.update(partial?: Partial<RRStackOptions>, policy?: UpdatePolicy): Notice[]
 
 // Rule management (convenience mutators; each performs one recompile)
 stack.addRule(rule: RuleJson, index?: number): void
@@ -278,6 +278,18 @@ Generation details:
 - The schema is produced by scripts/gen-schema.ts using zod-to-json-schema.
 - DurationParts positivity is enforced by adding an anyOf that requires at least one of the fields (years|months|weeks|days|hours|minutes|seconds) to be an integer with minimum 1.
 
+Update API (version/unit policies)
+
+- Use stack.update(partial, policy) to ingest a partial RRStackOptions in one pass.
+- Version handling runs first:
+  - onVersionUp (incoming older than engine): default 'off' (accept; upgrader runs no-op today).
+  - onVersionDown (incoming newer than engine): default 'error' (reject); set 'warn' or 'off' to ingest as current.
+  - onVersionInvalid (invalid semver): default 'error' (reject); set 'warn' or 'off' to ingest as current.
+- Time unit changes are supported:
+  - If rules provided: they replace the entire rules array and are assumed to already be expressed in the new unit (no conversion).
+  - If rules not provided: retained rules’ clamp timestamps (options.starts/options.ends) are converted between ms and s (ms → s: Math.trunc(ms/1000); s → ms: s\*1000), then recompiled.
+- update returns Notice[] and also supports onNotice in the policy for callback-based logging and UI feedback.
+
 Baseline (defaultEffect)
 
 - RRStack behaves as if a virtual, open-ended span rule is prepended:
@@ -306,6 +318,11 @@ Debounce knobs (trailing is always true)
 - `changeDebounce`: coalesce autosave (`onChange`) calls.
 - `mutateDebounce`: coalesce frequent UI → `rrstack` edits (e.g., typing). Mutations are staged (rules/timezone) and committed once per window.
 - `renderDebounce`: coalesce version bumps from rrstack notifications to reduce repaint churn (optional leading paint).
+
+Ingestion (form → engine)
+
+- The hook watches your `json` prop (by comparator that ignores `version`) and ingests via `rrstack.update(json, policy)` (debounced if configured). On commit, the hook triggers one `onChange` (debounced if configured) where you typically persist `rrstack.toJson()`.
+- Time unit changes are handled inside `update()` — retained rules have clamp timestamps converted; incoming rules in the same update are treated as already in the new unit.
 
 Helpers
 
@@ -505,7 +522,9 @@ const b = stack.getEffectiveBounds(); // { start: 2024-01-10T05:00Z, end: undefi
 
 ## Version handling
 
-- toJson writes the current package version via a build-time injected constant (`__RRSTACK_VERSION__`) so no package.json import is needed at runtime.- The constructor accepts RRStackOptions with an optional version key and ignores it. Version-based transforms may be added in the future without changing the public shape.
+- toJson writes the current package version via a build-time injected constant (`__RRSTACK_VERSION__`) so no package.json import is needed at runtime.
+- Version-based transforms are handled by `update()` at ingestion time via an internal upgrader (no‑op today). Defaults: `onVersionUp='off'`, `onVersionDown='error'`, `onVersionInvalid='error'`.
+- The constructor accepts RRStackOptions with an optional version key; runtime behavior is unaffected there (ingestion logic lives in `update()`).
 
 ## Common Patterns
 
@@ -525,7 +544,7 @@ const thirdTuesday = {
     byminute: [0],
     bysecond: [0],
     // Optional: anchor the cadence with starts to define the interval phase.
-    // starts: Date.UTC(2024, 0, 16, 5, 0, 0),
+    // starts: ms('2024-01-16T05:00:00Z'),
   },
   label: '3rd-tue-05',
 };
@@ -545,7 +564,7 @@ const daily9 = {
     bysecond: [0],
     // Set to midnight on the start date in the target timezone.
     // The first occurrence begins at 09:00 on/after this date.
-    // starts: ms('2021-05-01T00:00:00'),
+    // starts: ms('2024-05-01T00:00:00Z'),
   },
 };
 ```
@@ -566,7 +585,7 @@ const baseOddMonths = {
     byminute: [0],
     bysecond: [0],
     // Anchor to a known occurrence to define stepping
-    // starts: ms('2021-01-19T05:00:00'),
+    // starts: ms('2024-01-16T05:00:00Z'),
   },
 };
 
@@ -623,5 +642,7 @@ npm run build
 ## License
 
 BSD-3-Clause © Jason Williscroft
+
+---
 
 Built for you with ❤️ on Bali! Find more great tools & templates on my GitHub Profile: https://github.com/karmaniverous
