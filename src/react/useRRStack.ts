@@ -111,9 +111,9 @@ export function useRRStack({
   useEffect(() => {
     const safeJson: RRStackOptions = json ?? { timezone: 'UTC', rules: [] };
     // Ignore 'version' during comparison to avoid ping‑pong when persisting toJson()
-    const { version: _ignore, ...rest } = safeJson as RRStackOptions & {
-      version?: unknown;
-    };
+    const rest: RRStackOptions = { ...safeJson };
+    // Remove version only for comparison purposes
+    delete (rest as { version?: unknown }).version;
     let key: string;
     try {
       key = JSON.stringify(rest);

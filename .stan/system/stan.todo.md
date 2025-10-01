@@ -22,6 +22,12 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Build & lint fixes:
+  - Removed stray triple‑slash reference in src/rrstack/types.ts that broke TS/Typedoc/rollup (TS6231).
+  - Tidied TSDoc in DurationParts to escape special characters.
+  - Resolved ESLint unused binding in src/react/useRRStack.ts by switching to a deletion comparator for prop ingestion.
+  - Verified typecheck/lint/build/docs succeed.
+
 - Typedoc polish:
   - Added comprehensive TSDoc for Notice and UpdatePolicy with short examples to improve API reference output.
 

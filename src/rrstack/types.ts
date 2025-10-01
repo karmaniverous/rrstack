@@ -1,4 +1,3 @@
-/// <reference path="" />
 /**
  * Public RRStack types, options, and JSON shapes.
  *
@@ -38,10 +37,10 @@ export type FrequencyStr =
 /**
  * Structured duration parts for UI-friendly, lossless round-tripping.
  * - All fields are non-negative integers.
- * - At least one field must be > 0 (duration must be strictly positive).
+ * - At least one field must be \> 0 (duration must be strictly positive).
  * - Calendar vs exact:
- *   • { days: 1 } → calendar day (can be 23/25 hours across DST),
- *   • { hours: 24 } → exact 24 hours.
+ *   • \{ days: 1 \} → calendar day (can be 23/25 hours across DST),
+ *   • \{ hours: 24 \} → exact 24 hours.
  */
 export interface DurationParts {
   years?: number; // non-negative integer
@@ -118,6 +117,22 @@ export interface RRStackOptionsNormalized
 }
 
 /**
+ * Notices emitted by {@link RRStack.update | RRStack.update()} to describe
+ * version/unit handling outcomes. Returned in order and also delivered via
+ * {@link UpdatePolicy.onNotice | onNotice} when provided.
+ *
+ * Example: log all notices while accepting newer versions with a warning
+ * ```ts
+ * const notices = stack.update(incomingJson, {
+ *   onVersionDown: 'warn',
+ *   onNotice: (n) => {
+ *     console.info('[rrstack.notice]', n.kind, n.action);
+ *   },
+ * });
+ * // `notices` contains the same entries, in the same order
+ * ```
+ *
+ * @public
  * Notices emitted by RRStack.update() to describe version/unit handling outcomes.
  */
 export type Notice =
@@ -157,9 +172,28 @@ export type Notice =
     };
 
 /**
- * Policy switches for RRStack.update(). Defaults:
+ * Policy switches for {@link RRStack.update | RRStack.update()}. Defaults:
  * - onVersionUp: 'off'; onVersionDown: 'error'; onVersionInvalid: 'error';
  * - onTimeUnitChange: 'warn'.
+ *
+ * Example: accept newer versions with a warning and surface time‑unit changes
+ * ```ts
+ * stack.update(incoming, {
+ *   onVersionDown: 'warn',
+ *   onTimeUnitChange: 'warn',
+ *   onNotice: (n) => {
+ *     // route to your logger/telemetry
+ *     logger.info({ notice: n });
+ *   },
+ * });
+ * ```
+ *
+ * React passthrough:
+ * When supplied via `useRRStack({ policy })`, this policy is applied to both:
+ * - prop ingestion (`json` → engine), and
+ * - staged UI commits (timezone/rules/timeUnit).
+ *
+ * @public
  */
 export interface UpdatePolicy {
   onVersionUp?: 'error' | 'warn' | 'off';
