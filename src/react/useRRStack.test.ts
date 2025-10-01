@@ -5,7 +5,12 @@ import { createRoot } from 'react-dom/client';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { RRStack } from '../rrstack/RRStack';
-import type { RRStackOptions, RuleJson } from '../rrstack/types';
+import type {
+  Notice,
+  RRStackOptions,
+  RuleJson,
+  UpdatePolicy,
+} from '../rrstack/types';
 import { useRRStack } from './useRRStack';
 
 const EXAMPLE_A: RRStackOptions = {
@@ -379,6 +384,61 @@ describe('useRRStack (react)', () => {
     expect(e.tz).toBe('America/Chicago');
     app.unmount();
     vi.useRealTimers();
+  });
+
+  it('policy.onNotice is delivered on ingestion (timeUnit change)', async () => {
+    const seen: Notice[] = [];
+    const policy: UpdatePolicy = {
+      onTimeUnitChange: 'warn',
+      onNotice: (n) => seen.push(n),
+    };
+    function NoticeProbe({
+      json,
+      policy,
+    }: {
+      json: RRStackOptions;
+      policy: UpdatePolicy;
+    }) {
+      const { rrstack } = useRRStack({ json, policy });
+      const calls = useRef(0);
+      const unit = rrstack.timeUnit;
+      const renders = useMemo(() => ++calls.current, [unit, rrstack]);
+      return React.createElement('div', {
+        'data-unit': unit,
+        'data-renders': String(renders),
+      });
+    }
+    const base: RRStackOptions = { ...EXAMPLE_A }; // default 'ms'
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => {
+      root.render(React.createElement(NoticeProbe, { json: base, policy }));
+    });
+    // Ingest a timeUnit change via json → engine; hook policy should apply
+    act(() => {
+      root.render(
+        React.createElement(NoticeProbe, {
+          json: { ...EXAMPLE_A, timeUnit: 's' as const },
+          policy,
+        }),
+      );
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const div = container.querySelector('div')!;
+    expect(div.getAttribute('data-unit')).toBe('s');
+    // Should have observed a timeUnitChange notice from ingestion
+    expect(
+      seen.some(
+        (n) => n.kind === 'timeUnitChange' && n.from === 'ms' && n.to === 's',
+      ),
+    ).toBe(true);
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
   });
 
   it('accepts null json (falls back to UTC with empty rules)', () => {

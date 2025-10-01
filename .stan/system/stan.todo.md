@@ -20,6 +20,13 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Docs:
+  - Handbook Overview: added “Policy & notices” snippet with core and React
+    examples to mirror README guidance.
+
+- React tests:
+  - Added ingestion policy notice test: verifies that hook `policy.onNotice`
+    receives a `timeUnitChange` notice when json changes unit ('ms' → 's').
 - React tests:
   - Further relaxed overlapping-staged-edits final-state assertion: validate
     the rule count pattern (1 + k*3, k ≥ 1) to tolerate Strict/dev double-effect

@@ -69,6 +69,49 @@ Tips
   false negatives (still half‑open intervals).
 - For UI: prefer chunking long windows (day/week) or a Worker for heavy sweeps.
 
+## Policy & notices (ingestion and commits)
+
+Use UpdatePolicy to control version/unit handling and to surface notices during
+ingestion (and during staged commits in the React hook).
+
+Core (programmatic update)
+
+```ts
+import type { Notice, UpdatePolicy, RRStackOptions } from '@karmaniverous/rrstack';
+import { RRStack } from '@karmaniverous/rrstack';
+
+const stack = new RRStack({ timezone: 'UTC' });
+const incoming: Partial<RRStackOptions> = { version: '9.9.9', timeUnit: 's' };
+
+const seen: Notice[] = [];
+const policy: UpdatePolicy = {
+  onVersionDown: 'warn', // newer incoming than engine → accept with warning
+  onTimeUnitChange: 'warn',
+  onNotice: (n) => seen.push(n),
+};
+
+const notices = stack.update(incoming, policy);
+// `notices` and `seen` will include 'versionDown' and 'timeUnitChange'
+```
+
+React (ingestion + staged commits)
+
+```tsx
+import { useRRStack } from '@karmaniverous/rrstack/react';
+import type { Notice, UpdatePolicy, RRStackOptions } from '@karmaniverous/rrstack';
+
+function Editor({ json }: { json: RRStackOptions }) {
+  const policy: UpdatePolicy = {
+    onVersionDown: 'warn',
+    onTimeUnitChange: 'warn',
+    onNotice: (n) => console.info('[rrstack.notice]', n.kind, n.action),
+  };
+  const { rrstack } = useRRStack({ json, policy });
+  // policy applies to both json → engine ingestion and staged UI commits
+  return <div>Rules: {rrstack.rules.length}</div>;
+}
+```
+
 ## Span rules (continuous coverage)
 
 Not every schedule needs a recurrence. Omit `options.freq` to declare a span
