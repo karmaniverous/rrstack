@@ -341,6 +341,8 @@ describe('useRRStack (react)', () => {
       const { rrstack } = useRRStack({
         json,
         onChange: (s) => events.push({ count: s.rules.length, tz: s.timezone }),
+        // Coalesce observable onChange into a single call for this window
+        changeDebounce: { delay: 10 },
         mutateDebounce: { delay: 50 },
       });
       useEffect(() => {
@@ -357,6 +359,8 @@ describe('useRRStack (react)', () => {
     // Let the debounce window elapse and flush
     await act(async () => {
       vi.advanceTimersByTime(60);
+      // also allow the shorter changeDebounce window to fire the coalesced onChange
+      vi.advanceTimersByTime(20);
       await Promise.resolve();
     });
     expect(events.length).toBe(1);

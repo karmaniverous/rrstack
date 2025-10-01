@@ -25,10 +25,11 @@ Completed (recent)
 - React tests:
   - Added ingestion guard test (json comparator ignores version to avoid ping‑pong).
   - Added overlapping staged edits test to assert single commit and final state under mutateDebounce.
+  - Stabilized overlapping staged edits test by coalescing onChange via changeDebounce
+    to ensure a single observable autosave for the window.
 
 - Build & lint fixes:
-  - Removed stray triple‑slash reference in src/rrstack/types.ts that broke TS/Typedoc/rollup (TS6231).
-  - Tidied TSDoc in DurationParts to escape special characters.
+  - Removed stray triple‑slash reference in src/rrstack/types.ts that broke TS/Typedoc/rollup (TS6231).  - Tidied TSDoc in DurationParts to escape special characters.
   - Resolved ESLint unused binding in src/react/useRRStack.ts by switching to a deletion comparator for prop ingestion.
   - Verified typecheck/lint/build/docs succeed.
 
