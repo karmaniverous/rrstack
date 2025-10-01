@@ -20,6 +20,11 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- React tests:
+  - Added ordering/delivery test to compare rrstack.update()’s returned Notice[]
+    with notices received via policy.onNotice (identical content and ordering).
+  - Confirms synchronous onNotice delivery semantics alongside return value.
+
 - Docs:
   - Handbook Overview: added “Policy & notices” snippet with core and React
     examples to mirror README guidance.

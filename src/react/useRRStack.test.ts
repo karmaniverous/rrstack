@@ -441,6 +441,57 @@ describe('useRRStack (react)', () => {
     container.remove();
   });
 
+  it('policy.onNotice ordering matches rrstack.update() return (direct update)', async () => {
+    const seen: Notice[] = [];
+    const policy: UpdatePolicy = {
+      onVersionDown: 'warn',
+      onTimeUnitChange: 'warn',
+      onNotice: (n) => seen.push(n),
+    };
+    let returned: Notice[] | null = null;
+
+    function OrderProbe({
+      json,
+      policy,
+    }: {
+      json: RRStackOptions;
+      policy: UpdatePolicy;
+    }) {
+      const { rrstack } = useRRStack({ json }); // no ingestion changes; we drive update directly
+      const did = useRef(false);
+      useEffect(() => {
+        if (did.current) return;
+        did.current = true;
+        // Trigger both a versionDown (incoming newer) and a timeUnitChange in one update call.
+        returned = rrstack.update({ version: '9.9.9', timeUnit: 's' }, policy);
+      }, [rrstack, policy]);
+      return React.createElement('div');
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => {
+      root.render(
+        React.createElement(OrderProbe, {
+          json: EXAMPLE_A,
+          policy,
+        }),
+      );
+    });
+    // Allow effects to flush
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(Array.isArray(returned)).toBe(true);
+    expect(returned!.length).toBe(seen.length);
+    expect(returned).toEqual(seen);
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
   it('accepts null json (falls back to UTC with empty rules)', () => {
     function NullView({ json }: { json: RRStackOptions | null }) {
       const { rrstack } = useRRStack({ json });
