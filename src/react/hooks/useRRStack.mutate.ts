@@ -48,7 +48,7 @@ export const createMutateManager = (
     if (staging.rules !== undefined) patch.rules = staging.rules;
     staging = null;
     if (Object.keys(patch).length > 0) {
-      rrstackRef.current.updateOptions(patch);
+      rrstackRef.current.update(patch);
       log('commit');
     }
   };

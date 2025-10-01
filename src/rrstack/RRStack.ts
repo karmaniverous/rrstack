@@ -7,7 +7,7 @@
  *
  * Notes
  * - Options are normalized and frozen on the instance.
- * - `timeUnit` is immutable; change it by constructing a new instance.
+ * - `timeUnit` is mutable via update(); retained rules convert clamp timestamps.
  * - Intervals are half-open [start, end). In 's' mode, ends are rounded up to
  *   the next integer second to avoid boundary false negatives.
  *
@@ -33,12 +33,14 @@ import {
 } from './RRStack.queries';
 import {
   type instantStatus,
+  type Notice,
   type rangeStatus,
   type RRStackOptions,
   type RRStackOptionsNormalized,
   type RuleJson,
   type TimeZoneId,
   type UnixTimeUnit,
+  type UpdatePolicy,
 } from './types';
 // Build-time injected in production bundles; fallback for dev/test.
 declare const __RRSTACK_VERSION__: string | undefined;
@@ -208,29 +210,155 @@ export class RRStack {
   }
 
   /**
-   * Batch update timezone and/or rules in one pass.
-   * @param partial - Partial options containing `timezone` and/or `rules`.
-   * @remarks Performs one recompile after applying changes.
+   * Ingest a partial RRStackOptions JSON with version/unit handling, replacements, and notices.
+   * - Applies timezone, defaultEffect, rules, and timeUnit in one pass.
+   * - Version pipeline (upgrade-config) executes first; defaults:
+   *   • onVersionUp: 'off', onVersionDown: 'error', onVersionInvalid: 'error'.
+   * - timeUnit change:
+   *   • If rules provided: replace rules as-is (assumed in new unit).
+   *   • If not: convert retained rules' options.starts/options.ends between units (ms ↔ s).
+   * - Recompiles exactly once on success.
    */
-  updateOptions(
-    partial: Partial<Pick<RRStackOptions, 'timezone' | 'rules'>>,
-  ): void {
-    const tz =
+  update(
+    partial: Partial<RRStackOptions> = {},
+    policy: UpdatePolicy = {},
+  ): readonly Notice[] {
+    const notices: Notice[] = [];
+    const emit = (n: Notice) => {
+      notices.push(n);
+      try {
+        policy.onNotice?.(n);
+      } catch {
+        /* noop */
+      }
+    };
+
+    // 1) Version handling
+    const engineVersion =
+      (typeof __RRSTACK_VERSION__ === 'string' && __RRSTACK_VERSION__) ||
+      '0.0.0';
+    const incomingRaw = partial.version;
+    const isValid = (v: unknown): v is string =>
+      typeof v === 'string' && SEMVER_RE.test(v);
+
+    const pv = policy.onVersionInvalid ?? 'error';
+    const pu = policy.onVersionUp ?? 'off';
+    const pd = policy.onVersionDown ?? 'error';
+
+    if (incomingRaw !== undefined && !isValid(incomingRaw)) {
+      // invalid semver
+      const n: Notice = {
+        kind: 'versionInvalid',
+        level: pv === 'error' ? 'error' : pv === 'warn' ? 'warn' : 'info',
+        raw: incomingRaw,
+        to: engineVersion,
+        action: pv === 'error' ? 'rejected' : 'ingestAsCurrent',
+      };
+      emit(n);
+      if (pv === 'error') throw new Error('update: invalid version');
+      // ingest as current (no-op upgrader)
+      // upgradeConfig(engine→engine) is a no-op today.
+    } else if (typeof incomingRaw === 'string') {
+      const cmp = cmpSemver(incomingRaw, engineVersion);
+      if (cmp < 0) {
+        // incoming older (versionUp path)
+        const n: Notice = {
+          kind: 'versionUp',
+          level: pu === 'error' ? 'error' : pu === 'warn' ? 'warn' : 'info',
+          from: incomingRaw,
+          to: engineVersion,
+          action: pu === 'error' ? 'rejected' : 'upgrade',
+        };
+        emit(n);
+        if (pu === 'error') throw new Error('update: older version rejected');
+        // Accept: upgradeConfig(incoming→engine) — no-op today.
+      } else if (cmp > 0) {
+        // incoming newer (versionDown path)
+        const n: Notice = {
+          kind: 'versionDown',
+          level: pd === 'error' ? 'error' : pd === 'warn' ? 'warn' : 'info',
+          from: incomingRaw,
+          to: engineVersion,
+          action: pd === 'error' ? 'rejected' : 'ingestAsCurrent',
+        };
+        emit(n);
+        if (pd === 'error') {
+          throw new Error('update: newer version rejected');
+        }
+        // Accept as current; upgradeConfig(engine→engine) — no-op today.
+      }
+    }
+
+    // 2) Prepare next state with unit conversion if needed
+    const fromUnit = this.options.timeUnit;
+    const toUnit: UnixTimeUnit = partial.timeUnit ?? fromUnit;
+    const unitChanged = toUnit !== fromUnit;
+
+    const pt = policy.onTimeUnitChange ?? 'warn';
+    if (unitChanged) {
+      const n: Notice = {
+        kind: 'timeUnitChange',
+        level: pt === 'error' ? 'error' : pt === 'warn' ? 'warn' : 'info',
+        from: fromUnit,
+        to: toUnit,
+        action: 'convertedExisting',
+      };
+      // Decide early exit on error
+      if (pt === 'error') {
+        n.action = 'rejected';
+        emit(n);
+        throw new Error('update: timeUnit change rejected by policy');
+      }
+      // Defer emit until we know which path (convert vs incoming rules)
+      // We'll complete fields below.
+      // Keep for later emission after we set action/converted counts.
+      // We'll store and push at the end.
+      var unitNotice = n;
+    }
+
+    const nextTz =
       partial.timezone !== undefined
-        ? TimeZoneIdSchema.parse(partial.timezone)
+        ? (TimeZoneIdSchema.parse(partial.timezone) as unknown as TimeZoneId)
         : this.options.timezone;
-    const newRules =
-      partial.rules !== undefined
-        ? Object.freeze([...partial.rules])
-        : this.options.rules;
+    const nextDefault = partial.defaultEffect ?? this.options.defaultEffect;
+
+    let nextRules: readonly RuleJson[];
+    if (partial.rules !== undefined) {
+      // Replace with incoming; assume already in the new unit.
+      nextRules = Object.freeze([...partial.rules]);
+      if (unitChanged && unitNotice) {
+        unitNotice.action = 'acceptedIncomingRules';
+        unitNotice.replacedRuleCount = nextRules.length;
+      }
+    } else {
+      // Retain existing rules; convert clamps if unit changed.
+      nextRules = this.options.rules;
+      if (unitChanged) {
+        const converted = convertRulesUnit(
+          nextRules as RuleJson[],
+          fromUnit,
+          toUnit,
+        );
+        nextRules = Object.freeze(converted);
+        if (unitNotice) {
+          unitNotice.action = 'convertedExisting';
+          unitNotice.convertedRuleCount = converted.length;
+        }
+      }
+    }
+
+    // 3) Commit and recompile
     (this as unknown as { options: RRStackOptionsNormalized }).options =
       Object.freeze({
-        timezone: tz as unknown as TimeZoneId,
-        timeUnit: this.options.timeUnit,
-        defaultEffect: this.options.defaultEffect,
-        rules: newRules,
+        timezone: nextTz,
+        timeUnit: toUnit,
+        defaultEffect: nextDefault,
+        rules: nextRules,
       });
     this.recompile();
+
+    if (unitChanged && unitNotice) emit(unitNotice);
+    return notices;
   }
   // Helpers -------------------------------------------------------------------
   /**
@@ -498,4 +626,56 @@ export class RRStack {
     next.push(r);
     this.rules = next;
   }
+}
+
+// -------- Internal helpers (semver + unit conversion) ------------------------
+
+// Minimal semver (x.y.z) validator; allows pre-release/build suffixes.
+const SEMVER_RE =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+
+const cmpNum = (a: number, b: number) => (a < b ? -1 : a > b ? 1 : 0);
+
+/** Compare two semver strings (ignoring pre-release/build for ordering). */
+function cmpSemver(a: string, b: string): number {
+  const parse = (s: string): [number, number, number] => {
+    const main = s.split('-')[0].split('+')[0];
+    const [ma, mi, pa] = main.split('.').map((x) => Number(x));
+    return [ma || 0, mi || 0, pa || 0];
+  };
+  const [a0, a1, a2] = parse(a);
+  const [b0, b1, b2] = parse(b);
+  return cmpNum(a0, b0) || cmpNum(a1, b1) || cmpNum(a2, b2);
+}
+
+/** Convert retained rules' clamp timestamps (starts/ends) between ms and s. */
+function convertRulesUnit(
+  rules: readonly RuleJson[],
+  fromUnit: UnixTimeUnit,
+  toUnit: UnixTimeUnit,
+): RuleJson[] {
+  if (fromUnit === toUnit) return [...rules];
+  const toS = fromUnit === 'ms' && toUnit === 's';
+  const toMs = fromUnit === 's' && toUnit === 'ms';
+  const conv = (n: number | undefined): number | undefined => {
+    if (typeof n !== 'number') return n;
+    return toS ? Math.trunc(n / 1000) : toMs ? n * 1000 : n;
+  };
+  return rules.map((r) => {
+    const opts = { ...(r.options as Record<string, unknown>) };
+    if (typeof (opts as { starts?: number }).starts === 'number') {
+      (opts as { starts?: number }).starts = conv(
+        (opts as { starts?: number }).starts,
+      );
+    }
+    if (typeof (opts as { ends?: number }).ends === 'number') {
+      (opts as { ends?: number }).ends = conv((opts as { ends?: number }).ends);
+    }
+    return {
+      effect: r.effect,
+      duration: r.duration,
+      options: opts as RuleJson['options'],
+      label: r.label,
+    };
+  });
 }

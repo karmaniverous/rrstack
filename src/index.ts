@@ -36,6 +36,8 @@ export type {
   DurationParts,
   FrequencyStr,
   instantStatus,
+  // Update API
+  Notice,
   rangeStatus,
   RRStackOptions,
   RRStackOptionsNormalized,
@@ -44,4 +46,5 @@ export type {
   RuleOptionsJson,
   TimeZoneId,
   UnixTimeUnit,
+  UpdatePolicy,
 } from './rrstack/types';

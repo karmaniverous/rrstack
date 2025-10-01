@@ -116,5 +116,56 @@ export interface RRStackOptionsNormalized
   defaultEffect: instantStatus | 'auto';
 }
 
+/**
+ * Notices emitted by RRStack.update() to describe version/unit handling outcomes.
+ */
+export type Notice =
+  | {
+      kind: 'versionUp';
+      level: 'error' | 'warn' | 'info';
+      from: string | null; // null when missing/invalid
+      to: string; // engine version
+      action: 'upgrade' | 'rejected' | 'ingestAsCurrent';
+      message?: string;
+    }
+  | {
+      kind: 'versionDown';
+      level: 'error' | 'warn' | 'info';
+      from: string | null;
+      to: string; // engine version
+      action: 'rejected' | 'ingestAsCurrent';
+      message?: string;
+    }
+  | {
+      kind: 'versionInvalid';
+      level: 'error' | 'warn' | 'info';
+      raw: unknown; // original incoming value
+      to: string; // engine version
+      action: 'rejected' | 'ingestAsCurrent';
+      message?: string;
+    }
+  | {
+      kind: 'timeUnitChange';
+      level: 'error' | 'warn' | 'info';
+      from: UnixTimeUnit;
+      to: UnixTimeUnit;
+      action: 'convertedExisting' | 'acceptedIncomingRules' | 'rejected';
+      convertedRuleCount?: number;
+      replacedRuleCount?: number;
+      message?: string;
+    };
+
+/**
+ * Policy switches for RRStack.update(). Defaults:
+ * - onVersionUp: 'off'; onVersionDown: 'error'; onVersionInvalid: 'error';
+ * - onTimeUnitChange: 'warn'.
+ */
+export interface UpdatePolicy {
+  onVersionUp?: 'error' | 'warn' | 'off';
+  onVersionDown?: 'error' | 'warn' | 'off';
+  onVersionInvalid?: 'error' | 'warn' | 'off';
+  onTimeUnitChange?: 'error' | 'warn' | 'off';
+  onNotice?: (n: Notice) => void;
+}
 // Re-export useful rrule types so consumers can import from package API.
 export type { Options as RRuleOptions } from 'rrule';

@@ -31,17 +31,6 @@ export const createRRStackFacade = (
           };
         };
       }
-      if (prop === 'updateOptions') {
-        return (p: Partial<Pick<RRStackOptions, 'timezone' | 'rules'>>) => {
-          if (p.timezone !== undefined) mutate.stageTimezone(p.timezone);
-          if (p.rules !== undefined) {
-            // clone to break external references
-            const cloned = [...p.rules];
-            mutate.stageRules(cloned);
-          }
-          mutate.schedule();
-        };
-      }
       if (prop === 'addRule') {
         return (rule?: RuleJson, index?: number) => {
           const arr = mutate.ensureRules();
