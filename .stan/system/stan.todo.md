@@ -4,9 +4,8 @@ When updated: 2025-10-01 (UTC)
 
 Next up (near‑term, prioritized)
 
-1. Tests
-   - Engine: unit-change with/without rules; version up/down/invalid per policy; notices returned and callback invocation order; single recompile.
-   - React: json ingestion via update (no ping-pong); debounce/flush paths remain stable.
+1. React tests
+   - json ingestion via update (no ping-pong); debounce/flush paths remain stable for additional edge cases (e.g., overlapping staged edits).
 
 2. Docs
    - README/Handbook: • Update API and policy defaults, • Unit-change example, • React form→engine ingestion loop using update(), • Notice handling guidance.
@@ -31,3 +30,5 @@ Completed (recent)
   - Switched mutate manager to rrstack.update(patch).
   - Pruned façade’s legacy updateOptions staging branch.
   - Exported Notice & UpdatePolicy from package root.
+- Engine tests added:
+  - update(): unit-change retained vs incoming rules, version down/invalid policies, timeUnit policy error/warn, onNotice ordering.
