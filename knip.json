@@ -1,5 +1,5 @@
 {
-  "entry": ["src/**/index.ts", "stan.rollup.config.ts"],
+  "entry": ["src/**/index.ts"],
   "project": ["**/*", "!docs/**", "!.stan/**"],
   "rules": {
     "exports": "off",

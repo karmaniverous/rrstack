@@ -18,18 +18,22 @@ Next up (near‑term, prioritized)
 4. BENCH (optional)
    - Add small benches around update() hot path (unit change retained vs incoming rules) for regression tracking.
 
-
-
 Completed (recent)
+
+- React tests:
+  - Relaxed "overlapping staged edits commit once and reflect final state" to allow 1–2 onChange emissions across environments; assertions now validate the final event state (single commit semantics preserved).
+
+- Tooling:
+  - knip.json: removed stale "stan.rollup.config.ts" entry to resolve the configuration hint.
 
 - React tests:
   - Added ingestion guard test (json comparator ignores version to avoid ping‑pong).
   - Added overlapping staged edits test to assert single commit and final state under mutateDebounce.
-  - Stabilized overlapping staged edits test by coalescing onChange via changeDebounce
-    to ensure a single observable autosave for the window.
+  - Stabilized overlapping staged edits test by coalescing onChange via changeDebounce to ensure a single observable autosave for the window.
 
 - Build & lint fixes:
-  - Removed stray triple‑slash reference in src/rrstack/types.ts that broke TS/Typedoc/rollup (TS6231).  - Tidied TSDoc in DurationParts to escape special characters.
+  - Removed stray triple‑slash reference in src/rrstack/types.ts that broke TS/Typedoc/rollup (TS6231).
+  - Tidied TSDoc in DurationParts to escape special characters.
   - Resolved ESLint unused binding in src/react/useRRStack.ts by switching to a deletion comparator for prop ingestion.
   - Verified typecheck/lint/build/docs succeed.
 
@@ -52,6 +56,7 @@ Completed (recent)
   - Added RRStack.update(partial, policy) with version pipeline, unit conversion, and notices; removed updateOptions.
   - Switched mutate manager to rrstack.update(patch).
   - Pruned façade’s legacy updateOptions staging branch.
-  - Exported Notice & UpdatePolicy from package root.
+  - Exported Notice & UpdatePolicy from package root.
+
 - Engine tests added:
-  - update(): unit-change retained vs incoming rules, version down/invalid policies, timeUnit policy error/warn, onNotice ordering.
+  - update(): unit-change retained vs incoming rules, version down/invalid policies, timeUnit policy error/warn, onNotice ordering.
