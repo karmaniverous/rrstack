@@ -21,6 +21,10 @@ Next up (near‑term, prioritized)
 Completed (recent)
 
 - React tests:
+  - Further relaxed overlapping-staged-edits final-state assertion: validate
+    the rule count pattern (1 + k*3, k ≥ 1) to tolerate Strict/dev double-effect
+    behavior while still asserting the committed final state.
+- React tests:
   - Relaxed "overlapping staged edits commit once and reflect final state" to allow 1–2 onChange emissions across environments; assertions now validate the final event state (single commit semantics preserved).
 
 - Tooling:
