@@ -293,7 +293,7 @@ export class RRStack {
     const fromUnit = this.options.timeUnit;
     const toUnit: UnixTimeUnit = partial.timeUnit ?? fromUnit;
     const unitChanged = toUnit !== fromUnit;
-    let unitNotice: Notice | undefined;
+    let unitNotice: Extract<Notice, { kind: 'timeUnitChange' }> | undefined;
 
     const pt = policy.onTimeUnitChange ?? 'warn';
     if (unitChanged) {
