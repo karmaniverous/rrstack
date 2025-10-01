@@ -1,6 +1,6 @@
 # RRStack — Requirements
 
-Last updated: 2025-09-28 (UTC)
+Last updated: 2025-10-01 (UTC)
 
 Purpose
 
@@ -29,7 +29,7 @@ Functional scope
 Public API (core types and shapes)
 
 - RRStackOptions (constructor input/serialized output)
-  - version?: string (ignored by constructor; written by toJson)
+  - version?: string (ignored by constructor for behavior; used by the version pipeline in update(); written by toJson)
   - timezone: string (validated at runtime; narrowed internally)
   - timeUnit?: 'ms' | 's' (default 'ms')
   - defaultEffect?: 'active' | 'blackout' | 'auto' (default 'auto')
@@ -66,7 +66,7 @@ Baseline (defaultEffect)
 - The baseline applies uniformly to isActiveAt, getSegments, classifyRange, and getEffectiveBounds.
 - getEffectiveBounds returns open-sided bounds when the baseline is 'active' and no finite active contributors exist.
 
-Units and domain (no internal canonicalization)
+Units and domain
 
 - All public inputs/outputs (and internal algorithms) operate in the configured unit end-to-end.
 - 'ms': millisecond timestamps (Date.now()) + Luxon millisecond methods.
@@ -76,31 +76,117 @@ Units and domain (no internal canonicalization)
   - domainMax(unit):
     - 'ms' → 8_640_000_000_000_000 (approx max JS Date)
     - 's' → 8_640_000_000_000
+- timeUnit is MUTABLE via RRStack.update(...). When timeUnit changes, the engine converts retained rules’ clamp timestamps (starts/ends) between units before compile; incoming rules provided in the same update are accepted as already expressed in the new unit (no conversion applied to those).
 
-Timezone validation and typing
+Version handling (ingestion pipeline)
 
-- Validate timezone strings using Luxon’s IANAZone.isValidZone(tz).
-- RRStack.isValidTimeZone(tz: string) → boolean
-- RRStack.asTimeZoneId(tz: string) → TimeZoneId (throws if invalid)
-- Timezone acceptance depends on host ICU/Intl data (Node build, browser, OS).
+- Effective (engine) version
+  - The “current RRStack version” is the engine’s build-time version (**RRSTACK_VERSION**). toJson() always writes that value.
+- Version detector and upgrader (front of update pipeline)
+  - On every update(), detect the incoming JSON version string (may be missing or invalid).
+  - Invoke internal upgradeConfig(from: string | null, to: string, json: RRStackOptions): RRStackOptions.
+    - Today: no-op (returns json unchanged).
+    - Purpose: future-proofing for data model changes. It runs on every accepted version mismatch per policy.
+- UpdatePolicy (defaults and behavior)
+  - onVersionUp: incoming version older than engine version.
+    - 'error' | 'warn' | 'off' (default 'off'). Applying is allowed by default; upgrader runs (no-op today).
+  - onVersionDown: incoming version newer than engine version.
+    - 'error' | 'warn' | 'off' (default 'error'). Default is to reject; if 'warn' or 'off', ingest “as if current version” (treat incoming version as engine version for this update; upgrader is still invoked with (engine→engine)).
+  - onVersionInvalid: incoming version not valid semver.
+    - 'error' | 'warn' | 'off' (default 'error'). Default reject; if 'warn' or 'off', ingest “as if current version” (invoke upgrader with engine→engine).
+  - onTimeUnitChange:
+    - 'error' | 'warn' | 'off' (default 'warn'). If 'warn' or 'off', convert retained clamp timestamps prior to applying other replacements (see Unit conversion below).
+  - onNotice?: (n: Notice) => void
+    - Optional callback invoked for each notice the update() produces.
 
-Mutability and setters
+Update API (single entry point)
 
-- options (RRStackOptionsNormalized) is normalized and frozen on the instance.
-- Property-style setters:
-  - timezone: string getter/setter (validated; recompile on change)
-  - rules: readonly RuleJson[] getter; setter validates lite shape and recompiles
-  - timeUnit: immutable (changing unit requires a new instance)
-- updateOptions({ timezone?, rules? }): batch update with a single recompile.
-- Convenience rule mutators (each delegates to rules setter; single recompile):
-  - addRule(rule?: RuleJson, index?: number) — when rule omitted, inserts an active open-ended span { effect: 'active', options: {} }
-  - removeRule(i), swap(i, j), up(i), down(i), top(i), bottom(i)
+- Signature
+  - update(partial?: Partial<RRStackOptions>, policy?: UpdatePolicy): readonly Notice[]
+- Behavior
+  - Applies timezone, defaultEffect, rules, and timeUnit in one pass.
+  - Version pipeline executes first; policies can reject or accept with warnings/informational notices.
+  - Rules semantics: if rules is provided, it replaces the entire list (no per-rule merge).
+  - Recompile exactly once at the end of a successful apply.
+  - Returns a readonly array of Notice values; also invokes onNotice (if provided) for each notice in order.
+- Removal of updateOptions
+  - updateOptions is removed. Call update() for all JSON ingestion and partial merges.
 
-Observability (mutation notifications)
+Unit conversion (when timeUnit changes)
 
-- subscribe(listener: (self: RRStack) => void): () => void — notify exactly once post‑mutation (after compile).
-- The constructor does not trigger notifications.
-- Notifications fire on timezone/rules setters, updateOptions, and convenience mutators.
+- If partial.rules is provided alongside a timeUnit change:
+  - Replace rules with the provided array; treat those timestamps as already in the new unit; do not convert those incoming rules.
+- If partial.rules is not provided:
+  - Convert all retained rules’ options.starts/options.ends from oldUnit → newUnit:
+    - ms → s: Math.trunc(ms / 1000)
+    - s → ms: s \* 1000
+  - DurationParts are unitless; no conversion.
+- Recompile in the new unit. Query semantics remain the same (computeOccurrenceEnd still rounds ends up in 's' mode to preserve [start, end)).
+
+Notices (return type and callback payloads)
+
+- Notice is a discriminated union with stable kinds and levels so hosts can branch or log consistently:
+
+  ```ts
+  export type Notice =
+    | {
+        kind: 'versionUp';
+        level: 'error' | 'warn' | 'info';
+        from: string | null; // null when missing/invalid
+        to: string; // engine version
+        action: 'upgrade' | 'rejected' | 'ingestAsCurrent';
+        message?: string;
+      }
+    | {
+        kind: 'versionDown';
+        level: 'error' | 'warn' | 'info';
+        from: string | null;
+        to: string; // engine version
+        action: 'rejected' | 'ingestAsCurrent';
+        message?: string;
+      }
+    | {
+        kind: 'versionInvalid';
+        level: 'error' | 'warn' | 'info';
+        raw: unknown; // original incoming value
+        to: string; // engine version
+        action: 'rejected' | 'ingestAsCurrent';
+        message?: string;
+      }
+    | {
+        kind: 'timeUnitChange';
+        level: 'error' | 'warn' | 'info';
+        from: UnixTimeUnit;
+        to: UnixTimeUnit;
+        action: 'convertedExisting' | 'acceptedIncomingRules' | 'rejected';
+        convertedRuleCount?: number; // when converting retained rules
+        replacedRuleCount?: number; // when replacing with incoming rules
+        message?: string;
+      };
+  ```
+
+Update policy type
+
+- The policy object accepted by update():
+
+  ```ts
+  export interface UpdatePolicy {
+    onVersionUp?: 'error' | 'warn' | 'off'; // default 'off'
+    onVersionDown?: 'error' | 'warn' | 'off'; // default 'error'
+    onVersionInvalid?: 'error' | 'warn' | 'off'; // default 'error'
+    onTimeUnitChange?: 'error' | 'warn' | 'off'; // default 'warn'
+    onNotice?: (n: Notice) => void;
+  }
+  ```
+
+Persistence and version
+
+- toJson() remains the single source of serialized truth:
+  - Writes the build-time version (**RRSTACK_VERSION**).
+  - Unbrands timezone to a plain string.
+  - Clones arrays.
+  - In the React façade, overlays staged rules/timezone so autosave receives exactly what the user sees.
+- The constructor accepts RRStackOptions with an optional version but does not alter runtime behavior based on it; all version handling occurs in update().
 
 Algorithms (unit/timezone-aware; streaming where applicable)
 
@@ -142,11 +228,6 @@ Validation policy (zod)
   - RuleLiteSchema: lightweight rule validation at mutation boundaries
 - Full rrule options validation occurs during compilation.
 
-Persistence and version handling
-
-- toJson() writes the current package version injected at build time via **RRSTACK_VERSION**.
-- The constructor accepts RRStackOptions with optional version and ignores it (future transforms may be added without shape changes).
-
 Packaging and exports
 
 - Rollup builds CJS and ESM outputs; types included.
@@ -158,10 +239,14 @@ React adapter (./react)
 
 - Hooks observe a live RRStack instance without re-wrapping its control surface:
   - useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? }) → { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }
-    - mutateDebounce stages UI edits (rules/timezone) and commits once per window (optional leading).
+    - mutateDebounce stages UI edits (rules/timezone) and commits once per window.
     - renderDebounce coalesces paints (optional leading; trailing always true).
     - changeDebounce coalesces autosave calls (trailing always true; optional leading).
   - useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? }) → { selection, version, flushRender }
+- Ingestion loop (form → engine)
+  - The hook watches the json prop (by comparator ignoring version); when it changes, it invokes rrstack.update(json, policy) via the mutate manager (debounced if configured), then commits once per window.
+  - On commit, rrstack notifies and the hook calls onChange once (debounced if configured). onChange handlers typically persist rrstack.toJson().
+  - Using toJson() in onChange and the comparator guard avoids ping‑pong loops.
 - Staged vs compiled behavior
   - Reads of rrstack.rules and rrstack.timezone (and rrstack.toJson()) reflect staged values before commit.
   - Queries (isActiveAt, getSegments, etc.) reflect last committed compiled state until commit.
@@ -180,9 +265,9 @@ Documentation
 
 - README and Handbook document:
   - API surface and behavior (including segments limit, bounds semantics).
-  - timeUnit semantics and 's' rounding.
+  - timeUnit semantics, unit-change conversion details, and 's' rounding.
   - Timezone/ICU environment notes.
-  - React hooks options, staged vs compiled, debounce knobs.
+  - React hooks options, staged vs compiled, debounce knobs, and the form→engine ingestion flow via update().
   - Algorithms (deep dive) page detailing the orchestration strategies.
 
 Testing
@@ -193,27 +278,21 @@ Testing
   - Odd-month and every-2-month scenarios with blackout/reactivation cascades
   - Segment sweeps, range classification
   - Effective bounds (open/closed sides, ties, blackout overrides, reverse sweep)
-  - React hooks (debounce behaviors, version bump rendering)
+  - update(): version policies (up/down/invalid), timeUnit change (retained vs incoming rules), notices and callback invocation
+  - React hooks (debounce behaviors, version bump rendering, ingestion via update)
 - Performance
   - BENCH-gated micro-benchmarks (skipped by default) to characterize hot paths (e.g., getEffectiveBounds, isActiveAt, getSegments) under common workloads.
-
-Non-functional requirements
-
-- Performance: streaming algorithms are memory-bounded; no precomputation of large occurrence sets; finite/local bound search; O(1) open-end detection.
-- Determinism: half-open intervals [start, end); 's' mode rounds end upward.
-- Immutability: options are frozen; mutators perform immutable updates and a single recompile per call.
 
 API conventions (boolean options)
 
 - Boolean options are named such that their default is false. Undefined (falsy) must have the same meaning as an explicit false; explicit true is opt‑in.
-- DescribeOptions defaults:
+- DescribeOptions defaults (unchanged):
   - includeTimeZone: false (opt‑in to append “(timezone <tz>)”).
   - includeBounds: false (unchanged).
-- Existing code and tests should pass { includeTimeZone: true } when the timezone label is desired.
 
 Out of scope (current)
 
-- Changing timeUnit on an existing instance (construct a new instance instead).
+- Per-field merges inside rules (update replaces the whole rules array when provided).
 - Full RRULE Options validation via zod (compile remains authoritative).
 
 Rule descriptions — pluggable translator and frequency lexicon
@@ -252,11 +331,6 @@ Frequency lexicon
   - FREQUENCY_ADJECTIVE_EN, FREQUENCY_NOUN_EN, FREQUENCY_LEXICON_EN
 - UI helper:
   - toFrequencyOptions(labels?: FrequencyAdjectiveLabels) → Array<{ value: FrequencyStr; label: string }>, ordered.
-
-Configuration and injection
-
-- Per-call: describeRule(..., opts?: { translator?: 'strict-en' | DescribeTranslator; translatorOptions?: TranslatorOptions; includeTimeZone?; includeBounds?; formatTimeZone? })
-- Instance-level defaults may be added in the future (translator functions are not serialized).
 
 Acceptance criteria (descriptions)
 
