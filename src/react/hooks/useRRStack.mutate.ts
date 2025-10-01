@@ -1,7 +1,11 @@
 import type { RefObject } from 'react';
 
 import type { RRStack } from '../../rrstack/RRStack';
-import type { RRStackOptions, RuleJson } from '../../rrstack/types';
+import type {
+  RRStackOptions,
+  RuleJson,
+  UpdatePolicy,
+} from '../../rrstack/types';
 import type { DebounceCfgNormalized } from './useRRStack.config';
 
 export interface MutateManager {
@@ -20,6 +24,12 @@ export interface MutateManager {
 export const createMutateManager = (
   rrstackRef: RefObject<RRStack>,
   cfgRef: RefObject<DebounceCfgNormalized | undefined>,
+  /**
+   * Optional policy to apply to rrstack.update() when committing staged
+   * mutations (timezone/rules). Also used for timeUnit changes originating
+   * from UI edits.
+   */
+  policyRef: RefObject<UpdatePolicy | undefined>,
   log: (t: 'commit') => void,
 ): MutateManager => {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -48,7 +58,7 @@ export const createMutateManager = (
     if (staging.rules !== undefined) patch.rules = staging.rules;
     staging = null;
     if (Object.keys(patch).length > 0) {
-      rrstackRef.current.update(patch);
+      rrstackRef.current.update(patch, policyRef.current);
       log('commit');
     }
   };

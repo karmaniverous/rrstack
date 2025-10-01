@@ -259,7 +259,7 @@ export interface RRStackOptions {
 
 Notes
 
-- The library compiles DurationParts into a Luxon Duration and computes ends in the rule timezone to remain DST-correct.- Half-open intervals [start, end): in 's' mode, end is rounded up to the next second to avoid boundary false negatives.
+- The library compiles DurationParts into a Luxon Duration and computes ends in the rule timezone to remain DST-correct.- Half-open intervals [start, end): in 's' mode, end is rounded up to the next integer second to avoid boundary false negatives.
 - Calendar vs exact:
   - { days: 1 } means “same local time next day” (can be 23 or 25 hours across DST),
   - { hours: 24 } means “exactly 24 hours.”
@@ -284,7 +284,7 @@ Update API (version/unit policies)
 - Version handling runs first:
   - onVersionUp (incoming older than engine): default 'off' (accept; upgrader runs no-op today).
   - onVersionDown (incoming newer than engine): default 'error' (reject); set 'warn' or 'off' to ingest as current.
-  - onVersionInvalid (invalid semver): default 'error' (reject); set 'warn' or 'off' to ingest as current.
+  - onVersionInvalid (invalid semver): default 'error' (reject); set 'warn' or 'off' to ingest as current).
 - Time unit changes are supported:
   - If rules provided: they replace the entire rules array and are assumed to already be expressed in the new unit (no conversion).
   - If rules not provided: retained rules’ clamp timestamps (options.starts/options.ends) are converted between ms and s (ms → s: Math.trunc(ms/1000); s → ms: s\*1000), then recompiled.

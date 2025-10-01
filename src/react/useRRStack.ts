@@ -7,7 +7,7 @@ import {
 } from 'react';
 
 import { RRStack } from '../rrstack/RRStack';
-import type { RRStackOptions } from '../rrstack/types';
+import type { RRStackOptions, UpdatePolicy } from '../rrstack/types';
 import {
   CHANGE_DEBOUNCE_MS,
   type DebounceSpec,
@@ -38,6 +38,7 @@ export interface UseRRStackProps extends UseRRStackBaseProps {
   json?: RRStackOptions | null;
   mutateDebounce?: DebounceSpec;
   onChange?: (stack: RRStack) => void;
+  policy?: UpdatePolicy;
 }
 
 export interface UseRRStackOutput extends UseRRStackBaseOutput {
@@ -53,6 +54,7 @@ export function useRRStack({
   logger,
   mutateDebounce,
   onChange,
+  policy,
   renderDebounce,
   resetKey,
 }: UseRRStackProps): UseRRStackOutput {
@@ -64,6 +66,8 @@ export function useRRStack({
   // Refs for current instance and façade
   const rrstackRef = useRef(rrstack);
   rrstackRef.current = rrstack;
+  const policyRef = useRef<UpdatePolicy | undefined>(policy);
+  policyRef.current = policy;
   const facadeRef = useRef<RRStack>(rrstack);
 
   // Logger bound to current rrstack
@@ -85,9 +89,14 @@ export function useRRStack({
   );
   mutateCfgRef.current = normalizeDebounce(mutateDebounce, MUTATE_DEBOUNCE_MS);
   const mutateRef = useRef<MutateManager | null>(null);
-  mutateRef.current ??= createMutateManager(rrstackRef, mutateCfgRef, (t) => {
-    log(t);
-  });
+  mutateRef.current ??= createMutateManager(
+    rrstackRef,
+    mutateCfgRef,
+    policyRef,
+    (t) => {
+      log(t);
+    },
+  );
 
   // Render bumper (coalesce paints)
   const renderCfgRef = useRef(
@@ -96,6 +105,32 @@ export function useRRStack({
   renderCfgRef.current = normalizeDebounce(renderDebounce, RENDER_DEBOUNCE_MS);
   const renderRef = useRef<RenderBumper | null>(null);
   renderRef.current ??= createRenderBumper(renderCfgRef);
+
+  // Prop ingestion (json → engine), ignoring 'version' to avoid ping‑pong
+  const prevIngestKeyRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const safeJson: RRStackOptions = json ?? { timezone: 'UTC', rules: [] };
+    // Ignore 'version' during comparison to avoid ping‑pong when persisting toJson()
+    const { version: _ignore, ...rest } = safeJson as RRStackOptions & {
+      version?: unknown;
+    };
+    let key: string;
+    try {
+      key = JSON.stringify(rest);
+    } catch {
+      // Fallback to reference identity (ingest on every render if non-serializable)
+      key = String(Math.random());
+    }
+    if (prevIngestKeyRef.current === undefined) {
+      // First render: seed without ingest (RRStack was just constructed)
+      prevIngestKeyRef.current = key;
+      return;
+    }
+    if (prevIngestKeyRef.current !== key) {
+      rrstackRef.current.update(safeJson, policyRef.current);
+      prevIngestKeyRef.current = key;
+    }
+  }, [json, rrstackRef]);
 
   // React external-store binding: one React-level subscriber per hook instance.
   // Use a monotonic counter for the snapshot; Date.now() can be frozen by fake timers.

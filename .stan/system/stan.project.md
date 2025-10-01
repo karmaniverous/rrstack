@@ -50,6 +50,12 @@ Algorithmic guardrails
 
 Assistant ergonomics (this repo)
 
+- React API (policy passthrough)
+  - The hook `useRRStack` exposes an optional `policy?: UpdatePolicy` prop.
+  - The policy is applied to both:
+    - Prop ingestion (`json` → `rrstack.update(json, policy)`), and
+    - Staged UI commits (timezone/rules/timeUnit via `rrstack.update(patch, policy)`).
+  - Use `onNotice` in the policy to route notices centrally in apps.
 - Do not modify .stan/system/stan.system.md; propose durable behavior changes here (stan.project.md) or in stan.requirements.md as appropriate.
 - Respect BENCH-gated performance tests: do not enable them in CI; keep them deterministic when BENCH is set locally.
 - For React hooks, preserve staged-vs-compiled semantics:

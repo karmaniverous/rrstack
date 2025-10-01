@@ -9,8 +9,7 @@ Next up (near‑term, prioritized)
 
 2. Docs
    - README/Handbook: • Update API and policy defaults, • Unit-change example, • React form→engine ingestion loop using update(), • Notice handling guidance.
-   - Typedoc polish: ensure Notice/UpdatePolicy are clearly documented with short examples in the API reference.
-   - README snippet: add a short upgrade policy example (e.g., warn on newer version and log notices via onNotice).
+   - README snippet: add a short upgrade policy example (warn on newer version; log notices via onNotice).
 
 3. Cleanup / exports
    - Remove residual references to updateOptions in docs/tests (if any).
@@ -19,11 +18,19 @@ Next up (near‑term, prioritized)
 4. BENCH (optional)
    - Add small benches around update() hot path (unit change retained vs incoming rules) for regression tracking.
 
-5. React API nudge (optional)
-   - Consider exposing a policy prop passthrough on useRRStack to centralize ingestion policy and onNotice wiring in apps.
+
 
 Completed (recent)
 
+- Typedoc polish:
+  - Added comprehensive TSDoc for Notice and UpdatePolicy with short examples to improve API reference output.
+
+- React API:
+  - Implemented `policy?: UpdatePolicy` passthrough on useRRStack. Applied to both prop ingestion and staged commits; onNotice routed centrally.
+
+- Docs refresh:
+  - README: added upgrade-policy example and noted hook policy passthrough.
+  - Handbook (React): updated signature, parameters, and ingestion notes to include policy/onNotice.
 - Requirements & plan updated:
   - Introduced single ingestion method update(partial, policy); removed updateOptions.
   - Added version detection pipeline with no‑op upgrader; specified UpdatePolicy defaults.

@@ -1,3 +1,4 @@
+/// <reference path="" />
 /**
  * Public RRStack types, options, and JSON shapes.
  *
@@ -37,10 +38,10 @@ export type FrequencyStr =
 /**
  * Structured duration parts for UI-friendly, lossless round-tripping.
  * - All fields are non-negative integers.
- * - At least one field must be \> 0 (duration must be strictly positive).
+ * - At least one field must be > 0 (duration must be strictly positive).
  * - Calendar vs exact:
- *   • \{ days: 1 \} → calendar day (can be 23/25 hours across DST),
- *   • \{ hours: 24 \} → exact 24 hours.
+ *   • { days: 1 } → calendar day (can be 23/25 hours across DST),
+ *   • { hours: 24 } → exact 24 hours.
  */
 export interface DurationParts {
   years?: number; // non-negative integer

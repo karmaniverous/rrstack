@@ -238,13 +238,14 @@ Packaging and exports
 React adapter (./react)
 
 - Hooks observe a live RRStack instance without re-wrapping its control surface:
-  - useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? }) → { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }
+  - useRRStack({ json, onChange?, resetKey?, policy?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? }) → { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }
     - mutateDebounce stages UI edits (rules/timezone) and commits once per window.
     - renderDebounce coalesces paints (optional leading; trailing always true).
     - changeDebounce coalesces autosave calls (trailing always true; optional leading).
   - useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? }) → { selection, version, flushRender }
 - Ingestion loop (form → engine)
   - The hook watches the json prop (by comparator ignoring version); when it changes, it invokes rrstack.update(json, policy) via the mutate manager (debounced if configured), then commits once per window.
+  - The optional `policy` prop is applied to both ingestion and staged commits; use `onNotice` to surface notices centrally.
   - On commit, rrstack notifies and the hook calls onChange once (debounced if configured). onChange handlers typically persist rrstack.toJson().
   - Using toJson() in onChange and the comparator guard avoids ping‑pong loops.
 - Staged vs compiled behavior

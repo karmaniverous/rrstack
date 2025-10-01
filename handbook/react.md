@@ -12,7 +12,7 @@ Two small hooks observe a live RRStack instance without re‑wrapping its contro
 
 ```ts
 import { useRRStack, useRRStackSelector } from '@karmaniverous/rrstack/react';
-import type { RRStack, RRStackOptions } from '@karmaniverous/rrstack';
+import type { RRStack, RRStackOptions, UpdatePolicy } from '@karmaniverous/rrstack';
 ```
 
 ## useRRStack
@@ -30,6 +30,7 @@ function useRRStack(props: {
   json: RRStackOptions;
   onChange?: (s: RRStack) => void;
   resetKey?: string | number;
+  policy?: UpdatePolicy;
   changeDebounce?: true | number | { delay?: number; leading?: boolean };
   mutateDebounce?: true | number | { delay?: number; leading?: boolean };
   renderDebounce?: true | number | { delay?: number; leading?: boolean };
@@ -68,6 +69,13 @@ Hook props and outputs (quick reference)
     - Debounce UI → rrstack edits. Edits to rrstack.rules/timezone are staged and committed once per window.
   - renderDebounce: true | number | { delay?: number; leading?: boolean }
     - Debounce rrstack → UI paints by coalescing version bumps; final trailing paint always occurs.
+  - policy?: UpdatePolicy
+    - Optional passthrough to RRStack.update. Applied to both:
+      - Prop ingestion (json → engine), and
+      - Staged UI commits (timezone/rules, including timeUnit changes).
+    - Use onNotice to route notices:
+      `useRRStack({ json, policy: { onVersionDown: 'warn', onNotice: console.log } })`
+
   - logger: boolean | (e: { type: LogEvent; rrstack: RRStack }) => void
     - true logs to console.debug; function receives structured events.
 - Outputs
@@ -80,6 +88,7 @@ Parameters (props object)
 - `json: RRStackOptions` — JSON input for the stack (same shape as `new RRStack(opts)`). A new instance is only created when `resetKey` changes.
 - `onChange?: (s: RRStack) => void` — optional callback fired after successful mutations (post‑compile). The constructor does not trigger this callback.
 - `resetKey?: string | number` — change to intentionally rebuild the instance (e.g., switching documents).
+- `policy?: UpdatePolicy` — forwarded to `rrstack.update()` for both ingestion and staged commits. Set `onNotice` here to centralize notice handling.
 - `changeDebounce?: true | number | { delay?: number; leading?: boolean }` — autosave debounce.
 - `mutateDebounce?: true | number | { delay?: number; leading?: boolean }` — coalesce UI edits into a single commit per window (staged rules/timezone).
 - `renderDebounce?: true | number | { delay?: number; leading?: boolean }` — coalesce version bumps (rrstack → UI).
@@ -89,6 +98,7 @@ Ingestion (json → rrstack.update)
 
 - The hook watches `json` and calls `rrstack.update(json, policy)` (debounced if configured). On commit, it triggers one `onChange` (debounced if configured) where you typically persist `rrstack.toJson()`.
 - The default comparator ignores `version` to avoid ping‑pong when your `onChange` writes back `toJson()`.
+- Provide `policy` to apply version/unit handling and `onNotice` during both ingestion and staged commits.
 - Time unit changes are handled inside `update()` — retained rules have clamp timestamps converted; incoming rules are treated as already in the new unit when provided. No special adapter logic is required.
 
 Returns
