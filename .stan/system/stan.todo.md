@@ -22,6 +22,10 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- React tests:
+  - Added ingestion guard test (json comparator ignores version to avoid ping‑pong).
+  - Added overlapping staged edits test to assert single commit and final state under mutateDebounce.
+
 - Build & lint fixes:
   - Removed stray triple‑slash reference in src/rrstack/types.ts that broke TS/Typedoc/rollup (TS6231).
   - Tidied TSDoc in DurationParts to escape special characters.

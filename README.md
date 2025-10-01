@@ -310,7 +310,7 @@ console.log(RRSTACK_CONFIG_SCHEMA.$schema, 'RRStackOptions schema loaded');
 
 RRStack ships a tiny React adapter at the subpath `@karmaniverous/rrstack/react`. The hooks observe a live RRStack instance without re‑wrapping its control surface (RRStack remains the single source of truth).
 
-- `useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? })` → `{ rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }`
+- `useRRStack({ json, onChange?, resetKey?, policy?, changeDebounce?, mutateDebounce?, renderDebounce?, logger? })` → `{ rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }`
 - `useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?, resetKey? })` → `{ selection, version, flushRender }` (re‑renders only when selection changes).
 
 Debounce knobs (trailing is always true)
@@ -324,6 +324,18 @@ Ingestion (form → engine)
 - The hook watches your `json` prop (by comparator that ignores `version`) and ingests via `rrstack.update(json, policy)` (debounced if configured). On commit, the hook triggers one `onChange` (debounced if configured) where you typically persist `rrstack.toJson()`.
 - Time unit changes are handled inside `update()` — retained rules have clamp timestamps converted; incoming rules in the same update are treated as already in the new unit.
 
+Unit change examples
+
+```ts
+// Switch to seconds while retaining existing rules (clamps auto-converted)
+stack.update({ timeUnit: 's' }, { onTimeUnitChange: 'warn' });
+
+// Replace rules while switching unit; incoming rule clamps are assumed in 's'
+const rulesInSeconds = [
+  { effect: 'active', options: { starts: 1_700_000_000, ends: 1_700_000_600 } },
+];
+stack.update({ timeUnit: 's', rules: rulesInSeconds }, { onTimeUnitChange: 'warn' });
+```
 Helpers
 
 - `flushChanges()`: flush pending trailing autosave immediately.

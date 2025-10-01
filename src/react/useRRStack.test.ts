@@ -303,6 +303,71 @@ describe('useRRStack (react)', () => {
     vi.useRealTimers();
   });
 
+  it('json ingestion ignores version to avoid ping-pong', async () => {
+    const events: number[] = [];
+    function Probe({ json }: { json: RRStackOptions }) {
+      useRRStack({
+        json,
+        onChange: () => {
+          events.push(1);
+        },
+      });
+      return React.createElement('div');
+    }
+    const base = { ...EXAMPLE_A, version: '0.0.1' as const };
+    const app = mount(React.createElement(Probe, { json: base }));
+    // Re-render with version changed only; comparator ignores version
+    const withNewVersion = { ...EXAMPLE_A, version: '9.9.9' as const };
+    app.rerender(React.createElement(Probe, { json: withNewVersion }));
+    // allow effects to settle
+    await act(async () => {
+      await Promise.resolve();
+    });
+    // No ingestion-triggered onChange should have fired
+    expect(events.length).toBe(0);
+    app.unmount();
+  });
+
+  it('overlapping staged edits commit once and reflect final state', async () => {
+    vi.useFakeTimers();
+    const events: { count: number; tz: string }[] = [];
+    const addRule = (h: number, label: string): RuleJson => ({
+      effect: 'active',
+      duration: { minutes: 5 },
+      options: { freq: 'daily', byhour: [h], byminute: [0], bysecond: [0] },
+      label,
+    });
+    function DebouncedView({ json }: { json: RRStackOptions }) {
+      const { rrstack } = useRRStack({
+        json,
+        onChange: (s) => events.push({ count: s.rules.length, tz: s.timezone }),
+        mutateDebounce: { delay: 50 },
+      });
+      useEffect(() => {
+        // Multiple staged edits within the same window
+        rrstack.addRule(addRule(6, 'x'));
+        rrstack.addRule(addRule(7, 'y'));
+        rrstack.timezone = 'America/Chicago';
+        rrstack.addRule(addRule(8, 'z'));
+      }, [rrstack]);
+      return React.createElement('div');
+    }
+
+    const app = mount(React.createElement(DebouncedView, { json: EXAMPLE_A }));
+    // Let the debounce window elapse and flush
+    await act(async () => {
+      vi.advanceTimersByTime(60);
+      await Promise.resolve();
+    });
+    expect(events.length).toBe(1);
+    const e = events[0];
+    // EXAMPLE_A starts with 1 rule; after 3 staged adds => 4
+    expect(e.count).toBe(4);
+    expect(e.tz).toBe('America/Chicago');
+    app.unmount();
+    vi.useRealTimers();
+  });
+
   it('accepts null json (falls back to UTC with empty rules)', () => {
     function NullView({ json }: { json: RRStackOptions | null }) {
       const { rrstack } = useRRStack({ json });
