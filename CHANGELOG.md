@@ -2,10 +2,33 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.14.0](https://github.com/karmaniverous/rrstack/compare/0.13.4...0.14.0)
+
+- fix(update): resolve TS2454 and lint in unit-change notice; drop unused import [`cd85c83`](https://github.com/karmaniverous/rrstack/commit/cd85c83e9a7255854a924f3f7e4733660e131016)
+- test: fix TS4104 by typing update() result as readonly Notice[] [`9dcebd0`](https://github.com/karmaniverous/rrstack/commit/9dcebd01bf0b39b3019531d491e9ec80fea2b8cd)
+- test: assert update() Notice[] equals policy.onNotice ordering [`7eda06d`](https://github.com/karmaniverous/rrstack/commit/7eda06d5550786b6f100a81a0a82f70364bea8b9)
+- docs(test): add policy & notices doc snippet and hook notice test [`f41599e`](https://github.com/karmaniverous/rrstack/commit/f41599e3adf567f7f093f87e5d0b97bbd0a2d625)
+- fix: stabilize overlapping edits test; clean knip entry [`8a1e02b`](https://github.com/karmaniverous/rrstack/commit/8a1e02b2218b7ebfec82e3bc6cd0baaa825c04ce)
+- feat(update): single ingestion API with version/unit policies; remove updateOptions [`f16e7d7`](https://github.com/karmaniverous/rrstack/commit/f16e7d7ade1c3c5774807a68fd2c890dca1d35a3)
+- test: make overlapping-edits final count robust to dev double effects [`e073fb6`](https://github.com/karmaniverous/rrstack/commit/e073fb6ae75bd0f2bc071b4cc980caa43789c68e)
+- test(react): coalesce onChange in staged-edits test (single autosave) [`100909b`](https://github.com/karmaniverous/rrstack/commit/100909bc4cf7728d9a5078bbeff990f944a24923)
+- fix(types/react): resolve TS6231 and ESLint; improve TSDoc [`d37e8a7`](https://github.com/karmaniverous/rrstack/commit/d37e8a7bd9606c1a9f7179219398508b81d02de8)
+- test(docs): add react ingestion/staging tests; README updates [`6fd36b7`](https://github.com/karmaniverous/rrstack/commit/6fd36b7b5a44b976c058a1c3afcc74e913c54890)
+- feat(react/docs): policy passthrough + TSDoc polish; docs refreshed [`0b4611e`](https://github.com/karmaniverous/rrstack/commit/0b4611e86e7f69ba23d1dbbef0c47ebe2dfc74ab)
+- docs: define update() API, version/unit policies; prune dev plan [`7b71b2a`](https://github.com/karmaniverous/rrstack/commit/7b71b2a9586f4503ab212b02eedee604ab13db47)
+- test(update): add engine tests for unit conversion and version policies [`b391098`](https://github.com/karmaniverous/rrstack/commit/b3910989068277feaa97e6613abde78ce440ac06)
+- docs: update README/Handbook for update() API and ingestion flow [`38b2f49`](https://github.com/karmaniverous/rrstack/commit/38b2f4993d5a33f52a66082a35aef9ef0a8b3113)
+- fix(update): resolve TS2454 and lint in unit-change notice; drop unused import [`0fea7b0`](https://github.com/karmaniverous/rrstack/commit/0fea7b0d0476fd0638b9bfcd6303796171a14366)
+- fix(update): narrow unitNotice to timeUnitChange notice variant [`39d1060`](https://github.com/karmaniverous/rrstack/commit/39d10609ebb9d411e67d284aadea6ab5f4e080d9)
+- chore(todo): capture typedoc/readme tasks and React nudge [`fd1a65e`](https://github.com/karmaniverous/rrstack/commit/fd1a65e8f1f5b8d1fdf2894feaa85d6c327952bc)
+
 #### [0.13.4](https://github.com/karmaniverous/rrstack/compare/0.13.3...0.13.4)
+
+> 29 September 2025
 
 - fix(describe): yearly fallbacks and bounds clamp display [`32511bf`](https://github.com/karmaniverous/rrstack/commit/32511bf290dbbec6a62d6206229ed0abfb95e363)
 - test(describe): cover “or”-joined positioned weekdays and multi-nth [`f2ac4ed`](https://github.com/karmaniverous/rrstack/commit/f2ac4edb183e5a4644a286c4584a5304d08cff62)
+- chore: release v0.13.4 [`f4fa4ee`](https://github.com/karmaniverous/rrstack/commit/f4fa4ee62b65eecf4cb1152df0933b6558251338)
 - feat(describe): “or”-joined positioned weekdays and multi-nth [`01bc071`](https://github.com/karmaniverous/rrstack/commit/01bc07106797a5cd8cbbc426378b66cf2f99b2ec)
 
 #### [0.13.3](https://github.com/karmaniverous/rrstack/compare/0.13.2...0.13.3)
