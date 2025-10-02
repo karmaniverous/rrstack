@@ -448,7 +448,7 @@ describe('useRRStack (react)', () => {
       onTimeUnitChange: 'warn',
       onNotice: (n) => seen.push(n),
     };
-    let returned: Notice[] | null = null;
+    let returned: readonly Notice[] | null = null;
 
     function OrderProbe({
       json,

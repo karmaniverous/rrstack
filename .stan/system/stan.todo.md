@@ -20,6 +20,10 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Build/tests:
+  - Fixed TS4104 in src/react/useRRStack.test.ts by typing the result of
+    rrstack.update() as `readonly Notice[]` to match the API return type.
+
 - React tests:
   - Added ordering/delivery test to compare rrstack.update()’s returned Notice[]
     with notices received via policy.onNotice (identical content and ordering).
