@@ -18,6 +18,11 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Docs: descriptions/bounds formatting
+  - README “Rule description helpers”: corrected default (includeTimeZone is
+    opt‑in) and added boundsFormat example.
+  - Handbook “Descriptions”: added a short boundsFormat section with examples.
+
 - DescribeOptions bounds formatting:
   - Added `boundsFormat?: string` to DescribeOptions for customizing how
     includeBounds dates are rendered. When provided, bounds use Luxon

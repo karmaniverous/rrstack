@@ -109,7 +109,7 @@ const json = stack.toJson(); // RRStackOptions (includes version)
 const stack2 = new RRStack(json);
 
 // 7) Describe a rule (plain-language)
-// e.g., "Active for 1 hour: every day at 5:00 (timezone America/Chicago)"
+// e.g., "Active for 1 hour: every day at 5:00"
 const description = stack.describeRule(0);
 ```
 
@@ -400,12 +400,20 @@ Build a human-readable string describing a rule’s cadence using rrule’s toTe
 - Instance method (describe compiled rule by index):
 
 ```ts
-const text = stack.describeRule(0); // "Active for 1 hour: every day at 5:00 (timezone America/Chicago)"
+const text = stack.describeRule(0); // "Active for 1 hour: every day at 5:00"
 const textWithBounds = stack.describeRule(0, {
-  includeTimeZone: true, // default true
-  includeBounds: false, // default false; when true, appends [from ...; until ...] if present
+  includeTimeZone: true, // default false (opt in)
+  includeBounds: true, // default false; when true, appends [from ...; until ...] if present
+  // Optional: customize how bounds are rendered (Luxon toFormat in the rule's timezone)
+  boundsFormat: 'yyyy-LL-dd', // ISO with Z is used when omitted
 });
 ```
+
+Notes
+
+- Boolean describe options are opt‑in (default false). Use includeTimeZone
+  to append “(timezone <tz>)”. Use includeBounds to append “[from …; until …]”.
+- boundsFormat customizes only the bound timestamps; when omitted, bounds are rendered as ISO with milliseconds suppressed.
 
 - Helper function (compile on the fly from JSON):
 

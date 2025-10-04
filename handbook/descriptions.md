@@ -168,6 +168,27 @@ const text = describeRule(rule, RRStack.asTimeZoneId('UTC'), 'ms', {
 });
 ```
 
+### Bounds format (custom date rendering)
+
+You can customize how clamp bounds are rendered when `includeBounds` is true.
+Pass `boundsFormat` to `describeRule`/`stack.describeRule`. It uses Luxon’s
+`toFormat(boundsFormat)` in the rule’s timezone.
+
+```ts
+// ISO with Z is used when boundsFormat is omitted.
+const text1 = stack.describeRule(0, {
+  includeBounds: true,
+  boundsFormat: 'yyyy-LL-dd', // e.g., "from 2025-04-01; until 2025-04-02"
+});
+
+// With both zone label and custom bounds format
+const text2 = stack.describeRule(0, {
+  includeTimeZone: true,
+  includeBounds: true,
+  boundsFormat: "dd LLL yyyy 'at' HH:mm",
+});
+```
+
 ## Frequency lexicon (UI helpers)
 
 Exported from `@karmaniverous/rrstack`:
