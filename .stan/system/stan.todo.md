@@ -18,6 +18,12 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- DescribeOptions bounds formatting:
+  - Added `boundsFormat?: string` to DescribeOptions for customizing how
+    includeBounds dates are rendered. When provided, bounds use Luxon
+    `toFormat(boundsFormat)` in the rule’s timezone; otherwise ISO formatting
+    is preserved. Added tests for both span and recurring rules.
+
 - Time conversion utilities (final test fix):
   - Luxon may normalize invalid wall times (e.g., 02:30 → 03:30) while reporting
     `isValid=true`. We now detect normalization (mismatched wall fields) and treat

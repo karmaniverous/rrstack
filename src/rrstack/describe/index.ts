@@ -2,6 +2,7 @@
  * Requirements addressed:
  * - Provide a human-readable rule description leveraging rrule's toText().
  * - Include effect and duration; optionally include timezone and bounds.
+ * - Include effect and duration; optionally include timezone and bounds.
  * - Allow custom formatting of the timezone label.
  */
 
@@ -79,6 +80,19 @@ export interface DescribeOptions {
    * `(timezone formatTimeZone(tzId))` instead of the raw tz id.
    */
   formatTimeZone?: (tzId: string) => string;
+  /**
+   * Optional format string for bounds when `includeBounds` is true.
+   * When provided, bound instants are rendered via Luxon's `toFormat(boundsFormat)`
+   * in the rule's timezone. When omitted, bounds use ISO with milliseconds
+   * suppressed (default behavior).
+   *
+   * Examples:
+   * - 'yyyy-LL-dd' → "2025-04-01"
+   * - "dd LLL yyyy 'at' HH:mm" → "01 Apr 2025 at 07:30"
+   *
+   * Backward compatible: if undefined, behavior is unchanged.
+   */
+  boundsFormat?: string;
   /** Optional translator override ('strict-en' or custom) */
   translator?: 'strict-en' | DescribeTranslator;
   /** Options for the translator. */
@@ -96,6 +110,7 @@ export const describeCompiledRule = (
   const {
     includeTimeZone = false,
     includeBounds = false,
+    boundsFormat,
     formatTimeZone,
   } = opts;
   const effect = compiled.effect === 'active' ? 'Active' : 'Blackout';
@@ -110,13 +125,16 @@ export const describeCompiledRule = (
     }
     if (includeBounds) {
       const tz = compiled.tz;
-      const fmt = (v?: number) =>
-        typeof v === 'number'
-          ? (compiled.unit === 'ms'
-              ? DateTime.fromMillis(v, { zone: tz })
-              : DateTime.fromSeconds(v, { zone: tz })
-            ).toISO({ suppressMilliseconds: true })
-          : undefined;
+      const fmt = (v?: number) => {
+        if (typeof v !== 'number') return undefined;
+        const dt =
+          compiled.unit === 'ms'
+            ? DateTime.fromMillis(v, { zone: tz })
+            : DateTime.fromSeconds(v, { zone: tz });
+        return boundsFormat
+          ? dt.toFormat(boundsFormat)
+          : dt.toISO({ suppressMilliseconds: true });
+      };
       const from = fmt(compiled.start);
       const until = fmt(compiled.end);
       if (from || until) {
@@ -151,12 +169,13 @@ export const describeCompiledRule = (
     //  to dtstart/until)
 
     const tz = recur.tz;
-    const fmt = (d: Date | null | undefined) =>
-      d
-        ? DateTime.fromJSDate(d, { zone: tz }).toISO({
-            suppressMilliseconds: true,
-          })
-        : undefined;
+    const fmt = (d: Date | null | undefined) => {
+      if (!d) return undefined;
+      const dt = DateTime.fromJSDate(d, { zone: tz });
+      return boundsFormat
+        ? dt.toFormat(boundsFormat)
+        : dt.toISO({ suppressMilliseconds: true });
+    };
     // Show "from" only when the rule had an explicit starts clamp.
     const from = !recur.isOpenStart
       ? fmt((recur.options as { dtstart?: Date | null }).dtstart)

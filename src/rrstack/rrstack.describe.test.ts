@@ -66,6 +66,43 @@ describe('RRStack.describeRule(index, opts)', () => {
     expect(text).toContain('until 2025-04-02T00:00:00Z');
   });
 
+  it('span with starts/ends respects boundsFormat when includeBounds=true', () => {
+    const start = Date.UTC(2025, 3, 1, 0, 0, 0);
+    const end = Date.UTC(2025, 3, 2, 0, 0, 0);
+    const span: RuleJson = {
+      effect: 'active',
+      options: { starts: start, ends: end },
+    };
+    const stack = new RRStack({ timezone: 'UTC', rules: [span] });
+    const text = stack.describeRule(0, {
+      includeBounds: true,
+      boundsFormat: 'yyyy-LL-dd HH:mm',
+    });
+    expect(text).toContain('from 2025-04-01 00:00');
+    expect(text).toContain('until 2025-04-02 00:00');
+  });
+
+  it('recurring bounds respect boundsFormat when includeBounds=true', () => {
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { hours: 1 },
+      options: {
+        freq: 'daily',
+        byhour: [5],
+        byminute: [0],
+        bysecond: [0],
+        starts: Date.UTC(2025, 3, 1, 0, 0, 0),
+        ends: Date.UTC(2025, 3, 2, 0, 0, 0),
+      },
+    };
+    const stack = new RRStack({ timezone: 'UTC', rules: [rule] });
+    const text = stack.describeRule(0, {
+      includeBounds: true,
+      boundsFormat: 'yyyy-LL-dd',
+    });
+    expect(text).toContain('from 2025-04-01');
+    expect(text).toContain('until 2025-04-02');
+  });
   it('throws on out-of-range index', () => {
     const stack = new RRStack({ timezone: 'UTC', rules: [] });
     expect(() => stack.describeRule(0)).toThrow();
