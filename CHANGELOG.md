@@ -2,7 +2,20 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.15.0](https://github.com/karmaniverous/rrstack/compare/0.14.0...0.15.0)
+
+- feat(describe): add DescribeOptions.boundsFormat to customize includeBounds rendering [`5e52343`](https://github.com/karmaniverous/rrstack/commit/5e523438b4a6eec11c94e19feff2e85bcdc6671b)
+- fix(time): require exact wall match in minute probe for DST gap (tests green) [`6b327dc`](https://github.com/karmaniverous/rrstack/commit/6b327dc496f12c38bde01b9461400bb6cd0eaf6a)
+- feat: add timezone conversion helpers (wall time ↔ epoch) [`a9e99a2`](https://github.com/karmaniverous/rrstack/commit/a9e99a24d49e964caeab3437af4d5471ef3c35e0)
+- fix(time): treat normalized wall times as invalid; choose earliest valid minute [`bd4bb42`](https://github.com/karmaniverous/rrstack/commit/bd4bb4268722cb3b18d38b5995806d132e93e4f9)
+- fix(time): map spring-forward gaps via wall-minute probing (tests green) [`0d9437f`](https://github.com/karmaniverous/rrstack/commit/0d9437fb504e4f5a2f3b2004f00bc6acc2f951cb)
+- docs(time): add TypeDoc entries for wallTimeToEpoch/dateOnlyToEpoch/epochToWallDate [`587b65c`](https://github.com/karmaniverous/rrstack/commit/587b65c44df1aefeaf555e023627fb8cbee70cda)
+- fix(time): satisfy TS2775 and map DST forward gap to earliest valid instant [`d4d52ac`](https://github.com/karmaniverous/rrstack/commit/d4d52ac36d7993b0f9aca69e358479a1f50665dd)
+- docs: add boundsFormat examples and fix describe defaults [`6a82a4f`](https://github.com/karmaniverous/rrstack/commit/6a82a4fc69ff6d95cf55fd9f3f8f1d4ea53f1cab)
+
 #### [0.14.0](https://github.com/karmaniverous/rrstack/compare/0.13.4...0.14.0)
+
+> 2 October 2025
 
 - fix(update): resolve TS2454 and lint in unit-change notice; drop unused import [`cd85c83`](https://github.com/karmaniverous/rrstack/commit/cd85c83e9a7255854a924f3f7e4733660e131016)
 - test: fix TS4104 by typing update() result as readonly Notice[] [`9dcebd0`](https://github.com/karmaniverous/rrstack/commit/9dcebd01bf0b39b3019531d491e9ec80fea2b8cd)
@@ -15,6 +28,7 @@ All notable changes to this project will be documented in this file. Dates are d
 - fix(types/react): resolve TS6231 and ESLint; improve TSDoc [`d37e8a7`](https://github.com/karmaniverous/rrstack/commit/d37e8a7bd9606c1a9f7179219398508b81d02de8)
 - test(docs): add react ingestion/staging tests; README updates [`6fd36b7`](https://github.com/karmaniverous/rrstack/commit/6fd36b7b5a44b976c058a1c3afcc74e913c54890)
 - feat(react/docs): policy passthrough + TSDoc polish; docs refreshed [`0b4611e`](https://github.com/karmaniverous/rrstack/commit/0b4611e86e7f69ba23d1dbbef0c47ebe2dfc74ab)
+- chore: release v0.14.0 [`483e2c1`](https://github.com/karmaniverous/rrstack/commit/483e2c1440b4e309433b3412bb0f618f07576bb5)
 - docs: define update() API, version/unit policies; prune dev plan [`7b71b2a`](https://github.com/karmaniverous/rrstack/commit/7b71b2a9586f4503ab212b02eedee604ab13db47)
 - test(update): add engine tests for unit conversion and version policies [`b391098`](https://github.com/karmaniverous/rrstack/commit/b3910989068277feaa97e6613abde78ce440ac06)
 - docs: update README/Handbook for update() API and ingestion flow [`38b2f49`](https://github.com/karmaniverous/rrstack/commit/38b2f4993d5a33f52a66082a35aef9ef0a8b3113)
