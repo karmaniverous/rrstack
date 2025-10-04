@@ -132,6 +132,29 @@ const fromWallParts = (
  * Notes
  * - The Date's UTC fields are used intentionally so a "floating" Date produced
  *   by {@link epochToWallDate} round-trips deterministically.
+ *
+ * @public
+ * @category Time
+ * @param date - JS Date whose UTC fields (getUTCFullYear(), getUTCMonth(), etc.)
+ *   represent the intended wall-clock Y/M/D/H/M/S in the supplied IANA time zone.
+ *   If `date.getTime()` is NaN, a RangeError('Invalid Date') is thrown.
+ * @param zone - IANA time zone identifier (branded {@link TimeZoneId}). If not
+ *   recognized by the host ICU/Intl data, a RangeError('Invalid time zone') is thrown.
+ * @param unit - Target epoch unit: `'ms'` for milliseconds or `'s'` for integer
+ *   seconds. Any other value causes RangeError('Invalid time unit').
+ * @returns Epoch timestamp in the requested unit. In `'s'` mode, returns
+ *   truncated integer seconds (Math.trunc).
+ * @throws RangeError - On invalid Date, invalid time zone, or invalid unit.
+ * @remarks DST behavior:
+ * - Forward jump (skipped hour): invalid wall times map to the earliest valid
+ *   instant at/after the requested time in the zone (e.g., 02:30 → 03:00).
+ * - Backward (ambiguous): resolves to the earlier offset by Luxon defaults.
+ * @example
+ * ```ts
+ * const tz = RRStack.asTimeZoneId('America/New_York');
+ * const wall = new Date(Date.UTC(2025, 0, 1, 9, 0, 0)); // 09:00 (floating)
+ * const t = wallTimeToEpoch(wall, tz, 'ms'); // epoch for 2025-01-01 09:00 NY
+ * ```
  */
 export const wallTimeToEpoch = (
   date: Date,
@@ -179,6 +202,26 @@ export const dateOnlyToEpoch = (
  * in `zone` (a "floating" Date). The returned Date's UTC fields (getUTC*)
  * reflect the local time in `zone` at that instant; this shape is convenient
  * for UI round-trips with {@link wallTimeToEpoch}.
+ *
+ * @public
+ * @category Time
+ * @param epoch - Epoch timestamp in the provided `unit`.
+ * @param zone - IANA time zone identifier (branded {@link TimeZoneId}). Throws
+ *   RangeError on invalid zone.
+ * @param unit - `'ms'` (default) for milliseconds or `'s'` for integer seconds.
+ *   Throws RangeError on invalid value.
+ * @returns A "floating" Date whose UTC fields equal the local wall-clock
+ *   Y/M/D/H/M/S in `zone` at the provided instant. This is suitable for round-
+ *   tripping with {@link wallTimeToEpoch}.
+ * @remarks In `'s'` mode, the instant is interpreted as integer seconds since
+ *   epoch. DST is handled by Luxon at the instant being converted.
+ * @example
+ * ```ts
+ * const tz = RRStack.asTimeZoneId('Europe/Paris');
+ * const wall = epochToWallDate(Date.UTC(2024, 6, 20, 7, 0, 0), tz, 'ms');
+ * // wall.getUTCHours() equals the Paris local hour at that instant.
+ * const back = wallTimeToEpoch(wall, tz, 'ms'); // round-trip
+ * ```
  */
 export const epochToWallDate = (
   epoch: number,

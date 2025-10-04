@@ -18,12 +18,11 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Docs (API): Added TSDoc/TypeDoc comments for time helpers (`wallTimeToEpoch`, `dateOnlyToEpoch`, `epochToWallDate`) including parameters, errors, DST semantics, and examples. They are exported from the root and will render in the API reference.
+
 - Time conversion utilities (follow-up fixes):
-  - Resolved TypeScript TS2775 by changing the assertion function to a function
-    declaration (`assertValidUnit`) in src/time/index.ts.
-  - Adjusted DST forward gap mapping to use the earliest valid instant at/after
-    the requested wall time (minute-level bump). This maps 02:30 in the spring
-    gap to 03:00 local (per requirements) and fixes the failing test.
+  - Resolved TypeScript TS2775 by changing the assertion function to a function declaration (`assertValidUnit`) in src/time/index.ts.
+  - Adjusted DST forward gap mapping to use the earliest valid instant at/after the requested wall time (minute-level bump). This maps 02:30 in the spring gap to 03:00 local (per requirements) and fixes the failing test.
 
 - Time conversion utilities:
   - Implemented timezone conversion helpers in `src/time/index.ts`:
