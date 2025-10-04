@@ -22,7 +22,7 @@
  *
  * DST behavior
  * - Forward jump (skipped hour): mapping is performed by composing midnight
- *   and adding H/M/S in the zone; this yields the next valid instant.
+ *   and mapping to the earliest valid instant at/after the requested time.
  * - Backward (ambiguous): resolves to the earlier offset by Luxon defaults.
  */
 import { DateTime, IANAZone } from 'luxon';
@@ -40,20 +40,20 @@ const assertValidZone = (z: string): void => {
     throw new RangeError('Invalid time zone');
   }
 };
-const assertValidUnit = (u: string): asserts u is UnixTimeUnit => {
+function assertValidUnit(u: string): asserts u is UnixTimeUnit {
   if (u !== 'ms' && u !== 's') {
     throw new RangeError('Invalid time unit');
   }
-};
+}
 
 /** Convert Luxon DateTime to epoch in unit (ms|s). */
 const toEpoch = (dt: DateTime, unit: UnixTimeUnit): number =>
   unit === 'ms' ? dt.toMillis() : Math.trunc(dt.toSeconds());
 
 /**
- * Compose a DateTime at midnight local in zone, then add wall H/M/S.
- * This keeps DST behavior correct and maps skipped times to the next valid
- * instant while resolving ambiguous times to the earlier offset.
+ * Compose a DateTime in the local zone at the requested wall time; if invalid
+ * (spring-forward gap), map to the earliest valid instant at/after the target.
+ * Fall-back ambiguities use Luxon defaults (earlier offset).
  */
 const fromWallParts = (
   y: number,
@@ -64,8 +64,25 @@ const fromWallParts = (
   ss: number,
   zone: string,
 ): DateTime => {
-  // Start at midnight (valid anchor) then add H/M/S — Luxon handles DST edges.
-  const start = DateTime.fromObject(
+  // First try direct construction at the requested wall time.
+  const direct = DateTime.fromObject(
+    {
+      year: y,
+      month: m,
+      day: d,
+      hour: hh,
+      minute: mi,
+      second: ss,
+      millisecond: 0,
+    },
+    { zone },
+  );
+  if (direct.isValid) return direct;
+
+  // If invalid (e.g., inside the DST forward gap), map to the earliest valid
+  // instant at/after the requested time. Use minute-level bump to locate the gap end.
+  // Anchor at local midnight (or 01:00 as a rare fallback), then add minutes.
+  const startOfDay = DateTime.fromObject(
     {
       year: y,
       month: m,
@@ -77,9 +94,8 @@ const fromWallParts = (
     },
     { zone },
   );
-  // In the extremely rare case midnight is invalid (very unusual), fallback to 01:00.
-  const base = start.isValid
-    ? start
+  const base = startOfDay.isValid
+    ? startOfDay
     : DateTime.fromObject(
         {
           year: y,
@@ -92,7 +108,21 @@ const fromWallParts = (
         },
         { zone },
       );
-  return base.plus({ hours: hh, minutes: mi, seconds: ss });
+
+  // Target minutes past midnight; seek to the earliest valid minute ≥ target.
+  let candidate = base
+    .plus({ minutes: hh * 60 + mi })
+    .set({ second: 0, millisecond: 0 });
+  let guard = 0;
+  while (!candidate.isValid && guard++ < 240) {
+    candidate = candidate.plus({ minutes: 1 });
+  }
+  // Add seconds if representable; otherwise keep the earliest valid minute.
+  if (ss > 0) {
+    const withSeconds = candidate.plus({ seconds: ss });
+    if (withSeconds.isValid) return withSeconds;
+  }
+  return candidate;
 };
 
 /**

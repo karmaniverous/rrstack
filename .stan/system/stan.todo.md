@@ -18,6 +18,13 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Time conversion utilities (follow-up fixes):
+  - Resolved TypeScript TS2775 by changing the assertion function to a function
+    declaration (`assertValidUnit`) in src/time/index.ts.
+  - Adjusted DST forward gap mapping to use the earliest valid instant at/after
+    the requested wall time (minute-level bump). This maps 02:30 in the spring
+    gap to 03:00 local (per requirements) and fixes the failing test.
+
 - Time conversion utilities:
   - Implemented timezone conversion helpers in `src/time/index.ts`:
     - `wallTimeToEpoch(date, zone, unit)`
