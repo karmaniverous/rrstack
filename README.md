@@ -334,8 +334,12 @@ stack.update({ timeUnit: 's' }, { onTimeUnitChange: 'warn' });
 const rulesInSeconds = [
   { effect: 'active', options: { starts: 1_700_000_000, ends: 1_700_000_600 } },
 ];
-stack.update({ timeUnit: 's', rules: rulesInSeconds }, { onTimeUnitChange: 'warn' });
+stack.update(
+  { timeUnit: 's', rules: rulesInSeconds },
+  { onTimeUnitChange: 'warn' },
+);
 ```
+
 Helpers
 
 - `flushChanges()`: flush pending trailing autosave immediately.
@@ -514,6 +518,47 @@ const b = stack.getEffectiveBounds(); // { start: 2024-01-10T05:00Z, end: undefi
 - References
   - IANA TZDB: https://www.iana.org/time-zones
   - Wikipedia list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+## Timezone conversion helpers (wall time ↔ epoch)
+
+RRStack exposes small, tested utilities to convert between “wall clock” values in an IANA zone and epoch timestamps in your configured unit.
+
+```ts
+import {
+  wallTimeToEpoch,
+  dateOnlyToEpoch,
+  epochToWallDate,
+  RRStack,
+} from '@karmaniverous/rrstack';
+
+const tz = RRStack.asTimeZoneId('America/New_York');
+
+// Interpret UTC Y/M/D/H/M/S of this Date as a local wall time in New York.
+const wall = new Date(Date.UTC(2025, 0, 1, 9, 0, 0)); // 9:00 (floating)
+const t = wallTimeToEpoch(wall, tz, 'ms'); // epoch for 2025-01-01 09:00 America/New_York
+
+// Date-only clamp (midnight local in zone)
+const dOnly = new Date(Date.UTC(2025, 0, 1, 0, 0, 0));
+const midnight = dateOnlyToEpoch(dOnly, tz, 'ms'); // 2025-01-01T05:00:00Z in winter
+
+// Round-trip to a floating Date (UTC fields == local clock fields in zone)
+const roundTrip = epochToWallDate(t, tz, 'ms');
+// wallTimeToEpoch(roundTrip, tz, 'ms') === t
+```
+
+UI mapping tip
+
+- For “Date-only” pickers, round-trip via `dateOnlyToEpoch(selectedDate, stack.timezone, unit)`.
+- For “time-of-day” pickers, keep hour/minute as numbers; RRStack interprets them in the schedule timezone.
+- For preview text, prefer `stack.formatInstant(ts, { format })`, which formats in the stack’s timezone.
+
+Validation and DST
+
+- Throws RangeError on invalid Date/zone/unit.
+- DST forward gaps (skipped hour) map to the next valid instant; fall-back ambiguities resolve to the earlier offset (Luxon defaults).
+- 'ms' returns milliseconds; 's' returns integer seconds (truncation).
+
+These helpers are utilities; they do not apply RRStack’s “round ends up in 's' mode” policy — callers remain responsible for rounding policy on [start, end) intervals.
 
 ## Bounds and clamp semantics
 

@@ -172,3 +172,17 @@ returns open‑sided bounds when the baseline is 'active').
 Docs site
 
 - https://docs.karmanivero.us/rrstack
+
+## Timezone conversion helpers
+
+Utilities for converting between wall-clock values in an IANA zone and epoch:
+
+```ts
+import { wallTimeToEpoch, dateOnlyToEpoch, epochToWallDate, RRStack } from '@karmaniverous/rrstack';
+const tz = RRStack.asTimeZoneId('Europe/Paris');
+const wall = new Date(Date.UTC(2025, 6, 20, 9, 0, 0)); // 09:00 (floating)
+const t = wallTimeToEpoch(wall, tz, 'ms'); // epoch at 09:00 Paris
+const back = epochToWallDate(t, tz, 'ms'); // UTC fields reflect Paris local clock fields
+```
+
+See README for UI mapping tips and DST/validation notes.

@@ -8,6 +8,8 @@ export { RRStack } from './rrstack';
 export type { DescribeOptions } from './rrstack/describe';
 export { describeRule } from './rrstack/describe';
 export { fromIsoDuration, toIsoDuration } from './rrstack/duration';
+// Time conversion helpers (public utilities)
+export { dateOnlyToEpoch, epochToWallDate, wallTimeToEpoch } from './time';
 // Description translators & lexicon
 export type {
   RuleDescriptor,

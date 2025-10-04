@@ -1,45 +1,47 @@
 # RRStack — Development Plan
 
-When updated: 2025-10-01 (UTC)
+When updated: 2025-10-04 (UTC)
 
 Next up (near‑term, prioritized)
 
-1. React tests
-   - json ingestion via update (no ping-pong); debounce/flush paths remain stable for additional edge cases (e.g., overlapping staged edits).
+1. Docs polish
+   - Consider a dedicated "Time conversion helpers" page in Handbook if usage grows; otherwise keep README section concise.
 
-2. Docs
-   - README/Handbook: • Update API and policy defaults, • Unit-change example, • React form→engine ingestion loop using update(), • Notice handling guidance.
-   - README snippet: add a short upgrade policy example (warn on newer version; log notices via onNotice).
+2. Tests
+   - Expand table-driven coverage for additional IANA zones if CI ICU permits; keep deterministic across environments.
 
-3. Cleanup / exports
-   - Remove residual references to updateOptions in docs/tests (if any).
-   - Typedoc: ensure new types (Notice, UpdatePolicy) are exported and documented.
+3. Typedoc
+   - Add typedoc comments for the new helpers if we decide to publish in API reference (optional).
 
 4. BENCH (optional)
    - Add small benches around update() hot path (unit change retained vs incoming rules) for regression tracking.
 
 Completed (recent)
 
+- Time conversion utilities:
+  - Implemented timezone conversion helpers in `src/time/index.ts`:
+    - `wallTimeToEpoch(date, zone, unit)`
+    - `dateOnlyToEpoch(date, zone, unit)`
+    - `epochToWallDate(epoch, zone, unit='ms')`
+  - Behavior: validation errors (Invalid Date/zone/unit), unit semantics ('ms'| 's'), DST correctness (gap→next valid; fallback→earlier offset), round-trip friendly (floating Date).
+  - Added unit tests `src/time/convert.test.ts` covering ms/s, UTC/New_York/Paris, DST edges, round-trips, and validation.
+  - Exported helpers from package root.
+  - Updated README and Handbook (overview) with a short “UI mapping” example and notes.
+
 - Build/tests:
-  - Fixed TS4104 in src/react/useRRStack.test.ts by typing the result of
-    rrstack.update() as `readonly Notice[]` to match the API return type.
+  - Fixed TS4104 in src/react/useRRStack.test.ts by typing the result of rrstack.update()’s returned Notice[] to match the API return type.
 
 - React tests:
-  - Added ordering/delivery test to compare rrstack.update()’s returned Notice[]
-    with notices received via policy.onNotice (identical content and ordering).
-  - Confirms synchronous onNotice delivery semantics alongside return value.
+  - Added ordering/delivery test to compare rrstack.update()’s returned Notice[] with notices received via policy.onNotice (identical content and ordering).
+    - Confirms synchronous onNotice delivery semantics alongside return value.
 
 - Docs:
-  - Handbook Overview: added “Policy & notices” snippet with core and React
-    examples to mirror README guidance.
+  - Handbook Overview: added “Policy & notices” snippet with core and React examples to mirror README guidance.
 
 - React tests:
-  - Added ingestion policy notice test: verifies that hook `policy.onNotice`
-    receives a `timeUnitChange` notice when json changes unit ('ms' → 's').
+  - Added ingestion policy notice test: verifies that hook `policy.onNotice` receives a `timeUnitChange` notice when json changes unit ('ms' → 's').
 - React tests:
-  - Further relaxed overlapping-staged-edits final-state assertion: validate
-    the rule count pattern (1 + k*3, k ≥ 1) to tolerate Strict/dev double-effect
-    behavior while still asserting the committed final state.
+  - Further relaxed overlapping-staged-edits final-state assertion: validate the rule count pattern (1 + k\*3, k ≥ 1) to tolerate Strict/dev double-effect behavior while still asserting the committed final state.
 - React tests:
   - Relaxed "overlapping staged edits commit once and reflect final state" to allow 1–2 onChange emissions across environments; assertions now validate the final event state (single commit semantics preserved).
 
