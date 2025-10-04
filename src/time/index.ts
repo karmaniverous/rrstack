@@ -127,7 +127,9 @@ const fromWallParts = (
       },
       { zone },
     );
-    if (dt.isValid) {
+    // Accept only when Luxon did not normalize to a different wall time.
+    // Require that the constructed wall fields match (ch:cm:00) exactly.
+    if (dt.isValid && sameWall(dt, y, m, d, ch, cm, 0)) {
       minuteCandidate = dt;
       break;
     }
