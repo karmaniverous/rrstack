@@ -18,6 +18,12 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Time conversion utilities (final test fix):
+  - Luxon may normalize invalid wall times (e.g., 02:30 → 03:30) while reporting
+    `isValid=true`. We now detect normalization (mismatched wall fields) and treat
+    it as invalid for our policy, then probe successive wall minutes via
+    `DateTime.fromObject` to pick the earliest valid minute (02:30 → 03:00).
+  - All tests green.
 - Time conversion utilities (tests green):
   - Resolved the remaining spring-forward test by probing successive wall minutes
     with DateTime.fromObject (wall construction) to find the earliest valid minute

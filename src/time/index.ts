@@ -50,6 +50,23 @@ function assertValidUnit(u: string): asserts u is UnixTimeUnit {
 const toEpoch = (dt: DateTime, unit: UnixTimeUnit): number =>
   unit === 'ms' ? dt.toMillis() : Math.trunc(dt.toSeconds());
 
+/** Compare wall clock fields (Y/M/D/H/M/S) with primitives. */
+const sameWall = (
+  dt: DateTime,
+  y: number,
+  m: number,
+  d: number,
+  hh: number,
+  mi: number,
+  ss: number,
+) =>
+  dt.year === y &&
+  dt.month === m &&
+  dt.day === d &&
+  dt.hour === hh &&
+  dt.minute === mi &&
+  dt.second === ss;
+
 /**
  * Compose a DateTime in the local zone at the requested wall time; if invalid
  * (spring-forward gap), map to the earliest valid instant at/after the target.
@@ -77,7 +94,12 @@ const fromWallParts = (
     },
     { zone },
   );
-  if (direct.isValid) return direct;
+  // Accept only when Luxon did not normalize to a different wall time.
+  // If the requested fields differ (e.g., 02:30 → 03:30), treat as invalid
+  // and probe for the earliest valid minute at/after the request.
+  if (direct.isValid && sameWall(direct, y, m, d, hh, mi, ss)) {
+    return direct;
+  }
 
   // If invalid (e.g., inside the DST forward gap), map to the earliest valid
   // WALL instant at/after the requested time. Probe successive wall minutes via
@@ -112,7 +134,7 @@ const fromWallParts = (
     minuteOffset++;
   }
   // Fall back to direct if nothing found (extremely unlikely)
-  if (!minuteCandidate) minuteCandidate = direct;
+  minuteCandidate ??= direct;
   // Add seconds if representable as a valid wall instant; otherwise use the minute.
   if (ss > 0) {
     const withSec = DateTime.fromObject(
