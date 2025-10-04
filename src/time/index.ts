@@ -80,49 +80,56 @@ const fromWallParts = (
   if (direct.isValid) return direct;
 
   // If invalid (e.g., inside the DST forward gap), map to the earliest valid
-  // instant at/after the requested time. Use minute-level bump to locate the gap end.
-  // Anchor at local midnight (or 01:00 as a rare fallback), then add minutes.
-  const startOfDay = DateTime.fromObject(
-    {
-      year: y,
-      month: m,
-      day: d,
-      hour: 0,
-      minute: 0,
-      second: 0,
-      millisecond: 0,
-    },
-    { zone },
-  );
-  const base = startOfDay.isValid
-    ? startOfDay
-    : DateTime.fromObject(
-        {
-          year: y,
-          month: m,
-          day: d,
-          hour: 1,
-          minute: 0,
-          second: 0,
-          millisecond: 0,
-        },
-        { zone },
-      );
-
-  // Target minutes past midnight; seek to the earliest valid minute ≥ target.
-  let candidate = base
-    .plus({ minutes: hh * 60 + mi })
-    .set({ second: 0, millisecond: 0 });
-  let guard = 0;
-  while (!candidate.isValid && guard++ < 240) {
-    candidate = candidate.plus({ minutes: 1 });
+  // WALL instant at/after the requested time. Probe successive wall minutes via
+  // DateTime.fromObject (wall construction) rather than adding minutes to a base,
+  // which can advance along the real timeline and skip earlier valid wall minutes.
+  const targetMinutes = hh * 60 + mi;
+  let minuteOffset = 0;
+  let minuteCandidate: DateTime | undefined;
+  // Limit search to a few hours to avoid degenerate loops; typical DST gaps are 60 minutes.
+  while (minuteOffset <= 300) {
+    const total = targetMinutes + minuteOffset;
+    const ch = Math.floor(total / 60);
+    const cm = total % 60;
+    // Stop if we exceed same-day hours (defensive; unlikely in practice)
+    if (ch > 23) break;
+    const dt = DateTime.fromObject(
+      {
+        year: y,
+        month: m,
+        day: d,
+        hour: ch,
+        minute: cm,
+        second: 0,
+        millisecond: 0,
+      },
+      { zone },
+    );
+    if (dt.isValid) {
+      minuteCandidate = dt;
+      break;
+    }
+    minuteOffset++;
   }
-  // Add seconds if representable; otherwise keep the earliest valid minute.
+  // Fall back to direct if nothing found (extremely unlikely)
+  if (!minuteCandidate) minuteCandidate = direct;
+  // Add seconds if representable as a valid wall instant; otherwise use the minute.
   if (ss > 0) {
-    const withSeconds = candidate.plus({ seconds: ss });
-    if (withSeconds.isValid) return withSeconds;
+    const withSec = DateTime.fromObject(
+      {
+        year: minuteCandidate.year,
+        month: minuteCandidate.month,
+        day: minuteCandidate.day,
+        hour: minuteCandidate.hour,
+        minute: minuteCandidate.minute,
+        second: ss,
+        millisecond: 0,
+      },
+      { zone },
+    );
+    if (withSec.isValid) return withSec;
   }
-  return candidate;
+  return minuteCandidate;
 };
 
 /**

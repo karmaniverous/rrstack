@@ -18,6 +18,11 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Time conversion utilities (tests green):
+  - Resolved the remaining spring-forward test by probing successive wall minutes
+    with DateTime.fromObject (wall construction) to find the earliest valid minute
+    at/after the requested time (02:30 → 03:00). Avoids timeline-based additions
+    that could land at 03:30 across the gap.
 - Docs (API): Added TSDoc/TypeDoc comments for time helpers (`wallTimeToEpoch`, `dateOnlyToEpoch`, `epochToWallDate`) including parameters, errors, DST semantics, and examples. They are exported from the root and will render in the API reference.
 
 - Time conversion utilities (follow-up fixes):
