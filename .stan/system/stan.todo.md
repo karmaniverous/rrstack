@@ -1,6 +1,6 @@
 # RRStack — Development Plan
 
-When updated: 2025-10-04 (UTC)
+When updated: 2025-10-06 (UTC)
 
 Next up (near‑term, prioritized)
 
@@ -17,6 +17,16 @@ Next up (near‑term, prioritized)
    - Add small benches around update() hot path (unit change retained vs incoming rules) for regression tracking.
 
 Completed (recent)
+
+- JSON Schema: OpenAPI‑safe duration shape
+  - Removed the duration.anyOf positivity injection from the generated schema to
+    improve compatibility with serverless-openapi-documenter and other OpenAPI tools.
+  - Duration remains optional in the published JSON Schema; advanced constraints
+    (e.g., “duration required when freq is present” and “strictly positive duration”)
+    continue to be enforced by Zod at runtime.
+  - Updated tests (schema.test.ts) to drop the anyOf assertion and verify presence
+    of duration properties and freq enum.
+  - Updated README and requirements to document OpenAPI-safe policy.
 
 - Docs: descriptions/bounds formatting
   - README “Rule description helpers”: corrected default (includeTimeZone is

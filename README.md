@@ -275,8 +275,11 @@ A JSON Schema for the serialized RRStack options (constructor input) is generate
 
 Generation details:
 
-- The schema is produced by scripts/gen-schema.ts using zod-to-json-schema.
-- DurationParts positivity is enforced by adding an anyOf that requires at least one of the fields (years|months|weeks|days|hours|minutes|seconds) to be an integer with minimum 1.
+- The schema is produced by scripts/gen-schema.ts using Zod's native JSON Schema conversion.
+- OpenAPI-safe: the published JSON Schema intentionally omits advanced conditional/positivity constraints (e.g., “duration required when freq is present”, “at least one positive duration part”) to maximize compatibility with OpenAPI tooling (notably serverless-openapi-documenter).
+- These constraints are enforced at runtime by the Zod validators in RRStack:
+  - Recurring rules must include a strictly positive duration.
+  - Span rules must omit duration.
 
 Update API (version/unit policies)
 

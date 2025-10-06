@@ -1,6 +1,6 @@
 # RRStack — Requirements
 
-Last updated: 2025-10-01 (UTC)
+Last updated: 2025-10-06 (UTC)
 
 Purpose
 
@@ -159,8 +159,8 @@ Notices (return type and callback payloads)
         from: UnixTimeUnit;
         to: UnixTimeUnit;
         action: 'convertedExisting' | 'acceptedIncomingRules' | 'rejected';
-        convertedRuleCount?: number; // when converting retained rules
-        replacedRuleCount?: number; // when replacing with incoming rules
+        convertedRuleCount?: number;
+        replacedRuleCount?: number;
         message?: string;
       };
   ```
@@ -185,8 +185,15 @@ Persistence and version
   - Writes the build-time version (**RRSTACK_VERSION**).
   - Unbrands timezone to a plain string.
   - Clones arrays.
-  - In the React façade, overlays staged rules/timezone so autosave receives exactly what the user sees.
-- The constructor accepts RRStackOptions with an optional version but does not alter runtime behavior based on it; all version handling occurs in update().
+  - In the React façade, overlays staged values so autosave receives exactly what the user sees.
+
+JSON Schema
+
+- The schema is produced by scripts/gen-schema.ts using Zod's native JSON Schema conversion.
+- OpenAPI-safe policy:
+  - The published JSON Schema intentionally omits advanced conditional/positivity constraints (e.g., “duration required when freq is present”, “at least one positive duration part”).
+  - These constraints are enforced at runtime by Zod (RuleLiteSchema/superRefine and compilation checks).
+  - Rationale: improve compatibility with OpenAPI tooling such as serverless-openapi-documenter, which may misinterpret anyOf/required combinations.
 
 Algorithms (unit/timezone-aware; streaming where applicable)
 
@@ -252,11 +259,6 @@ React adapter (./react)
   - Reads of rrstack.rules and rrstack.timezone (and rrstack.toJson()) reflect staged values before commit.
   - Queries (isActiveAt, getSegments, etc.) reflect last committed compiled state until commit.
 
-Generated artifacts policy
-
-- assets/rrstackconfig.schema.json is generated (scripts/gen-schema.ts via zod-to-json-schema and post-processing).
-- Do not edit generated artifacts manually; run the generator and commit results.
-
 Release discipline
 
 - Do not bump package version or edit CHANGELOG.md in normal patches.
@@ -290,11 +292,6 @@ API conventions (boolean options)
 - DescribeOptions defaults (unchanged):
   - includeTimeZone: false (opt‑in to append “(timezone <tz>)”).
   - includeBounds: false (unchanged).
-
-Out of scope (current)
-
-- Per-field merges inside rules (update replaces the whole rules array when provided).
-- Full RRULE Options validation via zod (compile remains authoritative).
 
 Rule descriptions — pluggable translator and frequency lexicon
 

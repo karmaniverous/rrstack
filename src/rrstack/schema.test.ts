@@ -68,7 +68,7 @@ const locateRRRoot = (root: JSONSchema7): JSONSchema7 => {
 };
 
 describe('RRSTACK_CONFIG_SCHEMA export', () => {
-  it('exists and includes DurationParts positivity (anyOf)', () => {
+  it('exists and exposes OpenAPI-safe duration shape and freq enum', () => {
     const root = RRSTACK_CONFIG_SCHEMA;
     expect(root).toBeTruthy();
 
@@ -119,8 +119,34 @@ describe('RRSTACK_CONFIG_SCHEMA export', () => {
       duration = maybeDuration;
     }
 
+    // Duration schema present and has the integer fields; no advanced anyOf constraints required.
     expect(duration).toBeTruthy();
-    expect(Array.isArray(duration?.anyOf)).toBe(true);
-    expect((duration?.anyOf ?? []).length).toBeGreaterThanOrEqual(7);
+    expect(hasDurationProps(duration)).toBe(true);
+
+    // Also verify freq is a string enum with known values
+    const rrRoot = locateRRRoot(root);
+    const rules = asSchema(rrRoot.properties?.rules);
+    let itemSchema = Array.isArray(rules?.items)
+      ? asSchema(rules.items[0])
+      : asSchema(rules?.items);
+    if (isRef(itemSchema)) {
+      const resolved = followRef(root, itemSchema.$ref);
+      if (resolved) itemSchema = resolved;
+    }
+    const options = asSchema(
+      (
+        itemSchema?.properties as
+          | Record<string, JSONSchema7Definition>
+          | undefined
+      )?.options,
+    );
+    const freq = asSchema(
+      (options?.properties as Record<string, JSONSchema7Definition> | undefined)
+        ?.freq,
+    );
+    expect(freq?.type).toBe('string');
+    const enumVals = (freq as unknown as { enum?: string[] }).enum ?? [];
+    expect(enumVals).toContain('daily');
+    expect(enumVals).toContain('monthly');
   });
 });

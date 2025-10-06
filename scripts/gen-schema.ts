@@ -1,10 +1,10 @@
 /**
  * Generate the package JSON Schema from the Zod source of truth.
  * - Uses Zod v4 native JSON Schema conversion at build/docs time.
- * - Post-processes DurationParts to require at least one non-zero component
- *   via an `anyOf` of required+minimum(1) constraints.
- * - Post-processes Rule.options.freq to ensure a string enum of lower-case
- *   human-readable values ('yearly'..'secondly').
+ * - OpenAPI-safe: do not inject advanced conditional/positivity constraints;
+ *   these are enforced at runtime by Zod.
+ * - Post-process Rule.options.freq to ensure a string enum of lower‑case
+ *   human‑readable values ('yearly'..'secondly').
  */
 
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -15,17 +15,9 @@ import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 import { z } from 'zod';
 
 import { OptionsSchema, RuleLiteSchema } from '../src/rrstack/RRStack.options';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const durationKeys = [
-  'years',
-  'months',
-  'weeks',
-  'days',
-  'hours',
-  'minutes',
-  'seconds',
-] as const;
 
 const FREQ_VALUES = [
   'yearly',
@@ -57,20 +49,6 @@ const followRef = (root: JSONSchema7, ref: string): JSONSchema7 | undefined => {
   }
   if (typeof cur === 'boolean') return undefined;
   return cur as JSONSchema7;
-};
-
-const addAnyOfMinOne = (target: JSONSchema7): void => {
-  const existing = Array.isArray(target.anyOf) ? target.anyOf : [];
-  const positivity = durationKeys.map(
-    (k): JSONSchema7 =>
-      ({
-        required: [k],
-        properties: {
-          [k]: { type: 'integer', minimum: 1 },
-        } as Record<string, JSONSchema7Definition>,
-      }) satisfies JSONSchema7,
-  );
-  target.anyOf = [...existing, ...positivity];
 };
 
 const getDefs = (
@@ -154,7 +132,6 @@ async function main(): Promise<void> {
   });
 
   // 1) Generate base JSON Schema (draft-07) for RRStackOptions (no version) using Zod v4 native conversion.
-  // Provide a typed view of z with toJSONSchema to satisfy type-aware linting.
   type ZodWithToJSON = typeof z & {
     toJSONSchema: (
       schema: unknown,
@@ -170,69 +147,10 @@ async function main(): Promise<void> {
     $refStrategy: 'none',
   }) as JSONSchema7;
 
-  // 2) Locate DurationParts and enforce positivity via anyOf.
-  let durationTarget: JSONSchema7 | undefined;
-  // Preferred path: rrRoot.properties.rules.items.properties.duration
-  const rrRoot = locateRRRoot(schema);
-  const rulesSchema = asSchema(rrRoot.properties?.rules);
-
-  let itemSchema: JSONSchema7 | undefined;
-  const itemsDef = rulesSchema?.items;
-  if (Array.isArray(itemsDef)) {
-    itemSchema = asSchema(itemsDef[0]);
-  } else {
-    itemSchema = asSchema(itemsDef);
-  }
-
-  if (itemSchema) {
-    // Resolve items (Rule) which may be a ref
-    if (itemSchema.$ref && typeof itemSchema.$ref === 'string') {
-      const resolved = followRef(schema, itemSchema.$ref);
-      if (resolved) itemSchema = resolved;
-    }
-
-    const itemProps = itemSchema.properties as
-      | Record<string, JSONSchema7Definition>
-      | undefined;
-
-    const durationDef = itemProps?.duration;
-    const maybeDuration = asSchema(durationDef);
-
-    if (maybeDuration?.$ref && typeof maybeDuration.$ref === 'string') {
-      durationTarget = followRef(schema, maybeDuration.$ref);
-    } else if (maybeDuration) {
-      durationTarget = maybeDuration;
-    }
-  }
-
-  // Fallback: scan both definitions and $defs for a schema that looks like DurationParts.
-  if (!durationTarget) {
-    const defs = getDefs(schema);
-    if (defs) {
-      for (const def of Object.values(defs)) {
-        const s = asSchema(def);
-        if (!s) continue;
-        const props = s.properties as
-          | Record<string, JSONSchema7Definition>
-          | undefined;
-        if (!props) continue;
-        const hasAll = durationKeys.every((k) => k in props);
-        if (hasAll) {
-          durationTarget = s;
-          break;
-        }
-      }
-    }
-  }
-
-  if (durationTarget) {
-    addAnyOfMinOne(durationTarget);
-  }
-
-  // 3) Enforce freq string enum on Rule.options.freq.
+  // 2) Enforce freq string enum on Rule.options.freq.
   ensureFreqStringEnum(schema);
 
-  // 4) Write artifact.
+  // 3) Write artifact.
   const outDir = path.resolve(__dirname, '../assets');
   await mkdir(outDir, { recursive: true });
   const outFile = path.join(outDir, 'rrstackconfig.schema.json');
