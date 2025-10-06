@@ -25,9 +25,10 @@ describe('cross-timezone getEffectiveBounds + descriptions', () => {
     };
     const s = new RRStack({ timezone: tz, rules: [rule] });
     const b = s.getEffectiveBounds();
-    const expectedStart = msLocal('2024-05-01T09:00:00', 'Europe/London');
     expect(b.empty).toBe(false);
-    expect(b.start).toBe(expectedStart);
+    // Assert local wall-clock start time in the rule’s timezone (host-agnostic)
+    const sL = DateTime.fromMillis(b.start!, { zone: 'Europe/London' });
+    expect(sL.toFormat('yyyy-LL-dd HH:mm')).toBe('2024-05-01 09:00');
     expect(b.end).toBeUndefined(); // open end
 
     const text = s.describeRule(0, {
@@ -62,12 +63,12 @@ describe('cross-timezone getEffectiveBounds + descriptions', () => {
     };
     const s = new RRStack({ timezone: tz, rules: [rule] });
     const b = s.getEffectiveBounds();
-    const expectedStart = msLocal('2024-04-15T09:00:00', 'Asia/Tokyo');
-    const lastStart = msLocal('2024-05-15T09:00:00', 'Asia/Tokyo');
-    const expectedEnd = lastStart + 60 * 60 * 1000;
     expect(b.empty).toBe(false);
-    expect(b.start).toBe(expectedStart);
-    expect(b.end).toBe(expectedEnd);
+    const sL = DateTime.fromMillis(b.start!, { zone: 'Asia/Tokyo' });
+    const eL = DateTime.fromMillis(b.end!, { zone: 'Asia/Tokyo' });
+    expect(sL.toFormat('yyyy-LL-dd HH:mm')).toBe('2024-04-15 09:00');
+    // Window includes 2024-05-15 09:00 + 1h = 10:00
+    expect(eL.toFormat('yyyy-LL-dd HH:mm')).toBe('2024-05-15 10:00');
 
     const text = s.describeRule(0, {
       includeBounds: true,
@@ -102,11 +103,11 @@ describe('cross-timezone getEffectiveBounds + descriptions', () => {
     };
     const s = new RRStack({ timezone: tz, rules: [rule] });
     const b = s.getEffectiveBounds();
-    const expectedStart = msLocal('2021-07-01T08:00:00', 'Australia/Sydney');
-    const expectedEnd = msLocal('2022-07-01T09:00:00', 'Australia/Sydney');
     expect(b.empty).toBe(false);
-    expect(b.start).toBe(expectedStart);
-    expect(b.end).toBe(expectedEnd);
+    const sL = DateTime.fromMillis(b.start!, { zone: 'Australia/Sydney' });
+    const eL = DateTime.fromMillis(b.end!, { zone: 'Australia/Sydney' });
+    expect(sL.toFormat('yyyy-LL-dd HH:mm')).toBe('2021-07-01 08:00');
+    expect(eL.toFormat('yyyy-LL-dd HH:mm')).toBe('2022-07-01 09:00');
   });
 
   it('Asia/Kolkata: daily 18:30 (30m) with blackout overlay; latest end preserved; blackout description', () => {
@@ -144,11 +145,12 @@ describe('cross-timezone getEffectiveBounds + descriptions', () => {
 
     const s = new RRStack({ timezone: tz, rules: [active, blackout] });
     const b = s.getEffectiveBounds();
-    const expectedStart = msLocal('2024-03-01T18:30:00', 'Asia/Kolkata');
-    const expectedEnd = msLocal('2024-03-03T19:00:00', 'Asia/Kolkata'); // last day in window (Mar 3)
     expect(b.empty).toBe(false);
-    expect(b.start).toBe(expectedStart);
-    expect(b.end).toBe(expectedEnd);
+    const sL = DateTime.fromMillis(b.start!, { zone: 'Asia/Kolkata' });
+    const eL = DateTime.fromMillis(b.end!, { zone: 'Asia/Kolkata' });
+    expect(sL.toFormat('yyyy-LL-dd HH:mm')).toBe('2024-03-01 18:30');
+    // last day in window (Mar 3), 18:30 + 30m ⇒ 19:00
+    expect(eL.toFormat('yyyy-LL-dd HH:mm')).toBe('2024-03-03 19:00');
 
     // Description for the blackout rule should be clear, include duration and timezone
     const text = s.describeRule(1, { includeTimeZone: true });

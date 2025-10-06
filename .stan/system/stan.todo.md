@@ -19,6 +19,10 @@ Next up (near‑term, prioritized)
 Completed (recent)
 
 - Tests (cross timezones):
+  - Hardened new cross‑timezone bounds/describe tests to assert local
+    wall‑clock values in the rule’s timezone (using Luxon) instead of raw
+    epoch equality, ensuring determinism on UTC+8 hosts.
+- Tests (cross timezones):
   - Added realistic non‑UTC tests validating getEffectiveBounds and rule
     descriptions across Europe/London, Asia/Tokyo, Australia/Sydney, and
     Asia/Kolkata.
