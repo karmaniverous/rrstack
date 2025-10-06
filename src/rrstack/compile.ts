@@ -102,7 +102,8 @@ export const toRRuleOptions = (
 
   const partial: Partial<RRuleOptions> = {
     ...(rrLikeRaw as Partial<RRuleOptions>),
-    tzid: timezone,
+    // Intentionally omit 'tzid' so rrule operates in floating-wall mode.
+    // We handle all timezone math externally via Luxon to avoid host/tz drift.
   };
 
   if (typeof options.starts === 'number') {
