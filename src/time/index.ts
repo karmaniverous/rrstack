@@ -2,23 +2,23 @@
  * Timezone conversion helpers (wall time ↔ epoch).
  *
  * Public API
- * - wallTimeToEpoch(date, zone, unit): number
+ * - wallTimeToEpoch(date, timezone, timeUnit): number
  *   Interprets the Date's UTC Y/M/D/H/M/S fields as a wall-clock time in the
- *   supplied IANA zone; returns an epoch in the configured unit.
+ *   supplied IANA timezone; returns an epoch in the configured unit.
  *
- * - dateOnlyToEpoch(date, zone, unit): number
- *   Interprets the Date's UTC Y/M/D at 00:00:00 in the supplied zone; returns
- *   an epoch in the configured unit.
+ * - dateOnlyToEpoch(date, timezone, timeUnit): number
+ *   Interprets the Date's UTC Y/M/D at 00:00:00 in the supplied timezone;
+ *   returns an epoch in the configured unit.
  *
- * - epochToWallDate(epoch, zone, unit='ms'): Date
+ * - epochToWallDate(epoch, timezone, timeUnit='ms'): Date
  *   Converts an epoch in unit to a JS Date whose UTC fields reflect the local
- *   time in the supplied zone at that instant ("floating" Date). This shape is
- *   convenient for round-trips with wallTimeToEpoch in UI flows.
+ *   time in the supplied timezone at that instant ("floating" Date). This shape
+ *   is convenient for round-trips with wallTimeToEpoch in UI flows.
  *
  * Validation
  * - If date.getTime() is NaN ⇒ RangeError('Invalid Date')
- * - If zone is not a valid IANA timezone ⇒ RangeError('Invalid time zone')
- * - If unit not 'ms' | 's' ⇒ RangeError('Invalid time unit')
+ * - If timezone is not a valid IANA timezone ⇒ RangeError('Invalid time zone')
+ * - If timeUnit not 'ms' | 's' ⇒ RangeError('Invalid time unit')
  *
  * DST behavior
  * - Forward jump (skipped hour): mapping is performed by composing midnight
@@ -69,9 +69,9 @@ const sameWall = (
   dt.second === ss;
 
 /**
- * Compose a DateTime in the local zone at the requested wall time; if invalid
- * (spring-forward gap), map to the earliest valid instant at/after the target.
- * Fall-back ambiguities use Luxon defaults (earlier offset).
+ * Compose a DateTime in the local timezone at the requested wall time; if
+ * invalid (spring-forward gap), map to the earliest valid instant at/after the
+ * target. Fall-back ambiguities use Luxon defaults (earlier offset).
  */
 const fromWallParts = (
   y: number,
@@ -80,7 +80,7 @@ const fromWallParts = (
   hh: number,
   mi: number,
   ss: number,
-  zone: string,
+  timezone: string,
 ): DateTime => {
   // First try direct construction at the requested wall time.
   const direct = DateTime.fromObject(
@@ -93,7 +93,7 @@ const fromWallParts = (
       second: ss,
       millisecond: 0,
     },
-    { zone },
+    { zone: timezone },
   );
   // Accept only when Luxon did not normalize to a different wall time.
   // If the requested fields differ (e.g., 02:30 → 03:30), treat as invalid
@@ -126,7 +126,7 @@ const fromWallParts = (
         second: 0,
         millisecond: 0,
       },
-      { zone },
+      { zone: timezone },
     );
     // Accept only when Luxon did not normalize to a different wall time.
     // Require that the constructed wall fields match (ch:cm:00) exactly.
@@ -150,7 +150,7 @@ const fromWallParts = (
         second: ss,
         millisecond: 0,
       },
-      { zone },
+      { zone: timezone },
     );
     if (withSec.isValid) return withSec;
   }
@@ -158,7 +158,7 @@ const fromWallParts = (
 };
 
 /**
- * Interprets a Date's UTC Y/M/D/H/M/S as a wall-clock time in `zone` and
+ * Interprets a Date's UTC Y/M/D/H/M/S as a wall-clock time in `timezone` and
  * returns the epoch in the configured unit.
  *
  * Notes
@@ -170,16 +170,16 @@ const fromWallParts = (
  * @param date - JS Date whose UTC fields (getUTCFullYear(), getUTCMonth(), etc.)
  *   represent the intended wall-clock Y/M/D/H/M/S in the supplied IANA time zone.
  *   If `date.getTime()` is NaN, a RangeError('Invalid Date') is thrown.
- * @param zone - IANA time zone identifier (branded {@link TimeZoneId}). If not
- *   recognized by the host ICU/Intl data, a RangeError('Invalid time zone') is thrown.
- * @param unit - Target epoch unit: `'ms'` for milliseconds or `'s'` for integer
+ * @param timezone - IANA time zone identifier (branded {@link TimeZoneId}). If
+ *   not recognized by the host ICU/Intl data, a RangeError('Invalid time zone') is thrown.
+ * @param timeUnit - Target epoch unit: `'ms'` for milliseconds or `'s'` for integer
  *   seconds. Any other value causes RangeError('Invalid time unit').
  * @returns Epoch timestamp in the requested unit. In `'s'` mode, returns
  *   truncated integer seconds (Math.trunc).
  * @throws RangeError - On invalid Date, invalid time zone, or invalid unit.
  * @remarks DST behavior:
  * - Forward jump (skipped hour): invalid wall times map to the earliest valid
- *   instant at/after the requested time in the zone (e.g., 02:30 → 03:00).
+ *   instant at/after the requested time in the timezone (e.g., 02:30 → 03:00).
  * - Backward (ambiguous): resolves to the earlier offset by Luxon defaults.
  * @example
  * ```ts
@@ -190,11 +190,11 @@ const fromWallParts = (
  */
 export const wallTimeToEpoch = (
   date: Date,
-  zone: TimeZoneId,
-  timeUnit: UnixTimeUnit,
+  timezone: TimeZoneId,
+  timeUnit: UnixTimeUnit = DEFAULT_TIME_UNIT,
 ): number => {
   assertValidDate(date);
-  assertValidZone(zone as unknown as string);
+  assertValidZone(timezone as unknown as string);
   assertValidUnit(timeUnit);
 
   // Read UTC fields to treat the Date as "floating" wall time.
@@ -205,45 +205,45 @@ export const wallTimeToEpoch = (
   const mi = date.getUTCMinutes();
   const ss = date.getUTCSeconds();
 
-  const dt = fromWallParts(y, m, d, hh, mi, ss, zone as unknown as string);
+  const dt = fromWallParts(y, m, d, hh, mi, ss, timezone as unknown as string);
   return toEpoch(dt, timeUnit);
 };
 
 /**
- * Interprets a Date's UTC Y/M/D at 00:00:00 in `zone` and returns the epoch
+ * Interprets a Date's UTC Y/M/D at 00:00:00 in `timezone` and returns the epoch
  * in the configured unit.
  */
 export const dateOnlyToEpoch = (
   date: Date,
-  zone: TimeZoneId,
-  timeUnit: UnixTimeUnit,
+  timezone: TimeZoneId,
+  timeUnit: UnixTimeUnit = DEFAULT_TIME_UNIT,
 ): number => {
   assertValidDate(date);
-  assertValidZone(zone as unknown as string);
+  assertValidZone(timezone as unknown as string);
   assertValidUnit(timeUnit);
 
   const y = date.getUTCFullYear();
   const m = date.getUTCMonth() + 1;
   const d = date.getUTCDate();
-  const dt = fromWallParts(y, m, d, 0, 0, 0, zone as unknown as string);
+  const dt = fromWallParts(y, m, d, 0, 0, 0, timezone as unknown as string);
   return toEpoch(dt, timeUnit);
 };
 
 /**
- * Convert an epoch in unit to a JS Date carrying the same local clock fields
- * in `zone` (a "floating" Date). The returned Date's UTC fields (getUTC*)
- * reflect the local time in `zone` at that instant; this shape is convenient
+ * Convert an epoch in the given unit to a JS Date carrying the same local clock
+ * in `timezone` (a "floating" Date). The returned Date's UTC fields (getUTC*)
+ * reflect the local time in `timezone` at that instant; this shape is convenient
  * for UI round-trips with {@link wallTimeToEpoch}.
  *
  * @public
  * @category Time
  * @param epoch - Epoch timestamp in the provided `unit`.
- * @param zone - IANA time zone identifier (branded {@link TimeZoneId}). Throws
+ * @param timezone - IANA time zone identifier (branded {@link TimeZoneId}). Throws
  *   RangeError on invalid zone.
- * @param unit - `'ms'` (default) for milliseconds or `'s'` for integer seconds.
+ * @param timeUnit - `'ms'` (default) for milliseconds or `'s'` for integer seconds.
  *   Throws RangeError on invalid value.
  * @returns A "floating" Date whose UTC fields equal the local wall-clock
- *   Y/M/D/H/M/S in `zone` at the provided instant. This is suitable for round-
+ *   Y/M/D/H/M/S in `timezone` at the provided instant. This is suitable for round-
  *   tripping with {@link wallTimeToEpoch}.
  * @remarks In `'s'` mode, the instant is interpreted as integer seconds since
  *   epoch. DST is handled by Luxon at the instant being converted.
@@ -257,15 +257,15 @@ export const dateOnlyToEpoch = (
  */
 export const epochToWallDate = (
   epoch: number,
-  zone: TimeZoneId,
+  timezone: TimeZoneId,
   timeUnit: UnixTimeUnit = DEFAULT_TIME_UNIT,
 ): Date => {
-  assertValidZone(zone as unknown as string);
+  assertValidZone(timezone as unknown as string);
   assertValidUnit(timeUnit);
   const dt =
     timeUnit === 'ms'
-      ? DateTime.fromMillis(epoch, { zone: zone as unknown as string })
-      : DateTime.fromSeconds(epoch, { zone: zone as unknown as string });
+      ? DateTime.fromMillis(epoch, { zone: timezone as unknown as string })
+      : DateTime.fromSeconds(epoch, { zone: timezone as unknown as string });
   // Build a floating Date (UTC fields set to local wall clock fields).
   return datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
 };
