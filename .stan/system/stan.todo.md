@@ -18,6 +18,9 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Description tests:
+  - Added America/Chicago assertion that the daily 1‑day rule with a `starts` clamp renders bounds as local midnight (`from 2025-10-01 00:00`) and not the incorrect `from 2025-09-30 07:00`.
+
 - Time helpers consistency:
   - Renamed helper parameter `zone` → `timezone` to align with RRStackOptions.
   - Made `timeUnit` optional with `DEFAULT_TIME_UNIT` default in `wallTimeToEpoch` and `dateOnlyToEpoch` (already defaulted in `epochToWallDate`).

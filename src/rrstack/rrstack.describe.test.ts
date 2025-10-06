@@ -107,4 +107,27 @@ describe('RRStack.describeRule(index, opts)', () => {
     const stack = new RRStack({ timezone: 'UTC', rules: [] });
     expect(() => stack.describeRule(0)).toThrow();
   });
+
+  it('America/Chicago: daily 1 day with starts clamp renders local midnight bounds', () => {
+    // starts = 1759294800000 ms = 2025-10-01T05:00:00Z, which is 00:00 local in America/Chicago (DST active).
+    const rule: RuleJson = {
+      effect: 'active',
+      duration: { days: 1 },
+      options: {
+        freq: 'daily',
+        starts: 1_759_294_800_000,
+      },
+    };
+    const stack = new RRStack({ timezone: 'America/Chicago', rules: [rule] });
+    const text = stack.describeRule(0, {
+      includeBounds: true,
+      boundsFormat: 'yyyy-LL-dd HH:mm',
+    });
+    // Core phrasing
+    expect(text).toContain('Active for 1 day: every day');
+    // Bounds should reflect local midnight, not a UTC-based time
+    expect(text).toContain('from 2025-10-01 00:00');
+    // Guard against the incorrect prior value
+    expect(text).not.toContain('from 2025-09-30 07:00');
+  });
 });
