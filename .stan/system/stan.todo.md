@@ -19,14 +19,9 @@ Next up (near‑term, prioritized)
 Completed (recent)
 
 - Bounds & descriptions (America/Chicago daily 1‑day rule):
-  - Fixed recurring bounds rendering when `includeBounds=true` by treating
-    RRULE floating dates correctly (UTC fields reflect local wall time) and
-    rebuilding them in the rule’s timezone before formatting. Removes wrong
-    outputs like “from 2025‑09‑30 19:00”.
-  - Improved earliest‑bound pre‑pass: when the earliest blackout candidate is
-    the domain minimum (baseline blackout), accept the earliest active start
-    directly. This corrects the earliest start for the Chicago daily 1‑day
-    case.
+  - Fixed recurring bounds rendering when `includeBounds=true` by treating RRULE floating dates correctly (UTC fields reflect local wall time) and rebuilding them in the rule’s timezone before formatting. Removes wrong outputs like “from 2025‑09‑30 19:00”.
+  - Improved earliest‑bound pre‑pass: when the earliest blackout candidate is the domain minimum (baseline blackout), accept the earliest active start directly. This corrects the earliest start for the Chicago daily 1‑day case.
+  - Earliest pre‑pass: prefer compiled `dtstart` (floating) for earliest active candidates; fall back to `rrule.after` only when `dtstart` is absent. This removes environment‑dependent drift (e.g., local zone +13h) and makes the earliest bound equal to the starts clamp in America/Chicago.
 
 - Description tests:
   - Added America/Chicago assertion that the daily 1‑day rule with a `starts` clamp renders bounds as local midnight (`from 2025-10-01 00:00`) and not the incorrect `from 2025-09-30 07:00`.

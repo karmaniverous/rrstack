@@ -38,9 +38,15 @@ export const computeEarliestStart = (
       const r = rules[i];
       let t: number | undefined;
       if (r.kind === 'recur') {
-        const d = r.rrule.after(wallMinPerRule[i]!, true);
-        if (!d) continue;
-        t = floatingDateToZonedEpoch(d, r.tz, r.unit);
+        // Prefer compiled dtstart (floating) when present (closed-start recurrence).
+        const dtstart = r.options.dtstart ?? null;
+        if (dtstart instanceof Date) {
+          t = floatingDateToZonedEpoch(dtstart, r.tz, r.unit);
+        } else {
+          const d = r.rrule.after(wallMinPerRule[i]!, true);
+          if (!d) continue;
+          t = floatingDateToZonedEpoch(d, r.tz, r.unit);
+        }
       } else {
         // span: earliest candidate is the (possibly open) start clamp
         t = typeof r.start === 'number' ? r.start : min;
