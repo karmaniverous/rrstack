@@ -2,9 +2,31 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.15.3](https://github.com/karmaniverous/rrstack/compare/0.15.2...0.15.3)
+
+- bounds: follow rrule README timezone cautions; fix host drift [`103d6cc`](https://github.com/karmaniverous/rrstack/commit/103d6cc83eb5b3f6257501734b92b1380d8df2f0)
+- fix(bounds/latest): robust status check at finite probe using ruleCoversInstant [`86f3bc8`](https://github.com/karmaniverous/rrstack/commit/86f3bc8e446846c29868d271f8669f7a1d232252)
+- bounds: revert to UTC-floating rrule seam; remove host drift [`31cbcb3`](https://github.com/karmaniverous/rrstack/commit/31cbcb39af0a718f84289cdbf8794c88966ca4c2)
+- bounds: honor rrule timezone cautions; use UTC-floating Dates [`5658239`](https://github.com/karmaniverous/rrstack/commit/565823953c57ec9a12bb29cc53c1cdca9b510d80)
+- bounds: fix timezone drift by using local floating Dates for rrule [`06f3e5d`](https://github.com/karmaniverous/rrstack/commit/06f3e5dae45aa1048c4dc6968086199dbfa5ce24)
+- test: add diagnostics to DST fall-back 's' unit bounds test [`02fc047`](https://github.com/karmaniverous/rrstack/commit/02fc0472444bc0371bba6f8d069115885410dc8e)
+- test(bounds): assert earliest start for America/Chicago daily rule [`60e5ee4`](https://github.com/karmaniverous/rrstack/commit/60e5ee4e86432178bf59f50b9a18aaac90b71baf)
+- fix(bounds,describe): correct earliest start under baseline and format floating bounds [`b96d4ac`](https://github.com/karmaniverous/rrstack/commit/b96d4acc1c097610cbd9e01b9e580cb5df393229)
+- fix(bounds): use compiled dtstart for earliest start (env-proof) [`8a492b8`](https://github.com/karmaniverous/rrstack/commit/8a492b8262e0733d5b9a0819ee1d40b4517c7972)
+- fix(bounds): compute earliest from rrule.after(dtstart) not dtstart [`73f5702`](https://github.com/karmaniverous/rrstack/commit/73f5702855a9f676d9a55f09addd5bd1185edaea)
+- test(describe): assert Chicago daily 1‑day rule renders local bounds [`478bad5`](https://github.com/karmaniverous/rrstack/commit/478bad580f41fc8eaccc41638c2475ed818a1e49)
+- tests: add cross-timezone bounds/describe cases [`c6d538f`](https://github.com/karmaniverous/rrstack/commit/c6d538f353c2a8dbf80701719066bd1efff8a6d4)
+- test(formatInstant): assert America/Chicago (CST, -06:00) [`1fa0623`](https://github.com/karmaniverous/rrstack/commit/1fa0623b27ccafa92742bde2204bf9b2cb155e7d)
+- fix(bounds): eliminate env drift for daily rules without BY time [`49699ec`](https://github.com/karmaniverous/rrstack/commit/49699ec85dc7a23a36523e26364d1fedc9ecc6aa)
+- tests: make cross-timezone assertions host-agnostic [`7184588`](https://github.com/karmaniverous/rrstack/commit/7184588300f334440ed20dd060f2361c8ffcc23d)
+- fix: remove tzid from rrule options to restore floating-wall semantics [`b8410e9`](https://github.com/karmaniverous/rrstack/commit/b8410e9d3b27c9018996e29087c55507ab6279cc)
+
 #### [0.15.2](https://github.com/karmaniverous/rrstack/compare/0.15.1...0.15.2)
 
+> 6 October 2025
+
 - Centralize defaults and align public param names with RRStackOptions [`03aafff`](https://github.com/karmaniverous/rrstack/commit/03aafff17e5119218adc4740e7d38c4ce5b8e7e0)
+- chore: release v0.15.2 [`9b12b93`](https://github.com/karmaniverous/rrstack/commit/9b12b93ad719017f9932e2334c7d3c30111d103d)
 - feat(time): align helper params; default timeUnit; fix JSDoc [`22424f4`](https://github.com/karmaniverous/rrstack/commit/22424f46ce19e6ae30a8637a6734af252d5a861e)
 
 #### [0.15.1](https://github.com/karmaniverous/rrstack/compare/0.15.0...0.15.1)
