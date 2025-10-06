@@ -2,8 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.15.2](https://github.com/karmaniverous/rrstack/compare/0.15.1...0.15.2)
+
+- Centralize defaults and align public param names with RRStackOptions [`03aafff`](https://github.com/karmaniverous/rrstack/commit/03aafff17e5119218adc4740e7d38c4ce5b8e7e0)
+- feat(time): align helper params; default timeUnit; fix JSDoc [`22424f4`](https://github.com/karmaniverous/rrstack/commit/22424f46ce19e6ae30a8637a6734af252d5a861e)
+
 #### [0.15.1](https://github.com/karmaniverous/rrstack/compare/0.15.0...0.15.1)
 
+> 6 October 2025
+
+- chore: release v0.15.1 [`dbca052`](https://github.com/karmaniverous/rrstack/commit/dbca052d3bcf9e25d9d0af997d9d9287de44e7cc)
 - OpenAPI-safe JSON Schema: remove duration.anyOf; rely on runtime Zod [`74039b3`](https://github.com/karmaniverous/rrstack/commit/74039b36b2d52360c92cf8748cbf9f2501cb09f4)
 
 #### [0.15.0](https://github.com/karmaniverous/rrstack/compare/0.14.0...0.15.0)
