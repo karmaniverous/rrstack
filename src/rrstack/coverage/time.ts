@@ -7,6 +7,7 @@
 import { DateTime, type Duration, IANAZone } from 'luxon';
 
 import type { CompiledRecurRule } from '../compile';
+import { datetime } from '../rrule.runtime';
 import type { UnixTimeUnit } from '../types';
 export const isValidTimeZone = (tz: string): boolean =>
   IANAZone.isValidZone(tz);
@@ -30,9 +31,9 @@ export const epochToWallDate = (
     unit === 'ms'
       ? DateTime.fromMillis(value, { zone: tz })
       : DateTime.fromSeconds(value, { zone: tz });
-  // IMPORTANT: rrule computes using host-local Date objects. To represent a
-  // "floating" wall time in `tz`, construct a local Date with those parts.
-  return new Date(d.year, d.month - 1, d.day, d.hour, d.minute, d.second, 0);
+  // IMPORTANT: rrule expects "floating" Dates. Use UTC fields as the wall-clock
+  // container to avoid host-local leakage; rrule.datetime builds Date.UTC(...).
+  return datetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
 };
 /**
  * Convert a "floating" Date from rrule to an epoch value in the given unit * in the given IANA timezone.
@@ -42,17 +43,17 @@ export const floatingDateToZonedEpoch = (
   tz: string,
   unit: UnixTimeUnit,
 ): number => {
-  // rrule returns host-local Date objects (no embedded timezone semantics).
-  // Read LOCAL getters and rebuild a DateTime in the rule’s timezone.
+  // rrule returns "floating" Date objects; read UTC getters (the UTC fields
+  // carry the intended wall-clock parts) and rebuild in rule timezone.
   const zdt = DateTime.fromObject(
     {
-      year: d.getFullYear(),
-      month: d.getMonth() + 1,
-      day: d.getDate(),
-      hour: d.getHours(),
-      minute: d.getMinutes(),
-      second: d.getSeconds(),
-      millisecond: d.getMilliseconds(),
+      year: d.getUTCFullYear(),
+      month: d.getUTCMonth() + 1,
+      day: d.getUTCDate(),
+      hour: d.getUTCHours(),
+      minute: d.getUTCMinutes(),
+      second: d.getUTCSeconds(),
+      millisecond: d.getUTCMilliseconds(),
     },
     { zone: tz },
   );
