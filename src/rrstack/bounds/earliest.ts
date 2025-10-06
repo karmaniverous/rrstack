@@ -38,16 +38,39 @@ export const computeEarliestStart = (
       const r = rules[i];
       let t: number | undefined;
       if (r.kind === 'recur') {
-        // Base for first occurrence: dtstart when present (closed-start),
-        // otherwise the rule-specific wall-min. Always ask rrule for the first
-        // occurrence at/after that base (do not treat dtstart itself as the start
-        // because BYHOUR/BYMINUTE may shift it forward, e.g., 00:00 → 05:00).
-        const base =
-          (r.options as { dtstart?: Date | null }).dtstart ??
-          wallMinPerRule[i]!;
-        const d = r.rrule.after(base, true);
-        if (!d) continue;
-        t = floatingDateToZonedEpoch(d, r.tz, r.unit);
+        // Base for first occurrence:
+        // - If dtstart is present (closed-start), use it as the base.
+        // - Otherwise use the rule-specific wall minimum for this rule.
+        //
+        // For rules WITHOUT explicit BY time parts (no BYHOUR/BYMINUTE/BYSECOND),
+        // RRULE inherits dtstart's time-of-day. In that case, treat dtstart itself
+        // as the earliest candidate to avoid environment-local drift.
+        // Otherwise (BY time parts are present), ask RRULE for the first occurrence
+        // at/after the base via rrule.after(base, true).
+        const recur = r;
+        const dtstart =
+          (recur.options as { dtstart?: Date | null }).dtstart ?? null;
+
+        const hasByHour =
+          Array.isArray(recur.options.byhour) ||
+          typeof recur.options.byhour === 'number';
+        const hasByMinute =
+          Array.isArray(recur.options.byminute) ||
+          typeof recur.options.byminute === 'number';
+        const hasBySecond =
+          Array.isArray(recur.options.bysecond) ||
+          typeof recur.options.bysecond === 'number';
+        const hasExplicitTime = hasByHour || hasByMinute || hasBySecond;
+
+        if (dtstart instanceof Date && !hasExplicitTime) {
+          // No explicit BY time: first occurrence inherits dtstart wall time.
+          t = floatingDateToZonedEpoch(dtstart, recur.tz, recur.unit);
+        } else {
+          const base = dtstart ?? wallMinPerRule[i]!;
+          const d = recur.rrule.after(base, true);
+          if (!d) continue;
+          t = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
+        }
       } else {
         // span: earliest candidate is the (possibly open) start clamp
         t = typeof r.start === 'number' ? r.start : min;
