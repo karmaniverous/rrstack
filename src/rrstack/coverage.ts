@@ -70,14 +70,9 @@ export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
       true,
     );
     for (const sd of dayStarts) {
-      const candidates = [
-        sd.getTime(),
-        floatingDateToZonedEpoch(sd, recur.tz, recur.unit),
-      ];
-      for (const start of candidates) {
-        const end = computeOccurrenceEnd(recur, start);
-        if (start <= t && t < end) return true;
-      }
+      const start = floatingDateToZonedEpoch(sd, recur.tz, recur.unit);
+      const end = computeOccurrenceEnd(recur, start);
+      if (start <= t && t < end) return true;
     }
 
     if (localDayMatchesDailyTimes(recur, t)) return true;
@@ -88,13 +83,9 @@ export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
   const wallT = epochToWallDate(t, recur.tz, recur.unit);
   const d = recur.rrule.before(wallT, true);
   if (d) {
-    const startEpoch = d.getTime();
-    const endEpoch = computeOccurrenceEnd(recur, startEpoch);
-    if (startEpoch <= t && t < endEpoch) return true;
-
-    const startFloat = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
-    const endFloat = computeOccurrenceEnd(recur, startFloat);
-    if (startFloat <= t && t < endFloat) return true;
+    const start = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
+    const end = computeOccurrenceEnd(recur, start);
+    if (start <= t && t < end) return true;
   }
 
   // 2) Fallback enumeration: frequency/interval-aware window [t - horizon, t]
@@ -107,14 +98,9 @@ export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
   const starts = recur.rrule.between(windowStart, wallT, true);
 
   for (const sd of starts) {
-    const candidates = [
-      sd.getTime(),
-      floatingDateToZonedEpoch(sd, recur.tz, recur.unit),
-    ];
-    for (const start of candidates) {
-      const end = computeOccurrenceEnd(recur, start);
-      if (start <= t && t < end) return true;
-    }
+    const start = floatingDateToZonedEpoch(sd, recur.tz, recur.unit);
+    const end = computeOccurrenceEnd(recur, start);
+    if (start <= t && t < end) return true;
   }
 
   return false;

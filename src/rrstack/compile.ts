@@ -15,7 +15,7 @@ import type {
 } from 'rrule';
 
 import { domainMin } from './coverage/time';
-import { datetime, Frequency, RRule } from './rrule.runtime';
+import { Frequency, RRule } from './rrule.runtime';
 import {
   type FrequencyStr,
   type InstantStatus,
@@ -68,9 +68,9 @@ const toWall = (epoch: number, tz: string, unit: UnixTimeUnit): Date => {
     unit === 'ms'
       ? DateTime.fromMillis(epoch, { zone: tz })
       : DateTime.fromSeconds(epoch, { zone: tz });
-  // Build a "floating" Date using UTC fields to carry the wall time
-  // in `tz` (avoids host-local offset leakage).
-  return datetime(d.year, d.month, d.day, d.hour, d.minute, d.second);
+  // rrule reads LOCAL fields (floating). Build host-local Date whose local
+  // getters equal the wall time in `tz`.
+  return new Date(d.year, d.month - 1, d.day, d.hour, d.minute, d.second, 0);
 };
 /**
  * Convert a JSON-friendly rule options object into rrule Options with

@@ -18,6 +18,14 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Bounds timezone remediation:
+  - Implemented rrule README cautions: rrule-facing Dates are now built with
+    host-local constructors from wall parts in the rule timezone (floating).
+  - Decoding uses LOCAL getters on rrule Dates and Luxon to obtain epoch in
+    the rule timezone (ms/s unit-aware).
+  - Removed all raw .getTime() usage on rrule Date outputs; all comparisons
+    go through floatingDateToZonedEpoch + computeOccurrenceEnd.
+
 - Tests (cross timezones):
   - Hardened new cross‑timezone bounds/describe tests to assert local
     wall‑clock values in the rule’s timezone (using Luxon) instead of raw
