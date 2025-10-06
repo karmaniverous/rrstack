@@ -180,14 +180,14 @@ export const describeCompiledRule = (
       if (!d) return undefined;
       const dt = DateTime.fromObject(
         {
-          // Interpret rrule "floating" Date via LOCAL getters (carry wall parts)
-          year: d.getFullYear(),
-          month: d.getMonth() + 1,
-          day: d.getDate(),
-          hour: d.getHours(),
-          minute: d.getMinutes(),
-          second: d.getSeconds(),
-          millisecond: d.getMilliseconds(),
+          // Interpret rrule “floating” Date via UTC getters, then render in tz.
+          year: d.getUTCFullYear(),
+          month: d.getUTCMonth() + 1,
+          day: d.getUTCDate(),
+          hour: d.getUTCHours(),
+          minute: d.getUTCMinutes(),
+          second: d.getUTCSeconds(),
+          millisecond: d.getUTCMilliseconds(),
         },
         { zone: tz },
       );
