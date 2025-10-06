@@ -7,7 +7,7 @@
 import type { CompiledRule } from './compile';
 import { ruleCoversInstant } from './coverage';
 import { classifyRange, getEffectiveBounds, getSegments } from './sweep';
-import type { rangeStatus } from './types';
+import type { RangeStatus } from './types';
 
 export const isActiveAtCompiled = (
   compiled: CompiledRule[],
@@ -34,7 +34,7 @@ export const classifyRangeOverWindow = (
   compiled: CompiledRule[],
   from: number,
   to: number,
-): rangeStatus => classifyRange(compiled, from, to);
+): RangeStatus => classifyRange(compiled, from, to);
 
 export const getEffectiveBoundsFromCompiled = (compiled: CompiledRule[]) =>
   getEffectiveBounds(compiled);

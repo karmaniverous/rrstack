@@ -18,7 +18,7 @@ import { domainMin } from './coverage/time';
 import { datetime, Frequency, RRule } from './rrule.runtime';
 import {
   type FrequencyStr,
-  type instantStatus,
+  type InstantStatus,
   type RuleJson,
   type RuleOptionsJson,
   type TimeZoneId,
@@ -26,7 +26,7 @@ import {
 } from './types';
 
 export interface CompiledRuleBase {
-  effect: instantStatus;
+  effect: InstantStatus;
   label?: string;
   tz: string;
   unit: UnixTimeUnit;

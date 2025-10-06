@@ -10,9 +10,11 @@
 import type { Options as RRuleOptions } from 'rrule';
 
 /** Instant status classification for a timestamp. */
-export type instantStatus = 'active' | 'blackout';
+export type InstantStatus = 'active' | 'blackout';
+/** Default effect classification for an RRStack. */
+export type DefaultEffect = InstantStatus | 'auto';
 /** Range classification across `[from, to)`. */
-export type rangeStatus = instantStatus | 'partial';
+export type RangeStatus = InstantStatus | 'partial';
 /** Time unit for inputs/outputs and internal computation. */
 export type UnixTimeUnit = 'ms' | 's';
 
@@ -77,7 +79,7 @@ export type RuleOptionsJson = Partial<
 /** A single rule in the cascade. */
 export interface RuleJson {
   /** `'active' | 'blackout'` — effect applied at covered instants. */
-  effect: instantStatus;
+  effect: InstantStatus;
   /** Structured duration for recurring rules; must be omitted for span rules. */
   duration?: DurationParts;
   /** Subset of rrule options (see {@link RuleOptionsJson}). */
@@ -98,7 +100,7 @@ export interface RRStackOptions {
   /** Time unit ('ms' | 's'). Defaults to 'ms'. */
   timeUnit?: UnixTimeUnit;
   /** Baseline effect for uncovered instants. Defaults to 'auto'. */
-  defaultEffect?: instantStatus | 'auto';
+  defaultEffect?: DefaultEffect;
   /** Rule list. Defaults to empty. */
   rules?: RuleJson[];
 }
@@ -113,7 +115,7 @@ export interface RRStackOptionsNormalized
   timeUnit: UnixTimeUnit;
   rules: readonly RuleJson[];
   timezone: TimeZoneId;
-  defaultEffect: instantStatus | 'auto';
+  defaultEffect: DefaultEffect;
 }
 
 /**

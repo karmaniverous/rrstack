@@ -10,6 +10,7 @@ import { DateTime } from 'luxon';
 
 import type { CompiledRecurRule, CompiledRule } from '../compile';
 import { compileRule } from '../compile';
+import { DEFAULT_TIME_UNIT } from '../defaults';
 import type {
   DurationParts,
   RuleJson,
@@ -201,10 +202,12 @@ export const describeCompiledRule = (
 export const describeRule = (
   rule: RuleJson,
   timezone: TimeZoneId,
-  unit: UnixTimeUnit,
+  timeUnit?: UnixTimeUnit,
   opts: DescribeOptions = {},
 ): string => {
-  const compiled = compileRule(rule, timezone, unit);
+  // Downstream callers may reasonably pass undefined to use the library default.
+  const effectiveUnit = timeUnit ?? DEFAULT_TIME_UNIT;
+  const compiled = compileRule(rule, timezone, effectiveUnit);
   return describeCompiledRule(compiled, opts);
 };
 

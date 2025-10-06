@@ -18,6 +18,7 @@ import { DateTime } from 'luxon';
 
 import { type CompiledRule, compileRule } from './compile';
 import { isValidTimeZone } from './coverage/time';
+import { DEFAULT_DEFAULT_EFFECT } from './defaults';
 import { describeCompiledRule, type DescribeOptions } from './describe';
 import {
   normalizeOptions,
@@ -32,9 +33,9 @@ import {
   isActiveAtCompiled,
 } from './RRStack.queries';
 import {
-  type instantStatus,
+  type InstantStatus,
   type Notice,
-  type rangeStatus,
+  type RangeStatus,
   type RRStackOptions,
   type RRStackOptionsNormalized,
   type RuleJson,
@@ -63,9 +64,9 @@ export class RRStack {
    * - 'auto' =\> opposite of rule 0's effect, or 'active' when no rules.
    * - otherwise =\> the provided defaultEffect.
    */
-  private baselineEffect(): instantStatus {
+  private baselineEffect(): InstantStatus {
     const de = this.options.defaultEffect;
-    if (de !== 'auto') return de;
+    if (de !== DEFAULT_DEFAULT_EFFECT) return de;
     const hasFirst = this.options.rules.length > 0;
     if (!hasFirst) return 'active';
     const first = this.options.rules[0];
@@ -458,13 +459,13 @@ export class RRStack {
     from: number,
     to: number,
     opts?: { limit?: number },
-  ): Iterable<{ start: number; end: number; status: instantStatus }> {
+  ): Iterable<{ start: number; end: number; status: InstantStatus }> {
     return getSegmentsOverWindow(this.compiledWithBaseline(), from, to, opts);
   } /**
    * Classify a range `[from, to)` as `'active'`, `'blackout'`, or `'partial'`.
    * @param from - Start of the window (inclusive), in the configured unit.
    * @param to - End of the window (exclusive), in the configured unit.   */
-  classifyRange(from: number, to: number): rangeStatus {
+  classifyRange(from: number, to: number): RangeStatus {
     return classifyRangeOverWindow(this.compiledWithBaseline(), from, to);
   }
 

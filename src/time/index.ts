@@ -27,6 +27,7 @@
  */
 import { DateTime, IANAZone } from 'luxon';
 
+import { DEFAULT_TIME_UNIT } from '../rrstack/defaults';
 import { datetime } from '../rrstack/rrule.runtime';
 import type { TimeZoneId, UnixTimeUnit } from '../rrstack/types';
 
@@ -190,11 +191,11 @@ const fromWallParts = (
 export const wallTimeToEpoch = (
   date: Date,
   zone: TimeZoneId,
-  unit: UnixTimeUnit,
+  timeUnit: UnixTimeUnit,
 ): number => {
   assertValidDate(date);
   assertValidZone(zone as unknown as string);
-  assertValidUnit(unit);
+  assertValidUnit(timeUnit);
 
   // Read UTC fields to treat the Date as "floating" wall time.
   const y = date.getUTCFullYear();
@@ -205,7 +206,7 @@ export const wallTimeToEpoch = (
   const ss = date.getUTCSeconds();
 
   const dt = fromWallParts(y, m, d, hh, mi, ss, zone as unknown as string);
-  return toEpoch(dt, unit);
+  return toEpoch(dt, timeUnit);
 };
 
 /**
@@ -215,17 +216,17 @@ export const wallTimeToEpoch = (
 export const dateOnlyToEpoch = (
   date: Date,
   zone: TimeZoneId,
-  unit: UnixTimeUnit,
+  timeUnit: UnixTimeUnit,
 ): number => {
   assertValidDate(date);
   assertValidZone(zone as unknown as string);
-  assertValidUnit(unit);
+  assertValidUnit(timeUnit);
 
   const y = date.getUTCFullYear();
   const m = date.getUTCMonth() + 1;
   const d = date.getUTCDate();
   const dt = fromWallParts(y, m, d, 0, 0, 0, zone as unknown as string);
-  return toEpoch(dt, unit);
+  return toEpoch(dt, timeUnit);
 };
 
 /**
@@ -257,12 +258,12 @@ export const dateOnlyToEpoch = (
 export const epochToWallDate = (
   epoch: number,
   zone: TimeZoneId,
-  unit: UnixTimeUnit = 'ms',
+  timeUnit: UnixTimeUnit = DEFAULT_TIME_UNIT,
 ): Date => {
   assertValidZone(zone as unknown as string);
-  assertValidUnit(unit);
+  assertValidUnit(timeUnit);
   const dt =
-    unit === 'ms'
+    timeUnit === 'ms'
       ? DateTime.fromMillis(epoch, { zone: zone as unknown as string })
       : DateTime.fromSeconds(epoch, { zone: zone as unknown as string });
   // Build a floating Date (UTC fields set to local wall clock fields).

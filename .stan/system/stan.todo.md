@@ -18,6 +18,12 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Defaults and TS narrowing:
+  - Centralized defaults are now applied consistently during normalization
+    (DEFAULT_TIME_UNIT, DEFAULT_DEFAULT_EFFECT).
+  - DEFAULT_DEFAULT_EFFECT is exported as the literal `'auto'`, enabling proper
+    TypeScript narrowing in RRStack.baselineEffect and resolving TS2322 errors.
+
 - JSON Schema: OpenAPI‑safe duration shape
   - Removed the duration.anyOf positivity injection from the generated schema to
     improve compatibility with serverless-openapi-documenter and other OpenAPI tools.

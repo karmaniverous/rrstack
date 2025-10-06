@@ -37,10 +37,10 @@ export { RRSTACK_CONFIG_SCHEMA } from './rrstack/RRStack.schema';
 export type {
   DurationParts,
   FrequencyStr,
-  instantStatus,
+  InstantStatus,
   // Update API
   Notice,
-  rangeStatus,
+  RangeStatus,
   RRStackOptions,
   RRStackOptionsNormalized,
   RRuleOptions,

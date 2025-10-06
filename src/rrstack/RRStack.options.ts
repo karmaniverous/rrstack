@@ -10,6 +10,7 @@
 import { IANAZone } from 'luxon';
 import { z } from 'zod';
 
+import { DEFAULT_DEFAULT_EFFECT, DEFAULT_TIME_UNIT } from './defaults';
 import type {
   RRStackOptions,
   RRStackOptionsNormalized,
@@ -55,10 +56,10 @@ export const OptionsSchema = z.object({
   // Optional version in the unified input/serialization shape (ignored on input).
   version: z.string().optional(),
   timezone: TimeZoneIdSchema,
-  timeUnit: z.enum(['ms', 's']).default('ms').optional(),
+  timeUnit: z.enum(['ms', 's']).default(DEFAULT_TIME_UNIT).optional(),
   defaultEffect: z
     .enum(['active', 'blackout', 'auto'])
-    .default('auto')
+    .default(DEFAULT_DEFAULT_EFFECT)
     .optional(),
   rules: z.array(z.any()).default([]).optional(),
 });
@@ -126,8 +127,8 @@ export const normalizeOptions = (
   });
 
   // Coalesce defaulted optionals to concrete values for normalized shape.
-  const unit: UnixTimeUnit = (parsed.timeUnit ?? 'ms') as UnixTimeUnit;
-  const de = parsed.defaultEffect ?? 'auto';
+  const unit: UnixTimeUnit = parsed.timeUnit ?? DEFAULT_TIME_UNIT;
+  const de = parsed.defaultEffect ?? DEFAULT_DEFAULT_EFFECT;
   // Validate and coerce rules to RuleJson to avoid unsafe spreads of any[].
   const rawRules = (parsed.rules ?? []) as unknown[];
   const rulesArr: readonly RuleJson[] = Object.freeze(

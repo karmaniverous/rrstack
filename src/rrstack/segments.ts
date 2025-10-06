@@ -12,13 +12,13 @@ import {
   epochToWallDate,
   floatingDateToZonedEpoch,
 } from './coverage/time';
-import type { instantStatus, rangeStatus } from './types';
+import type { InstantStatus, RangeStatus } from './types';
 import { minBoundary } from './util/heap';
 
 const cascadedStatus = (
   covering: boolean[],
   rules: CompiledRule[],
-): instantStatus => {
+): InstantStatus => {
   for (let i = covering.length - 1; i >= 0; i--) {
     if (covering[i]) return rules[i].effect;
   }
@@ -57,7 +57,7 @@ export function* getSegments(
   from: number,
   to: number,
   opts?: { limit?: number },
-): Iterable<{ start: number; end: number; status: instantStatus }> {
+): Iterable<{ start: number; end: number; status: InstantStatus }> {
   if (!(from < to)) return;
 
   const limit = typeof opts?.limit === 'number' ? opts.limit : undefined;
@@ -175,7 +175,7 @@ export const classifyRange = (
   rules: CompiledRule[],
   from: number,
   to: number,
-): rangeStatus => {
+): RangeStatus => {
   let sawActive = false;
   let sawBlackout = false;
   for (const seg of getSegments(rules, from, to)) {

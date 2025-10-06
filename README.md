@@ -195,8 +195,8 @@ The public types closely mirror rrule’s Options, with a few adjustments to mak
 ```ts
 import type { Options as RRuleOptions } from 'rrule';
 
-export type instantStatus = 'active' | 'blackout';
-export type rangeStatus = instantStatus | 'partial';
+export type InstantStatus = 'active' | 'blackout';
+export type RangeStatus = InstantStatus | 'partial';
 
 export type UnixTimeUnit = 'ms' | 's';
 
@@ -238,7 +238,7 @@ export type RuleOptionsJson = Partial<
 };
 
 export interface RuleJson {
-  effect: instantStatus; // 'active' | 'blackout'
+  effect: InstantStatus; // 'active' | 'blackout'
   duration?: DurationParts; // recurring only; spans must omit
   options: RuleOptionsJson;
   label?: string;
@@ -414,8 +414,7 @@ const textWithBounds = stack.describeRule(0, {
 
 Notes
 
-- Boolean describe options are opt‑in (default false). Use includeTimeZone
-  to append “(timezone <tz>)”. Use includeBounds to append “[from …; until …]”.
+- Boolean describe options are opt‑in (default false). Use includeTimeZone to append “(timezone <tz>)”. Use includeBounds to append “[from …; until …]”.
 - boundsFormat customizes only the bound timestamps; when omitted, bounds are rendered as ISO with milliseconds suppressed.
 
 - Helper function (compile on the fly from JSON):
