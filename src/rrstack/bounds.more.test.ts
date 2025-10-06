@@ -5,6 +5,7 @@ import { RRStack } from './';
 import { getEffectiveBounds } from './bounds';
 import { compileRule } from './compile';
 import { computeOccurrenceEnd } from './coverage';
+import { ruleCoversInstant } from './coverage';
 import type { TimeZoneId } from './types';
 
 const sec = (isoUtc: string) =>
@@ -482,6 +483,34 @@ describe('bounds: additional scenarios', () => {
     );
     const b = getEffectiveBounds([rule]);
     expect(b.empty).toBe(false);
+    // Coverage checks around the expected end (if we derived one)
+    if (expectedEndSec !== null) {
+      const expStartLocal = lastStartLocalISO;
+      const expEndLocal = DateTime.fromSeconds(expectedEndSec, {
+        zone: 'America/Chicago',
+      }).toISO();
+      const coversAtStart =
+        lastStartLocalISO !== null
+          ? ruleCoversInstant(
+              rule,
+              Math.trunc(
+                DateTime.fromISO(lastStartLocalISO, {
+                  zone: 'America/Chicago',
+                }).toSeconds(),
+              ),
+            )
+          : null;
+      const coversAtEndMinus1 = ruleCoversInstant(rule, expectedEndSec - 1);
+      const coversAtEnd = ruleCoversInstant(rule, expectedEndSec);
+      console.log(
+        '[DST fallback debug] expected last start=%s last end=%s covers(start)=%s covers(end-1)=%s covers(end)=%s',
+        expStartLocal,
+        expEndLocal,
+        String(coversAtStart),
+        String(coversAtEndMinus1),
+        String(coversAtEnd),
+      );
+    }
     // Debug logging to diagnose occasional NaN span during DST fall back on 's' unit.
     if (b.start === undefined || b.end === undefined) {
       const sLocal = DateTime.fromSeconds(starts, {
@@ -519,6 +548,12 @@ describe('bounds: additional scenarios', () => {
         zone: 'America/Chicago',
       }).toISO();
       const span = b.end - b.start;
+      // Also log wall-clock of b.start for comparison with expected last start
+      console.log(
+        '[DST fallback debug] b.start local=%s b.end local=%s',
+        sLdbg,
+        eLdbg,
+      );
 
       console.log(
         '[DST fallback debug] dtstartLocal=%s untilLocal=%s',

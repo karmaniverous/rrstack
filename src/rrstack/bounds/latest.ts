@@ -11,18 +11,15 @@
  *    without scanning from 1970 or to 2099.
  */
 import type { CompiledRecurRule, CompiledRule } from '../compile';
+import { ruleCoversInstant } from '../coverage';
 import {
   computeOccurrenceEnd,
   domainMin,
   epochToWallDate,
   floatingDateToZonedEpoch,
 } from '../coverage/time';
-import {
-  cascadedStatus,
-  coversAt,
-  lastStartBefore,
-  topCoveringIndex,
-} from './common';
+import { cascadedStatus, lastStartBefore, topCoveringIndex } from './common';
+
 const hasAnyStart = (r: CompiledRecurRule): boolean =>
   !!r.rrule.after(epochToWallDate(domainMin(), r.tz, r.unit), true);
 
@@ -93,7 +90,14 @@ export const computeLatestEnd = (
     const min = domainMin();
     if (t <= min) return 'blackout';
     const testAt = t - 1;
-    const coveringBefore = rules.map((r) => coversAt(r, testAt));
+    // Use the same robust coverage used elsewhere to avoid rare DST/seconds-mode
+    // edge cases where simplified "lastStartBefore + computed end" can disagree
+    // with enumeration around repeated hours.
+    //
+    // We build a last-wins cascade array just like coversAt() did, but use
+    // ruleCoversInstant (day-window enumeration + structural matches + bounded fallback)
+    // for each rule to get a reliable per-rule coverage at testAt.
+    const coveringBefore = rules.map((r) => ruleCoversInstant(r, testAt));
     return cascadedStatus(coveringBefore, rules);
   };
   // Only short-circuit when we are pinned to a finite end (cursorStart equals
