@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import { describe, expect, it } from 'vitest';
 
+import { RRStack } from './';
 import { getEffectiveBounds } from './bounds';
 import { compileRule } from './compile';
 import type { TimeZoneId } from './types';
@@ -418,5 +419,25 @@ describe('bounds: additional scenarios', () => {
     });
     expect(sL.toISODate()).toBe('2021-11-07');
     expect(eL.toISODate()).toBe('2021-11-07');
+  });
+
+  it('America/Chicago daily (duration 1 day) with starts clamp: earliest equals starts', () => {
+    // starts = 1759294800000 ms = 2025-10-01T05:00:00Z, which is 00:00 local
+    // in America/Chicago (DST active). Rule is open-end (no ends clamp).
+    const starts = 1_759_294_800_000;
+    const stack = new RRStack({
+      timezone: 'America/Chicago',
+      rules: [
+        {
+          effect: 'active' as const,
+          duration: { days: 1 },
+          options: { freq: 'daily' as const, starts },
+        },
+      ],
+    });
+    const b = stack.getEffectiveBounds();
+    expect(b.empty).toBe(false);
+    expect(b.start).toBe(starts);
+    expect(b.end).toBeUndefined(); // open end
   });
 });
