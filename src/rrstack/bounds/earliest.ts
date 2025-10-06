@@ -1,6 +1,7 @@
 /**
  * Earliest-bound computation.
  */
+
 import type { CompiledRule } from '../compile';
 import {
   computeOccurrenceEnd,
@@ -207,6 +208,52 @@ export const computeEarliestStart = (
     if (candidate === undefined || candidate > probe) break;
     cursor = candidate;
     ({ covering, nextStart, nextEnd } = resetStateAt(cursor));
+  }
+
+  // Fallback (conservative): if we failed to determine earliest start via the
+  // pre‑pass and jump sweep, attempt to compute the first active start directly
+  // from explicit rule starts. This addresses rare edge cases (observed in
+  // 's' timeUnit on DST fall‑back) without changing open‑start/baseline
+  // semantics.
+  //
+  // Rules:
+  // - Consider only active contributors.
+  // - For recurring rules: require an explicit start (isOpenStart === false).
+  //   Use rrule.after(dtstart, true) to get the first start at/after dtstart.
+  // - For span rules: only consider defined numeric starts (ignore open-start).
+  //
+  // This keeps baseline/open-start cases unchanged (still undefined) while
+  // ensuring finite recurring rules provide a determinate earliest start.
+  if (earliestStart === undefined) {
+    let candidate: number | undefined;
+    for (const r of rules) {
+      if (r.effect !== 'active') continue;
+      if (r.kind === 'recur') {
+        if (r.isOpenStart) continue; // respect open-start semantics
+        const dtstart =
+          (r.options as { dtstart?: Date | null }).dtstart ?? null;
+        if (dtstart instanceof Date) {
+          const d0 = r.rrule.after(dtstart, true);
+          if (d0) {
+            const t = floatingDateToZonedEpoch(d0, r.tz, r.unit);
+            if (typeof t === 'number') {
+              candidate =
+                typeof candidate === 'number' ? Math.min(candidate, t) : t;
+            }
+          }
+        }
+      } else {
+        // span
+        const s = typeof r.start === 'number' ? r.start : undefined;
+        if (typeof s === 'number') {
+          candidate =
+            typeof candidate === 'number' ? Math.min(candidate, s) : s;
+        }
+      }
+    }
+    if (typeof candidate === 'number') {
+      earliestStart = candidate;
+    }
   }
 
   return earliestStart;

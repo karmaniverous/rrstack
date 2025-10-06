@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { RRStack } from './';
 import { getEffectiveBounds } from './bounds';
 import { compileRule } from './compile';
+import { computeOccurrenceEnd } from './coverage';
 import type { TimeZoneId } from './types';
 
 const sec = (isoUtc: string) =>
@@ -407,8 +408,138 @@ describe('bounds: additional scenarios', () => {
       tz,
       's',
     );
+    // Extra debug: surface dtstart/until and last start/end expectations.
+    if (rule.kind !== 'recur') throw new Error('expected recurring rule');
+    const optDtstart =
+      (rule.options as { dtstart?: Date | null }).dtstart ?? null;
+    const optUntil = (rule.options as { until?: Date | null }).until ?? null;
+    const toLocalIso = (d: Date | null) =>
+      d
+        ? DateTime.fromObject(
+            {
+              year: d.getUTCFullYear(),
+              month: d.getUTCMonth() + 1,
+              day: d.getUTCDate(),
+              hour: d.getUTCHours(),
+              minute: d.getUTCMinutes(),
+              second: d.getUTCSeconds(),
+              millisecond: d.getUTCMilliseconds(),
+            },
+            { zone: 'America/Chicago' },
+          ).toISO()
+        : null;
+    const dtstartLocalISO = toLocalIso(optDtstart);
+    const untilLocalISO = toLocalIso(optUntil);
+    // rrule view of last start at/ before UNTIL (inclusive)
+    let lastStartLocalISO: string | null = null;
+    let expectedEndSec: number | null = null;
+    if (optUntil instanceof Date) {
+      const lastStart = rule.rrule.before(optUntil, true);
+      if (lastStart instanceof Date) {
+        const lastLocal = DateTime.fromObject(
+          {
+            year: lastStart.getUTCFullYear(),
+            month: lastStart.getUTCMonth() + 1,
+            day: lastStart.getUTCDate(),
+            hour: lastStart.getUTCHours(),
+            minute: lastStart.getUTCMinutes(),
+            second: lastStart.getUTCSeconds(),
+            millisecond: lastStart.getUTCMilliseconds(),
+          },
+          { zone: 'America/Chicago' },
+        );
+        lastStartLocalISO = lastLocal.toISO();
+        // Derive expected end (seconds) in rule tz via helper
+        const startSec = Math.trunc(lastLocal.toSeconds());
+        expectedEndSec = computeOccurrenceEnd(rule, startSec);
+      }
+    }
+    // Enumerate the local calendar day for extra context
+    const dayStart = DateTime.fromSeconds(starts, {
+      zone: 'America/Chicago',
+    }).startOf('day');
+    const nextDay = dayStart.plus({ days: 1 });
+    const between = rule.rrule.between(
+      new Date(
+        Date.UTC(dayStart.year, dayStart.month - 1, dayStart.day, 0, 0, 0),
+      ),
+      new Date(Date.UTC(nextDay.year, nextDay.month - 1, nextDay.day, 0, 0, 0)),
+      true,
+    );
+    const betweenLocal = between.map((d) =>
+      DateTime.fromObject(
+        {
+          year: d.getUTCFullYear(),
+          month: d.getUTCMonth() + 1,
+          day: d.getUTCDate(),
+          hour: d.getUTCHours(),
+          minute: d.getUTCMinutes(),
+          second: d.getUTCSeconds(),
+          millisecond: d.getUTCMilliseconds(),
+        },
+        { zone: 'America/Chicago' },
+      ).toISO(),
+    );
     const b = getEffectiveBounds([rule]);
     expect(b.empty).toBe(false);
+    // Debug logging to diagnose occasional NaN span during DST fall back on 's' unit.
+    if (b.start === undefined || b.end === undefined) {
+      const sLocal = DateTime.fromSeconds(starts, {
+        zone: 'America/Chicago',
+      }).toISO();
+      const eLocal = DateTime.fromSeconds(ends, {
+        zone: 'America/Chicago',
+      }).toISO();
+      console.log(
+        '[DST fallback debug] dtstartLocal=%s untilLocal=%s',
+        dtstartLocalISO,
+        untilLocalISO,
+      );
+      console.log(
+        '[DST fallback debug] lastStartLocal=%s expectedEndSec=%s',
+        lastStartLocalISO,
+        String(expectedEndSec),
+      );
+      console.log('[DST fallback debug] between local day = %o', betweenLocal);
+
+      console.log(
+        '[DST fallback debug] tz=%s starts(s)=%s ends(s)=%s startsLocal=%s endsLocal=%s bounds=%o',
+        'America/Chicago',
+        String(starts),
+        String(ends),
+        sLocal,
+        eLocal,
+        b,
+      );
+    } else {
+      const sLdbg = DateTime.fromSeconds(b.start, {
+        zone: 'America/Chicago',
+      }).toISO();
+      const eLdbg = DateTime.fromSeconds(b.end, {
+        zone: 'America/Chicago',
+      }).toISO();
+      const span = b.end - b.start;
+
+      console.log(
+        '[DST fallback debug] dtstartLocal=%s untilLocal=%s',
+        dtstartLocalISO,
+        untilLocalISO,
+      );
+      console.log(
+        '[DST fallback debug] lastStartLocal=%s expectedEndSec=%s',
+        lastStartLocalISO,
+        String(expectedEndSec),
+      );
+      console.log('[DST fallback debug] between local day = %o', betweenLocal);
+      console.log(
+        '[DST fallback debug] bounds.start=%d (%s) bounds.end=%d (%s) span=%d',
+        b.start,
+        sLdbg,
+        b.end,
+        eLdbg,
+        span,
+      );
+    }
     // Assert 1-hour span and local calendar day; avoid brittle absolute instants.
     expect(b.end! - b.start!).toBe(3600);
     const sL = DateTime.fromSeconds(b.start!, {
