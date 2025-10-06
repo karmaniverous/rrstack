@@ -75,6 +75,18 @@ export const computeEarliestStart = (
         earliestActiveCandidate === domainMin() &&
         rules.some((r) => r.effect === 'active' && r.isOpenStart);
       earliestStart = startUndefined ? undefined : earliestActiveCandidate;
+    } else if (
+      // Common case: baseline blackout (open-start) appears as the "earliest blackout"
+      // at the domain minimum. In this scenario, the earliest active start is the
+      // first instant where the cascade becomes active, so we can accept it directly.
+      typeof earliestActiveCandidate === 'number' &&
+      typeof earliestBlackoutCandidate === 'number' &&
+      earliestBlackoutCandidate === domainMin()
+    ) {
+      const startUndefined =
+        earliestActiveCandidate === domainMin() &&
+        rules.some((r) => r.effect === 'active' && r.isOpenStart);
+      earliestStart = startUndefined ? undefined : earliestActiveCandidate;
     }
   }
 
