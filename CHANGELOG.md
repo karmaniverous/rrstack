@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.15.1](https://github.com/karmaniverous/rrstack/compare/0.15.0...0.15.1)
+
+- OpenAPI-safe JSON Schema: remove duration.anyOf; rely on runtime Zod [`74039b3`](https://github.com/karmaniverous/rrstack/commit/74039b36b2d52360c92cf8748cbf9f2501cb09f4)
+
 #### [0.15.0](https://github.com/karmaniverous/rrstack/compare/0.14.0...0.15.0)
+
+> 5 October 2025
 
 - feat(describe): add DescribeOptions.boundsFormat to customize includeBounds rendering [`5e52343`](https://github.com/karmaniverous/rrstack/commit/5e523438b4a6eec11c94e19feff2e85bcdc6671b)
 - fix(time): require exact wall match in minute probe for DST gap (tests green) [`6b327dc`](https://github.com/karmaniverous/rrstack/commit/6b327dc496f12c38bde01b9461400bb6cd0eaf6a)
@@ -10,6 +16,7 @@ All notable changes to this project will be documented in this file. Dates are d
 - fix(time): treat normalized wall times as invalid; choose earliest valid minute [`bd4bb42`](https://github.com/karmaniverous/rrstack/commit/bd4bb4268722cb3b18d38b5995806d132e93e4f9)
 - fix(time): map spring-forward gaps via wall-minute probing (tests green) [`0d9437f`](https://github.com/karmaniverous/rrstack/commit/0d9437fb504e4f5a2f3b2004f00bc6acc2f951cb)
 - docs(time): add TypeDoc entries for wallTimeToEpoch/dateOnlyToEpoch/epochToWallDate [`587b65c`](https://github.com/karmaniverous/rrstack/commit/587b65c44df1aefeaf555e023627fb8cbee70cda)
+- chore: release v0.15.0 [`d890ef2`](https://github.com/karmaniverous/rrstack/commit/d890ef25967aa72c6d218f0dadc06fe51a716b11)
 - fix(time): satisfy TS2775 and map DST forward gap to earliest valid instant [`d4d52ac`](https://github.com/karmaniverous/rrstack/commit/d4d52ac36d7993b0f9aca69e358479a1f50665dd)
 - docs: add boundsFormat examples and fix describe defaults [`6a82a4f`](https://github.com/karmaniverous/rrstack/commit/6a82a4fc69ff6d95cf55fd9f3f8f1d4ea53f1cab)
 

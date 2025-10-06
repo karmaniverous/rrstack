@@ -86,8 +86,14 @@
 </ul>
 <p>Generation details:</p>
 <ul>
-<li>The schema is produced by scripts/gen-schema.ts using zod-to-json-schema.</li>
-<li>DurationParts positivity is enforced by adding an anyOf that requires at least one of the fields (years|months|weeks|days|hours|minutes|seconds) to be an integer with minimum 1.</li>
+<li>The schema is produced by scripts/gen-schema.ts using Zod's native JSON Schema conversion.</li>
+<li>OpenAPI-safe: the published JSON Schema intentionally omits advanced conditional/positivity constraints (e.g., “duration required when freq is present”, “at least one positive duration part”) to maximize compatibility with OpenAPI tooling (notably serverless-openapi-documenter).</li>
+<li>These constraints are enforced at runtime by the Zod validators in RRStack:
+<ul>
+<li>Recurring rules must include a strictly positive duration.</li>
+<li>Span rules must omit duration.</li>
+</ul>
+</li>
 </ul>
 <p>Update API (version/unit policies)</p>
 <ul>
