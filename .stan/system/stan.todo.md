@@ -24,10 +24,12 @@ Completed (recent)
     `wallTimeToEpoch` and `dateOnlyToEpoch` (already defaulted in `epochToWallDate`).
   - Updated JSDoc `@param` tags (`unit` → `timeUnit`; `zone` → `timezone`) to clear TypeDoc warnings.
 
+- Tests:
+  - Added America/Chicago assertion for `RRStack.formatInstant` (CST, -06:00) to verify zone handling and local formatting.
+
 - Defaults and TS narrowing:
   - Centralized defaults are now applied consistently during normalization
-    (DEFAULT_TIME_UNIT, DEFAULT_DEFAULT_EFFECT).
-  - DEFAULT_DEFAULT_EFFECT is exported as the literal `'auto'`, enabling proper
+    (DEFAULT_TIME_UNIT, DEFAULT_DEFAULT_EFFECT).  - DEFAULT_DEFAULT_EFFECT is exported as the literal `'auto'`, enabling proper
     TypeScript narrowing in RRStack.baselineEffect and resolving TS2322 errors.
 
 - JSON Schema: OpenAPI‑safe duration shape
