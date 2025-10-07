@@ -83,6 +83,10 @@ Completed (recent)
   - Resolved the remaining spring-forward test by probing successive wall minutes with DateTime.fromObject (wall construction) to find the earliest valid minute at/after the requested time (02:30 → 03:00). Avoids timeline-based additions that could land at 03:30 across the gap.
 - Docs (API): Added TSDoc/TypeDoc comments for time helpers (`wallTimeToEpoch`, `dateOnlyToEpoch`, `epochToWallDate`) including parameters, errors, DST semantics, and examples. They are exported from the root and will render in the API reference.
 
+- JSON input strictness & policy:
+  - Enumerated RRULE-compatible keys in `rule.options` and made the schema strict (no additional properties). Options remain optional with default {}.
+  - Updated project policy: assistants must never patch generated files (e.g., assets/rrstackconfig.schema.json). Change the generator and rerun scripts to refresh artifacts.
+
 - Time conversion utilities (follow-up fixes):
   - Resolved TypeScript TS2775 by changing the assertion function to a function declaration (`assertValidUnit`) in src/time/index.ts.
   - Adjusted DST forward gap mapping to use the earliest valid instant at/after the requested wall time (minute-level bump). This maps 02:30 in the spring gap to 03:00 local (per requirements) and fixes the failing test.

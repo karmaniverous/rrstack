@@ -76,21 +76,116 @@ const freqSchema = z.enum([
   'secondly',
 ] as const);
 
+/**
+ * Enumerated JSON-friendly RRULE options accepted in rule.options.
+ * All keys are optional; when the entire options block is omitted, it defaults to {}.
+ * Strict: unknown keys are rejected.
+ */
+const RRuleJsonOptionsSchema = z
+  .object({
+    // RRStack JSON extras
+    freq: freqSchema.optional(),
+    starts: z.number().optional(),
+    ends: z.number().optional(),
+    // RRULE core keys (JSON-friendly)
+    interval: z.number().int().positive().optional(),
+    wkst: z.number().int().optional(),
+    count: z.number().int().positive().optional(),
+    bysetpos: z.union([z.array(z.number().int()), z.number().int()]).optional(),
+    bymonth: z
+      .union([
+        z.array(z.number().int().min(1).max(12)),
+        z.number().int().min(1).max(12),
+      ])
+      .optional(),
+    bymonthday: z
+      .union([
+        z.array(
+          z
+            .number()
+            .int()
+            .min(-31)
+            .max(31)
+            .refine((n) => n !== 0),
+        ),
+        z
+          .number()
+          .int()
+          .min(-31)
+          .max(31)
+          .refine((n) => n !== 0),
+      ])
+      .optional(),
+    byyearday: z
+      .union([
+        z.array(
+          z
+            .number()
+            .int()
+            .min(-366)
+            .max(366)
+            .refine((n) => n !== 0),
+        ),
+        z
+          .number()
+          .int()
+          .min(-366)
+          .max(366)
+          .refine((n) => n !== 0),
+      ])
+      .optional(),
+    byweekno: z
+      .union([
+        z.array(
+          z
+            .number()
+            .int()
+            .min(-53)
+            .max(53)
+            .refine((n) => n !== 0),
+        ),
+        z
+          .number()
+          .int()
+          .min(-53)
+          .max(53)
+          .refine((n) => n !== 0),
+      ])
+      .optional(),
+    // For JSON input we accept weekday as 0..6 (MO..SU per rrule numeric form).
+    byweekday: z
+      .union([
+        z.array(z.number().int().min(0).max(6)),
+        z.number().int().min(0).max(6),
+      ])
+      .optional(),
+    byhour: z
+      .union([
+        z.array(z.number().int().min(0).max(23)),
+        z.number().int().min(0).max(23),
+      ])
+      .optional(),
+    byminute: z
+      .union([
+        z.array(z.number().int().min(0).max(59)),
+        z.number().int().min(0).max(59),
+      ])
+      .optional(),
+    bysecond: z
+      .union([
+        z.array(z.number().int().min(0).max(59)),
+        z.number().int().min(0).max(59),
+      ])
+      .optional(),
+  })
+  .strict();
+
 export const ruleLiteSchema = z
   .object({
     effect: z.enum(['active', 'blackout']),
     duration: DurationPartsSchema.optional(),
-    // Make options optional in JSON with a default empty object; allow unknown RRULE opts.
-    options: z
-      .object({
-        // freq optional (when omitted ⇒ span rule)
-        freq: freqSchema.optional(),
-        starts: z.number().optional(),
-        ends: z.number().optional(),
-      })
-      .loose()
-      .default({})
-      .optional(),
+    // Strictly enumerated options; defaults to {} when omitted
+    options: RRuleJsonOptionsSchema.default({}).optional(),
     label: z.string().optional(),
   })
   .superRefine((val, ctx) => {
