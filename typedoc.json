@@ -18,14 +18,16 @@
     "GitHub": "https://github.com/karmaniverous/rrstack"
   },
   "out": "./docs/",
-  "plugin": ["typedoc-plugin-mdn-links", "typedoc-plugin-replace-text"],
-  "projectDocuments": [
-    "./handbook/index.md",
-    "./CHANGELOG.md"
+  "plugin": [
+    "typedoc-plugin-mdn-links",
+    "typedoc-plugin-replace-text",
+    "typedoc-plugin-zod"
   ],
+  "projectDocuments": ["./handbook/index.md", "./CHANGELOG.md"],
   "replaceText": {
     "replacements": [
-      {        "pattern": "<!-- TYPEDOC_EXCLUDE -->.*?<!-- /TYPEDOC_EXCLUDE -->",
+      {
+        "pattern": "<!-- TYPEDOC_EXCLUDE -->.*?<!-- /TYPEDOC_EXCLUDE -->",
         "flags": "gis",
         "replace": ""
       }

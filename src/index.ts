@@ -37,6 +37,7 @@ export type {
 } from './rrstack/describe/translate.strict.en';
 export { RRSTACK_CONFIG_SCHEMA } from './rrstack/RRStack.schema';
 export type {
+  DefaultEffect,
   DurationParts,
   FrequencyStr,
   InstantStatus,
