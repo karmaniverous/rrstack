@@ -81,6 +81,7 @@
             "additionalProperties": false
           },
           "options": {
+            "default": {},
             "type": "object",
             "properties": {
               "freq": {
@@ -109,8 +110,7 @@
           }
         },
         "required": [
-          "effect",
-          "options"
+          "effect"
         ],
         "additionalProperties": false
       }

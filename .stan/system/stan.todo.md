@@ -19,26 +19,17 @@ Next up (near‑term, prioritized)
 Completed (recent)
 
 - rrule floating-date seam (host-agnostic):
-  - Construct rrule Dates with rrule.datetime(y,m,d,hh,mi,ss) (UTC fields
-    carrying wall parts in the rule tz). Decode via UTC getters and rebuild
-    Luxon DateTime in the rule tz for epoch math. Eliminates host offset drift.
+  - Construct rrule Dates with rrule.datetime(y,m,d,hh,mi,ss) (UTC fields carrying wall parts in the rule tz). Decode via UTC getters and rebuild Luxon DateTime in the rule tz for epoch math. Eliminates host offset drift.
 
 - Bounds timezone remediation:
-  - Implemented rrule README cautions: rrule-facing Dates are now built with
-    host-local constructors from wall parts in the rule timezone (floating).
-  - Decoding uses LOCAL getters on rrule Dates and Luxon to obtain epoch in
-    the rule timezone (ms/s unit-aware).
-  - Removed all raw .getTime() usage on rrule Date outputs; all comparisons
-    go through floatingDateToZonedEpoch + computeOccurrenceEnd.
+  - Implemented rrule README cautions: rrule-facing Dates are now built with host-local constructors from wall parts in the rule timezone (floating).
+  - Decoding uses LOCAL getters on rrule Dates and Luxon to obtain epoch in the rule timezone (ms/s unit-aware).
+  - Removed all raw .getTime() usage on rrule Date outputs; all comparisons go through floatingDateToZonedEpoch + computeOccurrenceEnd.
 
 - Tests (cross timezones):
-  - Hardened new cross‑timezone bounds/describe tests to assert local
-    wall‑clock values in the rule’s timezone (using Luxon) instead of raw
-    epoch equality, ensuring determinism on UTC+8 hosts.
+  - Hardened new cross‑timezone bounds/describe tests to assert local wall‑clock values in the rule’s timezone (using Luxon) instead of raw epoch equality, ensuring determinism on UTC+8 hosts.
 - Tests (cross timezones):
-  - Added realistic non‑UTC tests validating getEffectiveBounds and rule
-    descriptions across Europe/London, Asia/Tokyo, Australia/Sydney, and
-    Asia/Kolkata.
+  - Added realistic non‑UTC tests validating getEffectiveBounds and rule descriptions across Europe/London, Asia/Tokyo, Australia/Sydney, and Asia/Kolkata.
 - Bounds & descriptions (America/Chicago daily 1‑day rule):
   - Fixed recurring bounds rendering when `includeBounds=true` by treating RRULE floating dates correctly (UTC fields reflect local wall time) and rebuilding them in the rule’s timezone before formatting. Removes wrong outputs like “from 2025‑09‑30 19:00”.
   - Improved earliest‑bound pre‑pass: when the earliest blackout candidate is the domain minimum (baseline blackout), accept the earliest active start directly. This corrects the earliest start for the Chicago daily 1‑day case.
@@ -75,6 +66,13 @@ Completed (recent)
 
 - DescribeOptions bounds formatting:
   - Added `boundsFormat?: string` to DescribeOptions for customizing how includeBounds dates are rendered. When provided, bounds use Luxon `toFormat(boundsFormat)` in the rule’s timezone; otherwise ISO formatting is preserved. Added tests for both span and recurring rules.
+
+- Schema/type sync:
+  - ruleLiteSchema.options is now optional with `.default({})`, allowing span rules without an options block in JSON.
+  - Added and exported `rrstackJsonSchema` (Zod) and `RRStackJson` (TypeScript input type) that correspond exactly to the published JSON Schema.
+  - normalizeOptions now parses with the unified `rrstackJsonSchema` so `rules` default to `[]` and each rule’s `options` default to `{}`.
+  - Regenerated assets/rrstackconfig.schema.json to remove `options` from rule `required` and add `default: {}` for `options`.
+  - Re-exported `RRStackJson` from the package root.
 
 - Time conversion utilities (final test fix):
   - Luxon may normalize invalid wall times (e.g., 02:30 → 03:30) while reporting `isValid=true`. We now detect normalization (mismatched wall fields) and treat it as invalid for our policy, then probe successive wall minutes via `DateTime.fromObject` to pick the earliest valid minute (02:30 → 03:00).

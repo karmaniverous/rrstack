@@ -8,6 +8,8 @@ export { RRStack } from './rrstack';
 export type { DescribeOptions } from './rrstack/describe';
 export { describeRule } from './rrstack/describe';
 export { fromIsoDuration, toIsoDuration } from './rrstack/duration';
+// JSON input type matching the published JSON Schema
+export type { RRStackJson } from './rrstack/RRStack.options';
 // Time conversion helpers (public utilities)
 export { dateOnlyToEpoch, epochToWallDate, wallTimeToEpoch } from './time';
 // Description translators & lexicon

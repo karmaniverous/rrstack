@@ -14,10 +14,7 @@ import { fileURLToPath } from 'node:url';
 import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 import { z } from 'zod';
 
-import {
-  ruleLiteSchema,
-  ruleOptionsSchema,
-} from '../src/rrstack/RRStack.options';
+import { rrstackJsonSchema } from '../src/rrstack/RRStack.options';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -127,13 +124,9 @@ const ensureFreqStringEnum = (root: JSONSchema7): void => {
 };
 
 async function main(): Promise<void> {
-  // Build a strengthened Options schema for JSON Schema generation.
-  const RRStackOptionsZod = ruleOptionsSchema.extend({
-    // Preserve optional + default so the generated schema does not require 'rules'.
-    rules: z.array(ruleLiteSchema).default([]).optional(),
-  });
+  // Use the centralized JSON input schema for generation.
+  const RRStackOptionsZod = rrstackJsonSchema;
 
-  // 1) Generate base JSON Schema (draft-07) for RRStackOptions (no version) using Zod v4 native conversion.
   type ZodWithToJSON = typeof z & {
     toJSONSchema: (
       schema: unknown,

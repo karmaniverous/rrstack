@@ -80,6 +80,7 @@ export const ruleLiteSchema = z
   .object({
     effect: z.enum(['active', 'blackout']),
     duration: DurationPartsSchema.optional(),
+    // Make options optional in JSON with a default empty object; allow unknown RRULE opts.
     options: z
       .object({
         // freq optional (when omitted ⇒ span rule)
@@ -87,11 +88,13 @@ export const ruleLiteSchema = z
         starts: z.number().optional(),
         ends: z.number().optional(),
       })
-      .loose(),
+      .loose()
+      .default({})
+      .optional(),
     label: z.string().optional(),
   })
   .superRefine((val, ctx) => {
-    const rawFreq = (val as { options: { freq?: unknown } }).options.freq;
+    const rawFreq = (val as { options?: { freq?: unknown } }).options?.freq;
     const hasFreq = typeof rawFreq === 'string';
     if (hasFreq) {
       // Recurring rule must provide a duration.
@@ -115,12 +118,27 @@ export const ruleLiteSchema = z
   });
 
 /**
+ * Unified JSON input schema for RRStack configuration.
+ * - rules: optional with default [].
+ * - rule.options: optional with default {} (when omitted).
+ * This is the exact shape accepted by the published JSON Schema.
+ */
+export const rrstackJsonSchema = ruleOptionsSchema.extend({
+  rules: z.array(ruleLiteSchema).default([]).optional(),
+});
+/**
+ * Type that corresponds exactly to the JSON Schema (input side).
+ * Use this when typing external JSON payloads.
+ */
+export type RRStackJson = z.input<typeof rrstackJsonSchema>;
+
+/**
  * Normalize constructor options using the ruleOptionsSchema.
  */
 export const normalizeOptions = (
   opts: RRStackOptions,
 ): RRStackOptionsNormalized => {
-  const parsed = ruleOptionsSchema.parse({
+  const parsed = rrstackJsonSchema.parse({
     version: opts.version,
     timezone: opts.timezone,
     timeUnit: opts.timeUnit,
@@ -136,6 +154,7 @@ export const normalizeOptions = (
   const rulesArr: readonly RuleJson[] = Object.freeze(
     rawRules.map((r) => {
       // Reuse the lightweight rule schema; full validation still occurs during compilation.
+      // ruleLiteSchema supplies defaults (e.g., options:{}).
       return ruleLiteSchema.parse(r) as RuleJson;
     }),
   );
