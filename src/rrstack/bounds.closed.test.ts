@@ -23,7 +23,7 @@ describe('bounds: closed-sided coverage and cascades', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const b = getEffectiveBounds([active]);
@@ -51,7 +51,7 @@ describe('bounds: closed-sided coverage and cascades', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
 
@@ -70,7 +70,7 @@ describe('bounds: closed-sided coverage and cascades', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
 

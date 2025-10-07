@@ -136,7 +136,7 @@ export const buildRuleDescriptor = (c: CompiledRule): RuleDescriptor => {
     tz: r.tz,
     unit: r.unit,
     clamps,
-    freq: freqToStr(r.options.freq as unknown as number),
+    freq: freqToStr(r.options.freq as number),
     interval:
       typeof r.options.interval === 'number' && r.options.interval > 0
         ? r.options.interval

@@ -94,18 +94,18 @@ describe('time conversion helpers (wall time ↔ epoch)', () => {
 
   it('throws on invalid date / invalid zone / invalid unit', () => {
     const badDate = new Date(Number.NaN);
-    const tz = 'Not/AZone' as unknown as TimeZoneId;
+    const tz = 'Not/AZone' as TimeZoneId;
     const goodTz = asTz('UTC');
     const goodDate = new Date(Date.UTC(2024, 0, 1, 0, 0, 0));
     expect(() => wallTimeToEpoch(badDate, goodTz, 'ms')).toThrow(RangeError);
     expect(() => dateOnlyToEpoch(badDate, goodTz, 'ms')).toThrow(RangeError);
     expect(() => wallTimeToEpoch(goodDate, tz, 'ms')).toThrow(RangeError);
     expect(() =>
-      wallTimeToEpoch(goodDate, goodTz, 'xx' as unknown as UnixTimeUnit),
+      wallTimeToEpoch(goodDate, goodTz, 'xx' as UnixTimeUnit),
     ).toThrow(RangeError);
     expect(() => epochToWallDate(0, tz, 'ms')).toThrow(RangeError);
-    expect(() =>
-      epochToWallDate(0, goodTz, 'xx' as unknown as UnixTimeUnit),
-    ).toThrow(RangeError);
+    expect(() => epochToWallDate(0, goodTz, 'xx' as UnixTimeUnit)).toThrow(
+      RangeError,
+    );
   });
 });

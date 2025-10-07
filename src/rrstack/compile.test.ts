@@ -16,7 +16,7 @@ describe('compileRule', () => {
           bysecond: [0],
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     if (cr.kind !== 'recur') throw new Error('expected recurring rule');

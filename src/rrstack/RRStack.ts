@@ -22,8 +22,8 @@ import { DEFAULT_DEFAULT_EFFECT } from './defaults';
 import { describeCompiledRule, type DescribeOptions } from './describe';
 import {
   normalizeOptions,
-  RuleLiteSchema,
-  TimeZoneIdSchema,
+  ruleLiteSchema,
+  timezoneIdSchema,
 } from './RRStack.options';
 import { toJsonSnapshot } from './RRStack.persistence';
 import {
@@ -123,7 +123,7 @@ export class RRStack {
    */
   static asTimeZoneId(tz: string): TimeZoneId {
     if (!isValidTimeZone(tz)) throw new Error(`Invalid IANA time zone: ${tz}`);
-    return tz as unknown as TimeZoneId;
+    return tz as TimeZoneId;
   }
 
   // Observability -------------------------------------------------------------
@@ -158,7 +158,7 @@ export class RRStack {
    * Get the current IANA timezone id (unbranded string).
    */
   get timezone(): string {
-    return this.options.timezone as unknown as string;
+    return this.options.timezone as string;
   }
 
   /**
@@ -167,15 +167,14 @@ export class RRStack {
    * @throws If the timezone is invalid.
    */
   set timezone(next: string) {
-    const tz = TimeZoneIdSchema.parse(next) as unknown as TimeZoneId;
+    const tz = timezoneIdSchema.parse(next) as unknown as TimeZoneId;
     const { timeUnit, rules, defaultEffect } = this.options;
-    (this as unknown as { options: RRStackOptionsNormalized }).options =
-      Object.freeze({
-        timezone: tz,
-        timeUnit,
-        defaultEffect,
-        rules,
-      });
+    (this as { options: RRStackOptionsNormalized }).options = Object.freeze({
+      timezone: tz,
+      timeUnit,
+      defaultEffect,
+      rules,
+    });
     this.recompile();
   }
   /**
@@ -192,16 +191,15 @@ export class RRStack {
    */
   set rules(next: readonly RuleJson[]) {
     // Minimal rule-lite validation to fail fast; full validation in compile.
-    next.forEach((r) => RuleLiteSchema.parse(r));
+    next.forEach((r) => ruleLiteSchema.parse(r));
     const { timezone, timeUnit, defaultEffect } = this.options;
     const frozen = Object.freeze([...(next as RuleJson[])]); // preserve readonly externally
-    (this as unknown as { options: RRStackOptionsNormalized }).options =
-      Object.freeze({
-        timezone,
-        timeUnit,
-        defaultEffect,
-        rules: frozen,
-      });
+    (this as { options: RRStackOptionsNormalized }).options = Object.freeze({
+      timezone,
+      timeUnit,
+      defaultEffect,
+      rules: frozen,
+    });
     this.recompile();
   }
   /**   * Get the configured time unit ('ms' | 's'). Immutable.
@@ -316,7 +314,7 @@ export class RRStack {
 
     const nextTz =
       partial.timezone !== undefined
-        ? (TimeZoneIdSchema.parse(partial.timezone) as unknown as TimeZoneId)
+        ? (timezoneIdSchema.parse(partial.timezone) as unknown as TimeZoneId)
         : this.options.timezone;
     const nextDefault = partial.defaultEffect ?? this.options.defaultEffect;
 
@@ -346,13 +344,12 @@ export class RRStack {
     }
 
     // 3) Commit and recompile
-    (this as unknown as { options: RRStackOptionsNormalized }).options =
-      Object.freeze({
-        timezone: nextTz,
-        timeUnit: toUnit,
-        defaultEffect: nextDefault,
-        rules: nextRules,
-      });
+    (this as { options: RRStackOptionsNormalized }).options = Object.freeze({
+      timezone: nextTz,
+      timeUnit: toUnit,
+      defaultEffect: nextDefault,
+      rules: nextRules,
+    });
     this.recompile();
 
     if (unitNotice) emit(unitNotice);
@@ -525,7 +522,7 @@ export class RRStack {
     // Default to an active, open-ended span when no rule is provided.
     const effectiveRule: RuleJson = rule ?? { effect: 'active', options: {} };
     // Lightweight validation
-    RuleLiteSchema.parse(effectiveRule);
+    ruleLiteSchema.parse(effectiveRule);
     const next = [...(this.options.rules as RuleJson[])];
     if (index === undefined) {
       next.push(effectiveRule);

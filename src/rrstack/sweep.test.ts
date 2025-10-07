@@ -13,7 +13,7 @@ describe('sweep', () => {
         duration: { hours: 1 },
         options: { freq: 'daily', byhour: [5], byminute: [0], bysecond: [0] },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     // Blackout 05:30–05:45 same day via separate rule
@@ -23,7 +23,7 @@ describe('sweep', () => {
         duration: { minutes: 15 },
         options: { freq: 'daily', byhour: [5], byminute: [30], bysecond: [0] },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const day = Date.UTC(2024, 0, 2);

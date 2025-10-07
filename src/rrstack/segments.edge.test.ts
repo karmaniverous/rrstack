@@ -12,7 +12,7 @@ describe('segments edge cases', () => {
         duration: { minutes: 30 },
         options: { freq: 'daily', byhour: [12], byminute: [0], bysecond: [0] },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const t = Date.UTC(2024, 0, 2, 12, 0, 0);

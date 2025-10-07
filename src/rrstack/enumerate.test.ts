@@ -5,7 +5,7 @@ import { enumerateStarts, enumerationHorizon } from './coverage/enumerate';
 import type { TimeZoneId } from './types';
 
 describe('coverage/enumerate', () => {
-  const tz = 'UTC' as unknown as TimeZoneId;
+  const tz = 'UTC' as TimeZoneId;
 
   it('computes enumeration horizons for yearly, monthly, and duration-based rules', () => {
     const yearly = compileRule(

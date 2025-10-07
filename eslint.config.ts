@@ -30,7 +30,7 @@ export default [
     // Use recommended rules when available from @vitest/eslint-plugin.
     // Fall back to just enabling the plugin if configs aren’t exposed.
     const recommendedRules: Record<string, unknown> | undefined = (
-      vitest as unknown as {
+      vitest as {
         configs?: { recommended?: { rules?: Record<string, unknown> } };
       }
     ).configs?.recommended?.rules;

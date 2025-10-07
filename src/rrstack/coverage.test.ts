@@ -17,7 +17,7 @@ describe('coverage', () => {
           bysecond: [0],
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const day = Date.UTC(2024, 0, 2);

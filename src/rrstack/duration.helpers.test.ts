@@ -21,7 +21,7 @@ describe('duration helpers: toIsoDuration / fromIsoDuration', () => {
   it('rejects invalid or zero durations', () => {
     expect(() => fromIsoDuration('P1W2D')).toThrow();
     expect(() => fromIsoDuration('PT1.5H')).toThrow();
-    expect(() => toIsoDuration({} as unknown as DurationParts)).toThrow();
+    expect(() => toIsoDuration({} as DurationParts)).toThrow();
     expect(() => fromIsoDuration('P0D')).toThrow();
   });
 });

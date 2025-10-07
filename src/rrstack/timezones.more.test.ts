@@ -9,7 +9,7 @@ const msLocal = (isoLocal: string, tz: string) =>
 
 describe('cross-timezone getEffectiveBounds + descriptions', () => {
   it('Europe/London: daily 09:00 open-end; earliest and description bounds', () => {
-    const tz = 'Europe/London' as unknown as TimeZoneId;
+    const tz = 'Europe/London' as TimeZoneId;
     // Start clamp at local midnight; no end clamp (open end)
     const starts = msLocal('2024-05-01T00:00:00', 'Europe/London');
     const rule: RuleJson = {
@@ -44,7 +44,7 @@ describe('cross-timezone getEffectiveBounds + descriptions', () => {
   });
 
   it('Asia/Tokyo: monthly on the 15th at 09:00 (closed window); earliest/latest and bounds text', () => {
-    const tz = 'Asia/Tokyo' as unknown as TimeZoneId;
+    const tz = 'Asia/Tokyo' as TimeZoneId;
     const starts = msLocal('2024-04-01T00:00:00', 'Asia/Tokyo');
     const ends = msLocal('2024-06-01T00:00:00', 'Asia/Tokyo');
 
@@ -85,7 +85,7 @@ describe('cross-timezone getEffectiveBounds + descriptions', () => {
   });
 
   it('Australia/Sydney: yearly count-limited (2 occurrences) yields finite latest bound', () => {
-    const tz = 'Australia/Sydney' as unknown as TimeZoneId;
+    const tz = 'Australia/Sydney' as TimeZoneId;
     const starts = msLocal('2021-01-01T00:00:00', 'Australia/Sydney');
     const rule: RuleJson = {
       effect: 'active',
@@ -111,7 +111,7 @@ describe('cross-timezone getEffectiveBounds + descriptions', () => {
   });
 
   it('Asia/Kolkata: daily 18:30 (30m) with blackout overlay; latest end preserved; blackout description', () => {
-    const tz = 'Asia/Kolkata' as unknown as TimeZoneId; // UTC+05:30 (no DST)
+    const tz = 'Asia/Kolkata' as TimeZoneId; // UTC+05:30 (no DST)
     const starts = msLocal('2024-03-01T00:00:00', 'Asia/Kolkata');
     const ends = msLocal('2024-03-04T00:00:00', 'Asia/Kolkata'); // window through Mar 3
 

@@ -18,7 +18,7 @@ describe('bounds: open-sided detection and empty set', () => {
           // starts undefined => open start
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const b = getEffectiveBounds([rule]);
@@ -40,7 +40,7 @@ describe('bounds: open-sided detection and empty set', () => {
           starts,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const b = getEffectiveBounds([active]);

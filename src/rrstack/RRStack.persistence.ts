@@ -16,7 +16,7 @@ export const toJsonSnapshot = (
   const version = (typeof versionMaybe === 'string' && versionMaybe) || '0.0.0';
   return {
     version,
-    timezone: options.timezone as unknown as string,
+    timezone: options.timezone as string,
     timeUnit: options.timeUnit,
     defaultEffect: options.defaultEffect,
     rules: [...options.rules],

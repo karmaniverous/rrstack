@@ -90,7 +90,7 @@ describe('RRStack.update() — unit conversion and version policies', () => {
 
     const seen: Notice[] = [];
     const notices = s.update(
-      { version: 'also:bad' as unknown as string },
+      { version: 'also:bad' as string },
       { onVersionInvalid: 'warn', onNotice: (n) => seen.push(n) },
     );
     const hasInvalid = notices.some((n) => n.kind === 'versionInvalid');

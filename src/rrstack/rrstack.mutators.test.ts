@@ -78,7 +78,7 @@ describe('RRStack convenience mutators', () => {
     it('removeRule throws on non-integer or out-of-range index', () => {
       const s = new RRStack({ timezone: 'UTC', rules: [ruleAt(5, 'A')] });
       expect(() => {
-        s.removeRule(0.5 as unknown as number);
+        s.removeRule(0.5 as number);
       }).toThrow(TypeError);
       expect(() => {
         s.removeRule(-1);
@@ -94,10 +94,10 @@ describe('RRStack convenience mutators', () => {
         rules: [ruleAt(5, 'A'), ruleAt(6, 'B')],
       });
       expect(() => {
-        s.swap(0.5 as unknown as number, 1);
+        s.swap(0.5 as number, 1);
       }).toThrow(TypeError);
       expect(() => {
-        s.swap(0, 1.2 as unknown as number);
+        s.swap(0, 1.2 as number);
       }).toThrow(TypeError);
       expect(() => {
         s.swap(-1, 0);
@@ -113,7 +113,7 @@ describe('RRStack convenience mutators', () => {
         rules: [ruleAt(5, 'A'), ruleAt(6, 'B')],
       });
       expect(() => {
-        s.up(0.1 as unknown as number);
+        s.up(0.1 as number);
       }).toThrow(TypeError);
       expect(() => {
         s.up(-1);
@@ -129,7 +129,7 @@ describe('RRStack convenience mutators', () => {
         rules: [ruleAt(5, 'A'), ruleAt(6, 'B')],
       });
       expect(() => {
-        s.down(1.1 as unknown as number);
+        s.down(1.1 as number);
       }).toThrow(TypeError);
       expect(() => {
         s.down(-1);
@@ -145,7 +145,7 @@ describe('RRStack convenience mutators', () => {
         rules: [ruleAt(5, 'A'), ruleAt(6, 'B')],
       });
       expect(() => {
-        s.top(1.5 as unknown as number);
+        s.top(1.5 as number);
       }).toThrow(TypeError);
       expect(() => {
         s.top(-1);
@@ -161,7 +161,7 @@ describe('RRStack convenience mutators', () => {
         rules: [ruleAt(5, 'A'), ruleAt(6, 'B')],
       });
       expect(() => {
-        s.bottom(2.2 as unknown as number);
+        s.bottom(2.2 as number);
       }).toThrow(TypeError);
       expect(() => {
         s.bottom(-1);

@@ -9,7 +9,7 @@ const sec = (isoLocal: string, tz: string) =>
 
 describe("'s' timeUnit: DST handling and rounded ends", () => {
   const tz = 'America/Chicago';
-  const tzId = tz as unknown as TimeZoneId;
+  const tzId = tz as TimeZoneId;
 
   it('spring forward: 2021-03-14 01:30 + 1h => 03:30 local; 3600 seconds', () => {
     const rule: RuleJson = {

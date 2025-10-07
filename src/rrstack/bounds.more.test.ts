@@ -31,7 +31,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
 
@@ -58,7 +58,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       's',
     );
 
@@ -86,7 +86,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
 
@@ -104,7 +104,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
 
@@ -133,7 +133,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     // Blackout exactly on the first day at 05:00–06:00 (same instant tie).
@@ -152,7 +152,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
 
@@ -187,7 +187,7 @@ describe('bounds: additional scenarios', () => {
           ends: probeEnds,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     // Later rule: active 00:00–06:00 on Jan 1 yearly (overrides blackout at probe)
@@ -206,7 +206,7 @@ describe('bounds: additional scenarios', () => {
           ends: probeEnds,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
 
@@ -234,7 +234,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const blk1112 = compileRule(
@@ -252,7 +252,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
 
@@ -279,7 +279,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const blackoutEarly = compileRule(
@@ -295,7 +295,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
 
@@ -323,7 +323,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const blk = compileRule(
@@ -341,7 +341,7 @@ describe('bounds: additional scenarios', () => {
           ends,
         },
       },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
 
@@ -354,7 +354,7 @@ describe('bounds: additional scenarios', () => {
   });
 
   it("'s' timeUnit DST spring forward (America/Chicago): 01:30 + 1h => 03:30 local", () => {
-    const tz = 'America/Chicago' as unknown as TimeZoneId;
+    const tz = 'America/Chicago' as TimeZoneId;
     const starts = secLocal('2021-03-14T00:00:00', 'America/Chicago');
     const ends = secLocal('2021-03-15T00:00:00', 'America/Chicago');
 
@@ -389,7 +389,7 @@ describe('bounds: additional scenarios', () => {
   });
 
   it("'s' timeUnit DST fall back (America/Chicago): 01:30 + 1h => 01:30 local", () => {
-    const tz = 'America/Chicago' as unknown as TimeZoneId;
+    const tz = 'America/Chicago' as TimeZoneId;
     const starts = secLocal('2021-11-07T00:00:00', 'America/Chicago');
     const ends = secLocal('2021-11-08T00:00:00', 'America/Chicago');
 

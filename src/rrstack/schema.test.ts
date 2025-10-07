@@ -44,8 +44,7 @@ const getDefs = (
   root: JSONSchema7,
 ): Record<string, JSONSchema7Definition> | undefined =>
   (root.definitions as Record<string, JSONSchema7Definition> | undefined) ??
-  (root as unknown as { $defs?: Record<string, JSONSchema7Definition> })
-    .$defs ??
+  (root as { $defs?: Record<string, JSONSchema7Definition> }).$defs ??
   undefined;
 
 const locateRRRoot = (root: JSONSchema7): JSONSchema7 => {
@@ -145,7 +144,7 @@ describe('RRSTACK_CONFIG_SCHEMA export', () => {
         ?.freq,
     );
     expect(freq?.type).toBe('string');
-    const enumVals = (freq as unknown as { enum?: string[] }).enum ?? [];
+    const enumVals = (freq as { enum?: string[] }).enum ?? [];
     expect(enumVals).toContain('daily');
     expect(enumVals).toContain('monthly');
   });

@@ -5,7 +5,7 @@ import { describeCompiledRule, describeRule } from '../describe';
 import type { RuleJson, TimeZoneId } from '../types';
 
 describe('rule description helpers', () => {
-  const tz = 'UTC' as unknown as TimeZoneId;
+  const tz = 'UTC' as TimeZoneId;
 
   const rule: RuleJson = {
     effect: 'active',

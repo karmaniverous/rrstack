@@ -10,7 +10,7 @@ describe('bounds: span rules', () => {
     const end = Date.UTC(2024, 0, 10, 7, 0, 0);
     const cr = compileRule(
       { effect: 'active', options: { starts: start, ends: end } },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const b = getEffectiveBounds([cr]);
@@ -23,7 +23,7 @@ describe('bounds: span rules', () => {
     const end = Date.UTC(1970, 0, 2, 0, 0, 0);
     const cr = compileRule(
       { effect: 'active', options: { ends: end } },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const b = getEffectiveBounds([cr]);
@@ -36,7 +36,7 @@ describe('bounds: span rules', () => {
     const start = Date.UTC(2024, 0, 10, 0, 0, 0);
     const cr = compileRule(
       { effect: 'active', options: { starts: start } },
-      'UTC' as unknown as TimeZoneId,
+      'UTC' as TimeZoneId,
       'ms',
     );
     const b = getEffectiveBounds([cr]);

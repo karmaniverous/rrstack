@@ -14,7 +14,10 @@ import { fileURLToPath } from 'node:url';
 import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 import { z } from 'zod';
 
-import { OptionsSchema, RuleLiteSchema } from '../src/rrstack/RRStack.options';
+import {
+  ruleLiteSchema,
+  ruleOptionsSchema,
+} from '../src/rrstack/RRStack.options';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -55,8 +58,7 @@ const getDefs = (
   root: JSONSchema7,
 ): Record<string, JSONSchema7Definition> | undefined =>
   (root.definitions as Record<string, JSONSchema7Definition> | undefined) ??
-  (root as unknown as { $defs?: Record<string, JSONSchema7Definition> })
-    .$defs ??
+  (root as { $defs?: Record<string, JSONSchema7Definition> }).$defs ??
   undefined;
 
 const locateRRRoot = (root: JSONSchema7): JSONSchema7 => {
@@ -118,17 +120,17 @@ const ensureFreqStringEnum = (root: JSONSchema7): void => {
   if (!freq) return;
 
   // Remove any wrapper so only the string enum remains.
-  delete (freq as unknown as { anyOf?: unknown }).anyOf;
+  delete (freq as { anyOf?: unknown }).anyOf;
 
   freq.type = 'string';
-  (freq as unknown as { enum?: readonly string[] }).enum = [...FREQ_VALUES];
+  (freq as { enum?: readonly string[] }).enum = [...FREQ_VALUES];
 };
 
 async function main(): Promise<void> {
   // Build a strengthened Options schema for JSON Schema generation.
-  const RRStackOptionsZod = OptionsSchema.extend({
+  const RRStackOptionsZod = ruleOptionsSchema.extend({
     // Preserve optional + default so the generated schema does not require 'rules'.
-    rules: z.array(RuleLiteSchema).default([]).optional(),
+    rules: z.array(ruleLiteSchema).default([]).optional(),
   });
 
   // 1) Generate base JSON Schema (draft-07) for RRStackOptions (no version) using Zod v4 native conversion.
@@ -142,7 +144,7 @@ async function main(): Promise<void> {
       },
     ) => unknown;
   };
-  const Z = z as unknown as ZodWithToJSON;
+  const Z = z as ZodWithToJSON;
   const schema = Z.toJSONSchema(RRStackOptionsZod, 'RRStackOptions', {
     $refStrategy: 'none',
   }) as JSONSchema7;

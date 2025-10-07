@@ -11,7 +11,7 @@ import type { RuleJson, TimeZoneId } from './types';
 
 describe('coverage/patterns structural matches', () => {
   it('matches DAILY times on the local day', () => {
-    const tz = 'UTC' as unknown as TimeZoneId;
+    const tz = 'UTC' as TimeZoneId;
     const cr = compileRule(
       {
         effect: 'active',
@@ -26,7 +26,7 @@ describe('coverage/patterns structural matches', () => {
     expect(localDayMatchesDailyTimes(cr, t)).toBe(true);
   });
   it('matches MONTHLY 3rd Tuesday at 05:00 in America/Chicago', () => {
-    const tz = 'America/Chicago' as unknown as TimeZoneId;
+    const tz = 'America/Chicago' as TimeZoneId;
     const rule: RuleJson = {
       effect: 'active',
       duration: { hours: 1 },
@@ -51,7 +51,7 @@ describe('coverage/patterns structural matches', () => {
     expect(localDayMatchesCommonPatterns(cr, tFalse)).toBe(false);
   });
   it('matches YEARLY bymonth/bymonthday at 05:00 in America/Chicago', () => {
-    const tz = 'America/Chicago' as unknown as TimeZoneId;
+    const tz = 'America/Chicago' as TimeZoneId;
     const rule: RuleJson = {
       effect: 'active',
       duration: { hours: 1 },

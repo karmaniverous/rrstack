@@ -21,6 +21,7 @@ import type {
 
 // DurationParts validation: non-negative integers, and total > 0.
 export const NonNegInt = z.number().int().min(0);
+
 export const DurationPartsSchema = z
   .object({
     years: NonNegInt.optional(),
@@ -44,7 +45,7 @@ export const DurationPartsSchema = z
     { message: 'Duration must be strictly positive' },
   );
 
-export const TimeZoneIdSchema = z
+export const timezoneIdSchema = z
   .string()
   .min(1)
   .refine((tz) => IANAZone.isValidZone(tz), {
@@ -52,10 +53,10 @@ export const TimeZoneIdSchema = z
   })
   .brand<'TimeZoneId'>();
 
-export const OptionsSchema = z.object({
+export const ruleOptionsSchema = z.object({
   // Optional version in the unified input/serialization shape (ignored on input).
   version: z.string().optional(),
-  timezone: TimeZoneIdSchema,
+  timezone: timezoneIdSchema,
   timeUnit: z.enum(['ms', 's']).default(DEFAULT_TIME_UNIT).optional(),
   defaultEffect: z
     .enum(['active', 'blackout', 'auto'])
@@ -63,8 +64,9 @@ export const OptionsSchema = z.object({
     .optional(),
   rules: z.array(z.any()).default([]).optional(),
 });
+
 // String literal-union for RRULE frequency (lower-case human-readable).
-const FreqSchema = z.enum([
+const freqSchema = z.enum([
   'yearly',
   'monthly',
   'weekly',
@@ -73,14 +75,15 @@ const FreqSchema = z.enum([
   'minutely',
   'secondly',
 ] as const);
-export const RuleLiteSchema = z
+
+export const ruleLiteSchema = z
   .object({
     effect: z.enum(['active', 'blackout']),
     duration: DurationPartsSchema.optional(),
     options: z
       .object({
         // freq optional (when omitted ⇒ span rule)
-        freq: FreqSchema.optional(),
+        freq: freqSchema.optional(),
         starts: z.number().optional(),
         ends: z.number().optional(),
       })
@@ -88,8 +91,7 @@ export const RuleLiteSchema = z
     label: z.string().optional(),
   })
   .superRefine((val, ctx) => {
-    const rawFreq = (val as unknown as { options: { freq?: unknown } }).options
-      .freq;
+    const rawFreq = (val as { options: { freq?: unknown } }).options.freq;
     const hasFreq = typeof rawFreq === 'string';
     if (hasFreq) {
       // Recurring rule must provide a duration.
@@ -113,12 +115,12 @@ export const RuleLiteSchema = z
   });
 
 /**
- * Normalize constructor options using the OptionsSchema.
+ * Normalize constructor options using the ruleOptionsSchema.
  */
 export const normalizeOptions = (
   opts: RRStackOptions,
 ): RRStackOptionsNormalized => {
-  const parsed = OptionsSchema.parse({
+  const parsed = ruleOptionsSchema.parse({
     version: opts.version,
     timezone: opts.timezone,
     timeUnit: opts.timeUnit,
@@ -134,7 +136,7 @@ export const normalizeOptions = (
   const rulesArr: readonly RuleJson[] = Object.freeze(
     rawRules.map((r) => {
       // Reuse the lightweight rule schema; full validation still occurs during compilation.
-      return RuleLiteSchema.parse(r) as RuleJson;
+      return ruleLiteSchema.parse(r) as RuleJson;
     }),
   );
 

@@ -134,7 +134,7 @@ export const compileRule = (
   timezone: TimeZoneId,
   unit: UnixTimeUnit,
 ): CompiledRule => {
-  const freqRaw = (rule.options as unknown as { freq?: unknown }).freq;
+  const freqRaw = (rule.options as { freq?: unknown }).freq;
   const isSpan = freqRaw === undefined;
 
   if (!isSpan) {

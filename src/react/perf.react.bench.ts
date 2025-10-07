@@ -21,7 +21,7 @@ import { useRRStack } from './useRRStack';
 
 // React 18/19: mark environment as act-enabled for benches to avoid warnings.
 (
-  globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+  globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
 // Tiny rule factory for quick façade operations

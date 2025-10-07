@@ -194,7 +194,7 @@ export const wallTimeToEpoch = (
   timeUnit: UnixTimeUnit = DEFAULT_TIME_UNIT,
 ): number => {
   assertValidDate(date);
-  assertValidZone(timezone as unknown as string);
+  assertValidZone(timezone as string);
   assertValidUnit(timeUnit);
 
   // Read UTC fields to treat the Date as "floating" wall time.
@@ -205,7 +205,7 @@ export const wallTimeToEpoch = (
   const mi = date.getUTCMinutes();
   const ss = date.getUTCSeconds();
 
-  const dt = fromWallParts(y, m, d, hh, mi, ss, timezone as unknown as string);
+  const dt = fromWallParts(y, m, d, hh, mi, ss, timezone as string);
   return toEpoch(dt, timeUnit);
 };
 
@@ -219,13 +219,13 @@ export const dateOnlyToEpoch = (
   timeUnit: UnixTimeUnit = DEFAULT_TIME_UNIT,
 ): number => {
   assertValidDate(date);
-  assertValidZone(timezone as unknown as string);
+  assertValidZone(timezone as string);
   assertValidUnit(timeUnit);
 
   const y = date.getUTCFullYear();
   const m = date.getUTCMonth() + 1;
   const d = date.getUTCDate();
-  const dt = fromWallParts(y, m, d, 0, 0, 0, timezone as unknown as string);
+  const dt = fromWallParts(y, m, d, 0, 0, 0, timezone as string);
   return toEpoch(dt, timeUnit);
 };
 
@@ -260,12 +260,12 @@ export const epochToWallDate = (
   timezone: TimeZoneId,
   timeUnit: UnixTimeUnit = DEFAULT_TIME_UNIT,
 ): Date => {
-  assertValidZone(timezone as unknown as string);
+  assertValidZone(timezone as string);
   assertValidUnit(timeUnit);
   const dt =
     timeUnit === 'ms'
-      ? DateTime.fromMillis(epoch, { zone: timezone as unknown as string })
-      : DateTime.fromSeconds(epoch, { zone: timezone as unknown as string });
+      ? DateTime.fromMillis(epoch, { zone: timezone as string })
+      : DateTime.fromSeconds(epoch, { zone: timezone as string });
   // Build a floating Date (UTC fields set to local wall clock fields).
   return datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
 };

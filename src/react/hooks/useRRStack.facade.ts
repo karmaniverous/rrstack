@@ -8,7 +8,7 @@ export const createRRStackFacade = (
   rrstackRef: RefObject<RRStack>,
   mutate: MutateManager,
 ): RRStack =>
-  new Proxy(rrstackRef.current as unknown as object, {
+  new Proxy(rrstackRef.current as object, {
     get(_t, prop) {
       const staged = (): { rules?: RuleJson[]; timezone?: string } | null =>
         mutate.getStaged();
@@ -91,7 +91,7 @@ export const createRRStackFacade = (
       }
       // fall through to real instance for all other members
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
-      return (rrstackRef.current as unknown as Record<PropertyKey, any>)[prop];
+      return (rrstackRef.current as Record<PropertyKey, any>)[prop];
     },
     set(_t, prop, value) {
       if (prop === 'timezone' && typeof value === 'string') {
@@ -108,4 +108,4 @@ export const createRRStackFacade = (
       // block unknown direct sets to keep façade deterministic
       return false;
     },
-  }) as unknown as RRStack;
+  }) as RRStack;

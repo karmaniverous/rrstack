@@ -5,7 +5,7 @@ import { describeRule } from '../describe';
 import type { RuleJson, TimeZoneId } from '../types';
 
 describe('rule description: weekday position and time', () => {
-  const tz = 'UTC' as unknown as TimeZoneId;
+  const tz = 'UTC' as TimeZoneId;
 
   it('monthly 3rd Tuesday at 05:00 shows "third Tuesday" and "5:00"', () => {
     const rule: RuleJson = {

@@ -192,7 +192,7 @@ JSON Schema
 - The schema is produced by scripts/gen-schema.ts using Zod's native JSON Schema conversion.
 - OpenAPI-safe policy:
   - The published JSON Schema intentionally omits advanced conditional/positivity constraints (e.g., “duration required when freq is present”, “at least one positive duration part”).
-  - These constraints are enforced at runtime by Zod (RuleLiteSchema/superRefine and compilation checks).
+  - These constraints are enforced at runtime by Zod (ruleLiteSchema/superRefine and compilation checks).
   - Rationale: improve compatibility with OpenAPI tooling such as serverless-openapi-documenter, which may misinterpret anyOf/required combinations.
 
 Algorithms (unit/timezone-aware; streaming where applicable)
@@ -231,8 +231,8 @@ Coverage helpers and horizons
 Validation policy (zod)
 
 - Minimal runtime checks:
-  - OptionsSchema: RRStackOptions parsing
-  - RuleLiteSchema: lightweight rule validation at mutation boundaries
+  - ruleOptionsSchema: RRStackOptions parsing
+  - ruleLiteSchema: lightweight rule validation at mutation boundaries
 - Full rrule options validation occurs during compilation.
 
 Packaging and exports

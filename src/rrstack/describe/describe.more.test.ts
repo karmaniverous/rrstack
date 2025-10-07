@@ -5,7 +5,7 @@ import { describeRule } from '../describe';
 import type { RuleJson, TimeZoneId } from '../types';
 
 describe('rule descriptions (extended scenarios)', () => {
-  const tz = 'UTC' as unknown as TimeZoneId;
+  const tz = 'UTC' as TimeZoneId;
 
   it('appends COUNT phrasing (“for N occurrences”)', () => {
     const rule: RuleJson = {
