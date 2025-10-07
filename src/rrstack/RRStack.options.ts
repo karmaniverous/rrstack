@@ -11,7 +11,10 @@ import { IANAZone } from 'luxon';
 import { z } from 'zod';
 
 import { DEFAULT_DEFAULT_EFFECT, DEFAULT_TIME_UNIT } from './defaults';
+// Accept Weekday instances in JSON input where callers use rrule helpers.
+import { Weekday } from './rrule.runtime';
 import type {
+  // types only
   RRStackOptions,
   RRStackOptionsNormalized,
   RuleJson,
@@ -78,7 +81,7 @@ const freqSchema = z.enum([
 
 /**
  * Enumerated JSON-friendly RRULE options accepted in rule.options.
- * All keys are optional; when the entire options block is omitted, it defaults to {}.
+ * All keys are optional; when the entire options block is omitted, it defaults to an empty object.
  * Strict: unknown keys are rejected.
  */
 const RRuleJsonOptionsSchema = z
@@ -152,11 +155,16 @@ const RRuleJsonOptionsSchema = z
           .refine((n) => n !== 0),
       ])
       .optional(),
-    // For JSON input we accept weekday as 0..6 (MO..SU per rrule numeric form).
+    // For JSON input we accept weekday as:
+    // - number 0..6 (MO..SU per rrule numeric form), or
+    // - Weekday instances (from rrule), or a mixed array of both.
     byweekday: z
       .union([
-        z.array(z.number().int().min(0).max(6)),
+        z.array(
+          z.union([z.number().int().min(0).max(6), z.instanceof(Weekday)]),
+        ),
         z.number().int().min(0).max(6),
+        z.instanceof(Weekday),
       ])
       .optional(),
     byhour: z
@@ -184,7 +192,7 @@ export const ruleLiteSchema = z
   .object({
     effect: z.enum(['active', 'blackout']),
     duration: DurationPartsSchema.optional(),
-    // Strictly enumerated options; defaults to {} when omitted
+    // Strictly enumerated options; defaults to an empty object when omitted
     options: RRuleJsonOptionsSchema.default({}).optional(),
     label: z.string().optional(),
   })

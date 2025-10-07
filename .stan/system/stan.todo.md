@@ -155,3 +155,6 @@ Completed (recent)
 
 - Engine tests added:
   - update(): unit-change retained vs incoming rules, version down/invalid policies, timeUnit policy error/warn, onNotice ordering.
+
+- JSON input strictness (follow-up):
+  - Kept rule.options strict and enumerated while allowing `byweekday` to accept either numeric 0..6, rrule Weekday instances, or mixed arrays. This preserves type-safety for keys and unblocks existing tests/usage. Also resolved TSDoc warnings by avoiding ambiguous `{}` in comments.
