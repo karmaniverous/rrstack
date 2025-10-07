@@ -1,6 +1,6 @@
 # RRStack — Development Plan
 
-When updated: 2025-10-06 (UTC)
+When updated: 2025-10-07 (UTC)
 
 Next up (near‑term, prioritized)
 
@@ -158,3 +158,4 @@ Completed (recent)
 
 - JSON input strictness (follow-up):
   - Kept rule.options strict and enumerated while allowing `byweekday` to accept either numeric 0..6, rrule Weekday instances, or mixed arrays. This preserves type-safety for keys and unblocks existing tests/usage. Also resolved TSDoc warnings by avoiding ambiguous `{}` in comments.
+  - Split schemas: rrstackJsonSchema (JSON-safe; numeric byweekday only) and rrstackRuntimeSchema (accepts Weekday). normalizeOptions now uses the runtime schema; the JSON Schema generator continues to use the JSON schema (no custom types).

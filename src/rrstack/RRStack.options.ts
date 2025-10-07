@@ -11,7 +11,7 @@ import { IANAZone } from 'luxon';
 import { z } from 'zod';
 
 import { DEFAULT_DEFAULT_EFFECT, DEFAULT_TIME_UNIT } from './defaults';
-// Accept Weekday instances in JSON input where callers use rrule helpers.
+// Runtime accepts rrule Weekday instances (tests and TS callers commonly use them).
 import { Weekday } from './rrule.runtime';
 import type {
   // types only
@@ -79,120 +79,113 @@ const freqSchema = z.enum([
   'secondly',
 ] as const);
 
-/**
- * Enumerated JSON-friendly RRULE options accepted in rule.options.
- * All keys are optional; when the entire options block is omitted, it defaults to an empty object.
- * Strict: unknown keys are rejected.
- */
-const RRuleJsonOptionsSchema = z
-  .object({
-    // RRStack JSON extras
-    freq: freqSchema.optional(),
-    starts: z.number().optional(),
-    ends: z.number().optional(),
-    // RRULE core keys (JSON-friendly)
-    interval: z.number().int().positive().optional(),
-    wkst: z.number().int().optional(),
-    count: z.number().int().positive().optional(),
-    bysetpos: z.union([z.array(z.number().int()), z.number().int()]).optional(),
-    bymonth: z
-      .union([
-        z.array(z.number().int().min(1).max(12)),
-        z.number().int().min(1).max(12),
-      ])
-      .optional(),
-    bymonthday: z
-      .union([
-        z.array(
-          z
-            .number()
-            .int()
-            .min(-31)
-            .max(31)
-            .refine((n) => n !== 0),
-        ),
+// Helper to build a strict options shape, parameterized by the weekday element type.
+const weekdayNumber = z.number().int().min(0).max(6);
+const makeOptionsShape = (weekdayAtom: z.ZodType) => ({
+  // RRStack JSON extras
+  freq: freqSchema.optional(),
+  starts: z.number().optional(),
+  ends: z.number().optional(),
+  // RRULE core keys (JSON-friendly)
+  interval: z.number().int().positive().optional(),
+  wkst: z.number().int().optional(),
+  count: z.number().int().positive().optional(),
+  bysetpos: z.union([z.array(z.number().int()), z.number().int()]).optional(),
+  bymonth: z
+    .union([
+      z.array(z.number().int().min(1).max(12)),
+      z.number().int().min(1).max(12),
+    ])
+    .optional(),
+  bymonthday: z
+    .union([
+      z.array(
         z
           .number()
           .int()
           .min(-31)
           .max(31)
           .refine((n) => n !== 0),
-      ])
-      .optional(),
-    byyearday: z
-      .union([
-        z.array(
-          z
-            .number()
-            .int()
-            .min(-366)
-            .max(366)
-            .refine((n) => n !== 0),
-        ),
+      ),
+      z
+        .number()
+        .int()
+        .min(-31)
+        .max(31)
+        .refine((n) => n !== 0),
+    ])
+    .optional(),
+  byyearday: z
+    .union([
+      z.array(
         z
           .number()
           .int()
           .min(-366)
           .max(366)
           .refine((n) => n !== 0),
-      ])
-      .optional(),
-    byweekno: z
-      .union([
-        z.array(
-          z
-            .number()
-            .int()
-            .min(-53)
-            .max(53)
-            .refine((n) => n !== 0),
-        ),
+      ),
+      z
+        .number()
+        .int()
+        .min(-366)
+        .max(366)
+        .refine((n) => n !== 0),
+    ])
+    .optional(),
+  byweekno: z
+    .union([
+      z.array(
         z
           .number()
           .int()
           .min(-53)
           .max(53)
           .refine((n) => n !== 0),
-      ])
-      .optional(),
-    // For JSON input we accept weekday as:
-    // - number 0..6 (MO..SU per rrule numeric form), or
-    // - Weekday instances (from rrule), or a mixed array of both.
-    byweekday: z
-      .union([
-        z.array(
-          z.union([z.number().int().min(0).max(6), z.instanceof(Weekday)]),
-        ),
-        z.number().int().min(0).max(6),
-        z.instanceof(Weekday),
-      ])
-      .optional(),
-    byhour: z
-      .union([
-        z.array(z.number().int().min(0).max(23)),
-        z.number().int().min(0).max(23),
-      ])
-      .optional(),
-    byminute: z
-      .union([
-        z.array(z.number().int().min(0).max(59)),
-        z.number().int().min(0).max(59),
-      ])
-      .optional(),
-    bysecond: z
-      .union([
-        z.array(z.number().int().min(0).max(59)),
-        z.number().int().min(0).max(59),
-      ])
-      .optional(),
-  })
+      ),
+      z
+        .number()
+        .int()
+        .min(-53)
+        .max(53)
+        .refine((n) => n !== 0),
+    ])
+    .optional(),
+  byweekday: z.union([z.array(weekdayAtom), weekdayAtom]).optional(),
+  byhour: z
+    .union([
+      z.array(z.number().int().min(0).max(23)),
+      z.number().int().min(0).max(23),
+    ])
+    .optional(),
+  byminute: z
+    .union([
+      z.array(z.number().int().min(0).max(59)),
+      z.number().int().min(0).max(59),
+    ])
+    .optional(),
+  bysecond: z
+    .union([
+      z.array(z.number().int().min(0).max(59)),
+      z.number().int().min(0).max(59),
+    ])
+    .optional(),
+});
+
+/** Strict, enumerated JSON options; weekday is numeric (0..6). */
+const RRuleJsonOptionsSchema = z
+  .object(makeOptionsShape(weekdayNumber))
+  .strict();
+/** Strict, enumerated runtime options; weekday may be numeric or rrule Weekday. */
+const RRuleRuntimeOptionsSchema = z
+  .object(makeOptionsShape(z.union([weekdayNumber, z.instanceof(Weekday)])))
   .strict();
 
-export const ruleLiteSchema = z
+/** JSON rule schema (strict keys; options defaults to empty). */
+export const ruleLiteSchemaJson = z
   .object({
     effect: z.enum(['active', 'blackout']),
     duration: DurationPartsSchema.optional(),
-    // Strictly enumerated options; defaults to an empty object when omitted
     options: RRuleJsonOptionsSchema.default({}).optional(),
     label: z.string().optional(),
   })
@@ -220,14 +213,42 @@ export const ruleLiteSchema = z
     }
   });
 
+/** Runtime rule schema (strict keys; options defaults to empty). */
+export const ruleLiteSchema = z
+  .object({
+    effect: z.enum(['active', 'blackout']),
+    duration: DurationPartsSchema.optional(),
+    options: RRuleRuntimeOptionsSchema.default({}).optional(),
+    label: z.string().optional(),
+  })
+  .superRefine((val, ctx) => {
+    const rawFreq = (val as { options?: { freq?: unknown } }).options?.freq;
+    const hasFreq = typeof rawFreq === 'string';
+    if (hasFreq) {
+      if (!val.duration) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Recurring rules require a positive duration.',
+          path: ['duration'],
+        });
+      }
+    } else if (val.duration) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Span rules must omit duration.',
+        path: ['duration'],
+      });
+    }
+  });
+
 /**
  * Unified JSON input schema for RRStack configuration.
  * - rules: optional with default [].
- * - rule.options: optional with default {} (when omitted).
+ * - rule options: optional with default empty object when omitted.
  * This is the exact shape accepted by the published JSON Schema.
  */
 export const rrstackJsonSchema = ruleOptionsSchema.extend({
-  rules: z.array(ruleLiteSchema).default([]).optional(),
+  rules: z.array(ruleLiteSchemaJson).default([]).optional(),
 });
 /**
  * Type that corresponds exactly to the JSON Schema (input side).
@@ -235,13 +256,18 @@ export const rrstackJsonSchema = ruleOptionsSchema.extend({
  */
 export type RRStackJson = z.input<typeof rrstackJsonSchema>;
 
+/** Runtime input schema (TS callers/tests; accepts Weekday in byweekday). */
+const rrstackRuntimeSchema = ruleOptionsSchema.extend({
+  rules: z.array(ruleLiteSchema).default([]).optional(),
+});
+
 /**
  * Normalize constructor options using the ruleOptionsSchema.
  */
 export const normalizeOptions = (
   opts: RRStackOptions,
 ): RRStackOptionsNormalized => {
-  const parsed = rrstackJsonSchema.parse({
+  const parsed = rrstackRuntimeSchema.parse({
     version: opts.version,
     timezone: opts.timezone,
     timeUnit: opts.timeUnit,
@@ -257,7 +283,7 @@ export const normalizeOptions = (
   const rulesArr: readonly RuleJson[] = Object.freeze(
     rawRules.map((r) => {
       // Reuse the lightweight rule schema; full validation still occurs during compilation.
-      // ruleLiteSchema supplies defaults (e.g., options:{}).
+      // ruleLiteSchema supplies defaults (options empty when omitted).
       return ruleLiteSchema.parse(r) as RuleJson;
     }),
   );
