@@ -16,10 +16,15 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Descriptions: suppress "from …" for open-start recurrences
+  - Descriptor now sets clamps.starts for recurring rules only when the user
+    provided a start clamp (isOpenStart === false). Open-start rules no longer
+    render a "from" date in descriptions. Ends remain gated on isOpenEnd.
+
+
 - Types: fix RRStackJson byweekday typing
   - Updated the zod options shape builder in RRStack.options.ts to be generic
-    over the provided weekday schema (ZodTypeAny). This preserves the concrete
-    input type so RRStackJson.rules[].options.byweekday is number|number[]|undefined.
+    over the provided weekday schema (ZodTypeAny). This preserves the concrete    input type so RRStackJson.rules[].options.byweekday is number|number[]|undefined.
 - DescribeConfig flattening (final cleanup):
   - Updated the remaining test (rrstack.describe.test.ts) to use the flattened
     keys (showBounds/boundsFormat) instead of the old nested bounds config.  - Resolves the last TS/build error and assertion for recurring bounds formatting.

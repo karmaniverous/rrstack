@@ -114,17 +114,24 @@ export const buildRuleDescriptor = (c: CompiledRule): RuleDescriptor => {
       if (idx) weekdays.push({ weekday: idx });
     }
   }
+  // Only surface user-provided clamps in the descriptor:
+  // - starts: present when the JSON 'starts' existed (isOpenStart === false).
+  // - ends: present when the JSON 'ends' existed (isOpenEnd === false).
   const untilDate = (r.options as { until?: Date | null }).until ?? undefined;
   const dtstart = (r.options as { dtstart?: Date | null }).dtstart ?? undefined;
+  let startsEpoch: number | undefined;
+  let endsEpoch: number | undefined;
+  if (!r.isOpenStart && dtstart instanceof Date) {
+    startsEpoch = floatingDateToZonedEpoch(dtstart, r.tz, r.unit);
+  }
+  if (!r.isOpenEnd && untilDate instanceof Date) {
+    endsEpoch = floatingDateToZonedEpoch(untilDate, r.tz, r.unit);
+  }
   const clamps =
-    dtstart || untilDate
+    typeof startsEpoch === 'number' || typeof endsEpoch === 'number'
       ? {
-          starts: dtstart
-            ? floatingDateToZonedEpoch(dtstart, r.tz, r.unit)
-            : undefined,
-          ends: untilDate
-            ? floatingDateToZonedEpoch(untilDate, r.tz, r.unit)
-            : undefined,
+          starts: startsEpoch,
+          ends: endsEpoch,
         }
       : undefined;
   const wkst = (r.options as { wkst?: unknown }).wkst;
@@ -169,9 +176,12 @@ export const buildRuleDescriptor = (c: CompiledRule): RuleDescriptor => {
       wkst: toWkst(wkst),
     },
     count: (r.options as { count?: number | null }).count ?? undefined,
-    until: untilDate
-      ? floatingDateToZonedEpoch(untilDate, r.tz, r.unit)
-      : undefined,
+    // Keep 'until' mirrored as a convenience for translators, but only when a real
+    // user-provided end exists (isOpenEnd === false).
+    until:
+      !r.isOpenEnd && untilDate instanceof Date
+        ? floatingDateToZonedEpoch(untilDate, r.tz, r.unit)
+        : undefined,
   };
   return desc;
 };
