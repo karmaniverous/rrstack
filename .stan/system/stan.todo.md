@@ -17,11 +17,15 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- DescribeConfig flattening (final cleanup):
+  - Updated the remaining test (rrstack.describe.test.ts) to use the flattened
+    keys (showBounds/boundsFormat) instead of the old nested bounds config.
+  - Resolves the last TS/build error and assertion for recurring bounds formatting.
+
 - Descriptions & lint fixes:
   - Fixed recurring bounds (“from …”) formatting to honor the rule’s timezone by converting rrule “floating” dtstart/until via floatingDateToZonedEpoch when building descriptor clamps. This resolves America/Chicago (local midnight) and Europe/London (01:00 vs 00:00) test failures.
   - Adjusted yearly multi‑month cadence to use Oxford‑comma “or” lists for months and (when BYSETPOS/nth present) for weekdays, matching tests (e.g., “in january, february, or april … on the third tuesday, wednesday, or thursday”).
   - Removed unused import in cadence.ts and satisfied @typescript-eslint/restrict-template-expressions by stringifying numeric template operands in helpers.ts.
-
 - API alignment:
   - Updated RRStack.describeRule to accept the unified DescribeConfig and removed the legacy DescribeOptions import to resolve typecheck errors.
 - Descriptions (inline bounds and limits gating):

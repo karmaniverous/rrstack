@@ -94,7 +94,8 @@ describe('RRStack.describeRule(index, opts)', () => {
     };
     const stack = new RRStack({ timezone: 'UTC', rules: [rule] });
     const text = stack.describeRule(0, {
-      bounds: { show: true, format: 'yyyy-LL-dd' },
+      showBounds: true,
+      boundsFormat: 'yyyy-LL-dd',
     });
     expect(text).toContain('from 2025-04-01');
     expect(text).toContain('until 2025-04-02');
@@ -103,7 +104,6 @@ describe('RRStack.describeRule(index, opts)', () => {
     const stack = new RRStack({ timezone: 'UTC', rules: [] });
     expect(() => stack.describeRule(0)).toThrow();
   });
-
   it('America/Chicago: daily 1 day with starts clamp renders local midnight bounds', () => {
     // starts = 1759294800000 ms = 2025-10-01T05:00:00Z, which is 00:00 local in America/Chicago (DST active).
     const rule: RuleJson = {
