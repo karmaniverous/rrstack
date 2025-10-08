@@ -6,7 +6,6 @@ Next up (near‑term, prioritized)
 
 1. Docs polish
    - Consider a dedicated "Time conversion helpers" page in Handbook if usage grows; otherwise keep README section concise.
-
 2. Tests
    - Expand table-driven coverage for additional IANA zones if CI ICU permits; keep deterministic across environments.
 
@@ -18,9 +17,11 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Style (descriptions):
+  - Removed the colon after the duration in rule descriptions (e.g., "Active for 1 hour every day at 5:00"). Updated tests and docs examples accordingly.
+
 - rrule floating-date seam (host-agnostic):
   - Construct rrule Dates with rrule.datetime(y,m,d,hh,mi,ss) (UTC fields carrying wall parts in the rule tz). Decode via UTC getters and rebuild Luxon DateTime in the rule tz for epoch math. Eliminates host offset drift.
-
 - Bounds timezone remediation:
   - Implemented rrule README cautions: rrule-facing Dates are now built with host-local constructors from wall parts in the rule timezone (floating).
   - Decoding uses LOCAL getters on rrule Dates and Luxon to obtain epoch in the rule timezone (ms/s unit-aware).

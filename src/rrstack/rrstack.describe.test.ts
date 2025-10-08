@@ -124,7 +124,7 @@ describe('RRStack.describeRule(index, opts)', () => {
       boundsFormat: 'yyyy-LL-dd HH:mm',
     });
     // Core phrasing
-    expect(text).toContain('Active for 1 day: every day');
+    expect(text).toContain('Active for 1 day every day');
     // Bounds should reflect local midnight, not a UTC-based time
     expect(text).toContain('from 2025-10-01 00:00');
     // Guard against the incorrect prior value

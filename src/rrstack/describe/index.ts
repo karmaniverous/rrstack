@@ -1,11 +1,9 @@
-/**
- * Requirements addressed:
- * - Provide a human-readable rule description leveraging rrule's toText().
- * - Bounds formatting must respect RRULE floating dates (UTC fields = local wall time).
- * - Include effect and duration; optionally include timezone and bounds.
- * - Include effect and duration; optionally include timezone and bounds.
- * - Allow custom formatting of the timezone label.
- */
+// Requirements addressed:
+// - Provide a human-readable rule description leveraging rrule's toText().
+// - Bounds formatting must respect RRULE floating dates (UTC fields = local wall time).
+// - Include effect and duration; optionally include timezone and bounds.
+// - Include effect and duration; optionally include timezone and bounds.
+// - Allow custom formatting of the timezone label.
 
 import { DateTime } from 'luxon';
 
