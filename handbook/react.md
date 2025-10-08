@@ -41,10 +41,18 @@ Highlights
   - `rrstack.rules`/`rrstack.timezone` (and `rrstack.toJson()`) reflect staged values before commit.
   - Queries (`isActiveAt`, `getSegments`, etc.) reflect the last committed compile until commit.
 
+Cross‑links
+
+- Types referenced here (`RRStackOptions`, `UpdatePolicy`) are documented in
+  [Core API and Types](./api.md).
+- For ingestion, versioning, and notice semantics, see
+  [Configuration & update()](./configuration.md).
+- New to RRStack? Start with [Getting started](./getting-started.md) to build a
+  stack JSON you can pass as the hook’s `json` prop.
+
 ## useRRStackSelector
 
 Subscribe to an RRStack‑derived value. The selector recomputes on RRStack mutations and the component only re‑renders when `isEqual` deems the derived value changed.
-
 ```ts
 function useRRStackSelector<T>(props: {
   rrstack: RRStack;

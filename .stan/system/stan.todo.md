@@ -20,9 +20,11 @@ Completed (recent)
   - Removed the colon after the duration in rule descriptions (e.g., "Active for 1 hour every day at 5:00"). Updated tests and docs examples accordingly.
   - Implemented in code (describeCompiledRule) to match tests; recurrence descriptions now read "Active for 1 day every day ..." without a colon.
 
+- Docs:
+  - Cross‑link pass: added explicit links from API → Descriptions and React → API/Configuration/Getting started to improve navigation without losing detail.
+
 - rrule floating-date seam (host-agnostic):
-  - Construct rrule Dates with rrule.datetime(y,m,d,hh,mi,ss) (UTC fields carrying wall parts in the rule tz). Decode via UTC getters and rebuild Luxon DateTime in the rule tz for epoch math. Eliminates host offset drift.- Bounds timezone remediation:
-  - Implemented rrule README cautions: rrule-facing Dates are now built with host-local constructors from wall parts in the rule timezone (floating).
+  - Construct rrule Dates with rrule.datetime(y,m,d,hh,mi,ss) (UTC fields carrying wall parts in the rule tz). Decode via UTC getters and rebuild Luxon DateTime in the rule tz for epoch math. Eliminates host offset drift.- Bounds timezone remediation:  - Implemented rrule README cautions: rrule-facing Dates are now built with host-local constructors from wall parts in the rule timezone (floating).
   - Decoding uses LOCAL getters on rrule Dates and Luxon to obtain epoch in the rule timezone (ms/s unit-aware).
   - Removed all raw .getTime() usage on rrule Date outputs; all comparisons go through floatingDateToZonedEpoch + computeOccurrenceEnd.
 

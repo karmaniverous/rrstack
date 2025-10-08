@@ -97,8 +97,9 @@ epochToWallDate(epoch: number, timezone: TimeZoneId, timeUnit?: UnixTimeUnit): D
 
 See details, DST behavior, and mapping tips in [Time & timezones](./time.md).
 
-## Types (selected)
+For `DescribeOptions` and translator details, see [Rule descriptions](./descriptions.md).
 
+## Types (selected)
 ```ts
 // Top‑level options
 export interface RRStackOptions {
