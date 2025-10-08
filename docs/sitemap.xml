@@ -2,198 +2,218 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/index.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/modules.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/hierarchy.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.Overview.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
-		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.Algorithms_(deep_dive).html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.Getting_started.html</loc>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
-		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.React.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.Core_API_and_Types.html</loc>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.Configuration___update().html</loc>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.Time___timezones.html</loc>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.Descriptions.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.React.html</loc>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.Algorithms_(deep_dive).html</loc>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
+	</url>
+	<url>
+		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.JSON_Schema___validation.html</loc>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/documents/Handbook.Performance.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/documents/CHANGELOG.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/modules/index.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/classes/index.RRStack.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.DescribeOptions.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.DurationParts.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.FrequencyLexicon.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.RRStackOptions.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.RRStackOptionsNormalized.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.RRuleOptions.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.RuleDescriptorRecur.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.RuleDescriptorSpan.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.RuleJson.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.TranslatorOptions.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.UpdatePolicy.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/interfaces/index.WeekdayPos.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.DefaultEffect.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.DescribeTranslator.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.FrequencyAdjectiveLabels.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.FrequencyNounLabels.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.FrequencyStr.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.InstantStatus.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.Notice.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.OrdinalStyle.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.RangeStatus.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.RRStackJson.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.RuleDescriptor.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.RuleOptionsJson.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.TimeZoneId.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/types/index.UnixTimeUnit.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/variables/index.FREQUENCY_ADJECTIVE_EN.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/variables/index.FREQUENCY_LEXICON_EN.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/variables/index.FREQUENCY_NOUN_EN.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/variables/index.RRSTACK_CONFIG_SCHEMA.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/functions/index.dateOnlyToEpoch.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/functions/index.describeRule.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/functions/index.epochToWallDate.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/functions/index.fromIsoDuration.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/functions/index.toFrequencyOptions.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/functions/index.toIsoDuration.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/rrstack/functions/index.wallTimeToEpoch.html</loc>
-		<lastmod>2025-10-07T13:52:43.712Z</lastmod>
+		<lastmod>2025-10-08T08:17:10.257Z</lastmod>
 	</url>
 </urlset>

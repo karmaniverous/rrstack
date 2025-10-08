@@ -2,10 +2,24 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.15.5](https://github.com/karmaniverous/rrstack/compare/0.15.4...0.15.5)
+
+- docs: streamline README and expand Handbook (API, config, time, schema) [`96d0c13`](https://github.com/karmaniverous/rrstack/commit/96d0c1304011189476d59ced6696cf3110505183)
+- updated docs [`c9b1e6b`](https://github.com/karmaniverous/rrstack/commit/c9b1e6bd34df66a73c6f7baeb4ebc19c0ad27f32)
+- updated docs [`0737142`](https://github.com/karmaniverous/rrstack/commit/0737142abb32c76c7f5731fb936da0c9abb0c46d)
+- test: add Singapore span includeBounds description assertions [`c71e946`](https://github.com/karmaniverous/rrstack/commit/c71e94617e51346e8694f9cf6b4406bc28329635)
+- chore(describe): drop colon after duration in descriptions [`6f694fc`](https://github.com/karmaniverous/rrstack/commit/6f694fc4a4abb3827000b01b33f782e322b3b9f6)
+- docs: add cross-links (API→Descriptions; React→API/Config/Getting started) [`729417b`](https://github.com/karmaniverous/rrstack/commit/729417bdaeba2402975011c3be6e812db132f26a)
+- chore(describe): remove colon after duration in recurrence text [`c0df00e`](https://github.com/karmaniverous/rrstack/commit/c0df00ea5c3155ede0f60ad56ede756fc9b38dd2)
+- updated stan [`f8d04ac`](https://github.com/karmaniverous/rrstack/commit/f8d04ac42e993bb4bc9ba088de4895fec4482da9)
+
 #### [0.15.4](https://github.com/karmaniverous/rrstack/compare/0.15.3...0.15.4)
+
+> 7 October 2025
 
 - fix(schema): split JSON vs runtime schemas; keep strict keys and allow Weekday at runtime [`9258d67`](https://github.com/karmaniverous/rrstack/commit/9258d676c7c0720f1289f4521bf6522db507d4fa)
 - fix(schema): accept rrule Weekday in byweekday under strict options [`78febd1`](https://github.com/karmaniverous/rrstack/commit/78febd1cfcb91d3efc844588fe7a22eceba6cd55)
+- chore: release v0.15.4 [`e415ec1`](https://github.com/karmaniverous/rrstack/commit/e415ec1285dd8b049cc3f073fa24c684153b4d3c)
 - feat(schema): make rule.options strict with enumerated RRULE keys [`60ada4d`](https://github.com/karmaniverous/rrstack/commit/60ada4dd59c3f0d70710739755b504d0629e4a9d)
 - renamed schemas & eliminated unnecessary "as unknown as" [`337d45a`](https://github.com/karmaniverous/rrstack/commit/337d45a4e0a1ce1fd3862f9725de21a6caf64b4d)
 - feat(schema): make rule.options optional; export RRStackJson type [`97f2ee9`](https://github.com/karmaniverous/rrstack/commit/97f2ee95d06b8d762dac93790cfdbed47ed65d4f)

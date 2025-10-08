@@ -1,405 +1,75 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Algorithms (deep dive) | @karmaniverous/rrstack</title><meta name="description" content="Documentation for @karmaniverous/rrstack"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@karmaniverous/rrstack</a><div id="tsd-toolbar-links"><a href="https://github.com/karmaniverous/rrstack">GitHub</a></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><ul class="tsd-breadcrumb" aria-label="Breadcrumb"><li><a href="Handbook.html">Handbook</a></li><li><a href="" aria-current="page">Algorithms (deep dive)</a></li></ul></div><div class="tsd-panel tsd-typography"><h1 id="algorithms-deep-dive" class="tsd-anchor-link">Algorithms (deep dive)<a href="#algorithms-deep-dive" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1><p>This page explains the core algorithms that power RRStack: how coverage is
-computed in the cascade, how segments are streamed, how ranges are classified,
-and how effective bounds are derived — all with timezone/DST‑correct math and
-unit‑aware operation.</p>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Algorithms (deep dive) | @karmaniverous/rrstack</title><meta name="description" content="Documentation for @karmaniverous/rrstack"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@karmaniverous/rrstack</a><div id="tsd-toolbar-links"><a href="https://github.com/karmaniverous/rrstack">GitHub</a></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><ul class="tsd-breadcrumb" aria-label="Breadcrumb"><li><a href="Handbook.html">Handbook</a></li><li><a href="" aria-current="page">Algorithms (deep dive)</a></li></ul></div><div class="tsd-panel tsd-typography"><h1 id="algorithms-deep-dive" class="tsd-anchor-link">Algorithms (deep dive)<a href="#algorithms-deep-dive" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1><p>This page explains the core algorithms that power RRStack: how coverage is computed in the cascade, how segments are streamed, how ranges are classified, and how effective bounds are derived — all with timezone/DST‑correct math and unit‑aware operation.</p>
 <p>Goals and constraints</p>
 <ul>
-<li>Time unit is explicit and end‑to‑end:
-<ul>
-<li>'ms' → timestamps in milliseconds,</li>
-<li>'s' → integer seconds (half‑open intervals preserve correctness via end rounding).</li>
-</ul>
-</li>
-<li>Intervals are half‑open: [start, end).</li>
-<li>All arithmetic is performed in the rule’s IANA timezone; DST transitions are
-handled correctly (spring forward/fall back).</li>
+<li>Time unit is explicit and end‑to‑end.</li>
+<li>Intervals are half‑open: <code>[start, end)</code>.</li>
+<li>All arithmetic is performed in the rule’s IANA timezone; DST transitions are handled correctly (spring forward/fall back).</li>
 <li>Later rules override earlier ones at covered instants (last‑wins cascade).</li>
 </ul>
 <p>Baseline (defaultEffect)</p>
 <ul>
-<li>The baseline behaves like a virtual, open‑ended span rule prepended to the
-cascade (lowest priority).</li>
+<li>The baseline behaves like a virtual, open‑ended span rule prepended to the cascade (lowest priority).</li>
 <li>Values:
 <ul>
-<li>'auto' (default): opposite of the first rule’s effect, or 'active' when
-no rules exist.</li>
-<li>'active' | 'blackout': use exactly that effect for uncovered instants.</li>
+<li><code>'auto'</code> (default): opposite of the first rule’s effect, or <code>'active'</code> when no rules exist.</li>
+<li><code>'active' | 'blackout'</code>: use exactly that effect for uncovered instants.</li>
 </ul>
 </li>
-<li>All queries respect the baseline:
-<ul>
-<li><code>isActiveAt</code> classifies uncovered instants by the baseline.</li>
-<li><code>getSegments</code> yields baseline segments where no rule covers the window.</li>
-<li><code>classifyRange</code> accounts for baseline vs overlays.</li>
-<li><code>getEffectiveBounds</code> returns open‑sided bounds when the baseline is 'active'
-and no finite active contributors exist; open‑end detection remains O(1)
-via stack inspection.</li>
-</ul>
-</li>
-<li>The last‑wins rule still applies: later rules override the baseline anywhere
-they cover.</li>
 </ul>
 <p>Core coverage primitives</p>
 <ul>
-<li>Spans (continuous coverage):  - options.freq omitted → span rule; duration must be omitted,
+<li>Spans (continuous coverage):
 <ul>
-<li>start/end clamps live in options.starts/options.ends (open sides allowed),</li>
-<li>coverage test: s &lt;= t &lt; e (open sides use domainMin()/domainMax()).</li>
+<li>Omit <code>options.freq</code> → span rule; duration must be omitted.</li>
+<li>Coverage is continuous across <code>[starts, ends)</code>; either side may be open.</li>
 </ul>
 </li>
 <li>Recurrences (RRULE based):
 <ul>
-<li>options.freq present (daily/weekly/monthly/etc.),</li>
-<li>dtstart/until/tzid synthesized from JSON (unit/timezone aware),</li>
-<li>occurrence end computed by adding the rule’s Duration in the rule timezone.</li>
+<li><code>options.freq</code> present (daily/weekly/monthly/etc.).</li>
+<li><code>dtstart/until/tzid</code> synthesized from JSON (unit/timezone aware).</li>
+<li>Occurrence end computed by adding the rule’s <code>Duration</code> in the rule timezone.</li>
 </ul>
 </li>
 </ul>
-<p>Key helpers (src/rrstack/coverage/time.ts)</p>
+<p>Key helpers</p>
 <ul>
-<li>epochToWallDate(value, tz, unit) → Date: epoch→floating wall‑clock Date for rrule.</li>
-<li>floatingDateToZonedEpoch(date, tz, unit) → number: back to epoch for comparisons.</li>
-<li>computeOccurrenceEnd(rule, start) → number: Luxon add in rule tz; rounds up in 's' mode.</li>
-<li>domainMin() = 0; domainMax(unit) is a very large bound (not used for scans).</li>
+<li><code>epochToWallDate(value, tz, unit) → Date</code>: epoch → floating wall‑clock Date for rrule.</li>
+<li><code>floatingDateToZonedEpoch(date, tz, unit) → number</code>: to epoch for comparisons.</li>
+<li><code>computeOccurrenceEnd(rule, start) → number</code>: Luxon add in rule tz; rounds up in <code>'s'</code> mode.</li>
+<li><code>domainMin()</code>, <code>domainMax(unit)</code>: safe guard rails.</li>
 </ul>
 <p>Cascade evaluation (last‑wins)</p>
 <ul>
-<li>At any instant t, the cascade status is the effect of the last rule in the list that covers t.</li>
-<li>“Covering” is per rule:
-<ul>
-<li>span: numeric range check,</li>
-<li>recurrence: find the last start &lt;= t and check end &gt; t (half‑open).</li>
+<li>At any instant <code>t</code>, the cascade status is the effect of the last rule in the list that covers <code>t</code>.</li>
 </ul>
-</li>
-</ul>
-<h2 id="point-query-isactiveatt" class="tsd-anchor-link">Point query: isActiveAt(t)<a href="#point-query-isactiveatt" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>API: RRStack.isActiveAt(t: number): boolean</p>
-<p>Strategy (src/rrstack/coverage.ts → ruleCoversInstant; src/rrstack/RRStack.queries.ts):</p>
+<h2 id="point-query-isactiveatt" class="tsd-anchor-link">Point query: isActiveAt(t)<a href="#point-query-isactiveatt" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>Strategy (<code>coverage.ts</code>):</p>
 <ol>
-<li>Spans: s &lt;= t &lt; e (open sides use domain min/max).</li>
+<li>Spans: <code>s &lt;= t &lt; e</code> (open sides use domain min/max).</li>
 <li>Recurrences: robust coverage in three cooperative steps:
 <ul>
-<li>Enumerate starts on the local calendar day of t (rrule.between(day, day+1)):
-<ul>
-<li>Test both the floating Date epoch and the “zoned” epoch candidate for each start,</li>
-<li>This is fast and avoids large jumps; also catches DST‑boundary subtlety.</li>
+<li>Day‑window enumeration in the local calendar day of <code>t</code>,</li>
+<li>Structural matches for common patterns (daily times, monthly/yearly patterns),</li>
+<li>Bounded backward enumeration with rrule and end computation.</li>
 </ul>
 </li>
-<li>Structural matches for common patterns:
-<ul>
-<li>DAILY times (byhour/byminute/bysecond),</li>
-<li>Common MONTHLY/YEARLY patterns (byweekday/bysetpos/bymonthday/bymonth).</li>
-</ul>
-</li>
-<li>Fallback: small backward horizon enumeration:
-<ul>
-<li>Compute horizon relative to frequency/interval/duration (enumerationHorizon),</li>
-<li>Enumerate rrule.between(windowStart, wallT) and check coverage with computeOccurrenceEnd.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Cascade status:
-<ul>
-<li>Scan rules in order; last rule whose “covers” is true decides active/blackout at t.</li>
-</ul>
-</li>
+<li>Cascade status: scan rules in order; last match wins.</li>
 </ol>
-<p>Complexity: O(n + occurrences near t), where n = number of rules. The fallback window is small and bounded.</p>
-<p>Notes</p>
-<ul>
-<li>'s' time unit: computeOccurrenceEnd rounds up to the next integer second (still [start, end) at integer boundaries).</li>
-<li>Timezone/DST: coverage/end are computed in the rule tz; “01:30 + 1h” over DST behaves correctly.</li>
+<h2 id="streaming-segments-getsegmentsfrom-to" class="tsd-anchor-link">Streaming segments: getSegments(from, to)<a href="#streaming-segments-getsegmentsfrom-to" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>Streaming, memory‑bounded merge over per‑rule boundary streams (starts/ends). Ends are processed before starts at the same timestamp to preserve last‑wins semantics. Optional <code>limit</code> throws if exceeded. See <code>segments.ts</code>.</p>
+<h2 id="range-classification-classifyrangefrom-to" class="tsd-anchor-link">Range classification: classifyRange(from, to)<a href="#range-classification-classifyrangefrom-to" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>Scans streamed segments; early‑exits on mixed coverage. See <code>segments.ts</code>.</p>
+<h2 id="effective-bounds-geteffectivebounds" class="tsd-anchor-link">Effective bounds: getEffectiveBounds()<a href="#effective-bounds-geteffectivebounds" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
+<li>Earliest bound: candidate‑filtered forward sweep; detects open start when coverage is active at domain minimum due to open‑start sources.</li>
+<li>Open‑end detection: stack inspection (no far‑future probes).</li>
+<li>Latest bound: finite/local probe + bounded reverse sweep; never scans far into the future.</li>
 </ul>
-<h2 id="streaming-segments-getsegmentsfrom-to" class="tsd-anchor-link">Streaming segments: getSegments(from, to)<a href="#streaming-segments-getsegmentsfrom-to" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>API: RRStack.getSegments(from: number, to: number, { limit? }): Iterable&lt;{ start, end, status }&gt;</p>
-<p>Intent</p>
-<ul>
-<li>Stream contiguous cascade segments over [from, to) with half‑open semantics.</li>
-<li>Memory bounded; no pre‑materialization of all occurrences.</li>
+<p>See <code>bounds/*.ts</code> for pass details.</p>
+<h2 id="timezones-and-dst" class="tsd-anchor-link">Timezones and DST<a href="#timezones-and-dst" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
+<li>All coverage is computed in the rule’s IANA timezone.</li>
+<li>Occurrence end times use Luxon in the rule’s zone. In <code>'s'</code> mode, ends remain exact integer seconds across DST transitions.</li>
 </ul>
-<p>Algorithm (src/rrstack/segments.ts)</p>
-<ol>
-<li>Initialize per‑rule state at “from”:
-<ul>
-<li>covering[i] = whether rule i covers “from”,</li>
-<li>nextStart[i] = next start &gt;= from,</li>
-<li>nextEnd[i] = end for the current or next occurrence,</li>
-<li>For spans: pre‑clip [start, end) to [from, to), set nextStart/nextEnd accordingly.</li>
+<h2 id="see-also" class="tsd-anchor-link">See also<a href="#see-also" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
+<li>Public API and types: <a href="Handbook.Core_API_and_Types.html">Core API and Types</a></li>
+<li>Configuration and notices: <a href="Handbook.Configuration___update().html">Configuration &amp; update()</a></li>
+<li>Time helpers and formatting: <a href="Handbook.Time___timezones.html">Time &amp; timezones</a></li>
 </ul>
-</li>
-<li>Event loop:
-<ul>
-<li>t = minBoundary(nextStart[], nextEnd[]) (earliest upcoming boundary),</li>
-<li>If t is undefined or t &gt;= to: emit the tail segment [prevT, to) and stop,</li>
-<li>Process end boundaries at t before start boundaries at t,</li>
-<li>Update covering[] accordingly; advance nextStart for rules whose start fired (rrule.after at wall‑clock t, false),</li>
-<li>Compute new cascade status; if it changed, emit [prevT, t) and set prevT = t.</li>
-</ul>
-</li>
-<li>Optional limit:
-<ul>
-<li>If emissions would exceed the limit, throw (no silent truncation).</li>
-</ul>
-</li>
-</ol>
-<p>Edge cases</p>
-<ul>
-<li>from === to → no segments,</li>
-<li>Ends before starts at the same timestamp to preserve last‑wins intra‑instant semantics,</li>
-<li>'s' rounding ensures we don’t produce zero‑length segments from integer boundaries.</li>
-</ul>
-<p>Complexity: O(k log m) by intuition, but here “heap” is realized by scanning arrays and selecting min; with small m (rules) this is fast and simple. Memory usage is bounded.</p>
-<h2 id="range-classification-classifyrangefrom-to" class="tsd-anchor-link">Range classification: classifyRange(from, to)<a href="#range-classification-classifyrangefrom-to" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>API: RRStack.classifyRange(from, to): 'active' | 'blackout' | 'partial'</p>
-<p>Implementation (src/rrstack/segments.ts)</p>
-<ul>
-<li>We stream getSegments(from, to) and track:
-<ul>
-<li>sawActive if any segment.status === 'active',</li>
-<li>sawBlackout if any segment.status === 'blackout'.</li>
-</ul>
-</li>
-<li>Early exit: if we see both, return 'partial'.</li>
-<li>End logic:
-<ul>
-<li>if only active segments: 'active',</li>
-<li>if only blackout segments (or no segments): 'blackout'.</li>
-</ul>
-</li>
-</ul>
-<p>Complexity: O(#segments) over the window; memory bounded and streaming.</p>
-<h2 id="effective-bounds-geteffectivebounds" class="tsd-anchor-link">Effective bounds: getEffectiveBounds()<a href="#effective-bounds-geteffectivebounds" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>API: RRStack.getEffectiveBounds(): { start?: number; end?: number; empty: boolean }</p>
-<p>Intent</p>
-<ul>
-<li>Compute the earliest instant the cascade ever becomes active (start; omitted if open start),</li>
-<li>Compute the latest instant after which the cascade is never active again (end; omitted if open end),</li>
-<li>empty signals “no active coverage exists” (both bounds undefined and no coverage).</li>
-</ul>
-<p>Key properties preserved</p>
-<ul>
-<li>Half‑open intervals: [start, end),</li>
-<li>Timezone‑ and unit‑aware,</li>
-<li>No far‑future rrule scans (performance is constant for open‑ended schedules and bounded for finite ones).</li>
-</ul>
-<p>Orchestration (src/rrstack/bounds.ts)</p>
-<ol>
-<li>
-<p>Earliest start (computeEarliestStart: src/rrstack/bounds/earliest.ts)</p>
-<ul>
-<li>Pre‑pass: choose earliest active vs blackout candidates:
-<ul>
-<li>Spans: candidate at start clamp (open start uses domainMin()),</li>
-<li>Recurrences: rrule.after(wall(domainMin), true).</li>
-</ul>
-</li>
-<li>If earliest active precedes earliest blackout:
-<ul>
-<li>If open‑start coverage exists at domainMin (active + isOpenStart), return start: undefined,</li>
-<li>Else return that active instant.</li>
-</ul>
-</li>
-<li>Otherwise, run a small candidate‑filtered forward sweep to find the first instant the cascade turns active.</li>
-</ul>
-</li>
-<li>
-<p>Open‑end detection (detectOpenEnd: src/rrstack/bounds/openEnd.ts)</p>
-<ul>
-<li>Pure stack inspection, O(1); no far‑future probe:
-<ul>
-<li>The cascade is open‑ended iff the last open‑ended candidate is an active source:
-<ul>
-<li>Active open span (kind === 'span' and isOpenEnd),</li>
-<li>Active recurrence with no until and no count that produces any start (isOpenEnd + hasAnyStart()),</li>
-<li>Baseline active (compiled as open span).</li>
-</ul>
-</li>
-<li>A blackout open‑ended span closes the future; it does not make the cascade open‑ended.</li>
-</ul>
-</li>
-<li>If open‑ended is true, latest bound is undefined.</li>
-</ul>
-</li>
-<li>
-<p>Latest end (computeLatestEnd: src/rrstack/bounds/latest.ts)</p>
-<ul>
-<li>No far‑future scans; bounded and local:
-<ul>
-<li>Compute a finite probe = max end across all finite contributors (spans with end; recurrences with count or until).</li>
-<li>Choose cursorStart = min(externalProbe, finiteProbe) to preserve legacy “strictly before probe window” semantics in tests.</li>
-<li>Short‑circuit: only when cursorStart equals finiteProbe and the cascade is active immediately before cursorStart → return cursorStart (half‑open semantics).</li>
-<li>Otherwise, run a bounded reverse sweep from cursorStart:
-<ul>
-<li>For spans: supply previous start/end if &lt; cursor; mark covering when end &gt; cursor &gt;= start.</li>
-<li>For recurrences: find last start before cursor; if end &gt;= cursor, step to the previous occurrence (strict e &gt;= cursor guard); build prevStart/prevEnd per rule; recompute covering[].</li>
-<li>At each iteration, pick the latest boundary among prevStart/prevEnd; update covering; test whether the cascade just transitioned to active (wasBlackout &amp;&amp; isActiveNow) → return that boundary.</li>
-</ul>
-</li>
-<li>If no earlier transition is found, return cursorStart (covers “tie at probe” and pure finite cases).</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p>Emptiness (isCascadeInactiveEverywhere: src/rrstack/bounds.ts)</p>
-<ul>
-<li>Not empty if any open‑ended active source exists (active open span; infinite active recurrence with any start),</li>
-<li>Not empty if any finite active contributor exists (span with end &gt; start; recurrence with any first start),</li>
-<li>Otherwise empty.</li>
-</ul>
-</li>
-</ol>
-<p>Correctness notes</p>
-<ul>
-<li>Open start: if coverage is already active at the domain minimum due to an open‑start active source, earliest start is omitted (undefined).</li>
-<li>Open end: if any open‑ended active source exists and no later open‑ended blackout span permanently closes the future, the cascade is open‑ended (end === undefined).</li>
-<li>Ties and overlays:
-<ul>
-<li>“End before start” processing at a shared timestamp gives blackout the chance to truncate a coincident active,</li>
-<li>The reverse sweep honors last‑wins overlays on the last day (e.g., a blackout that suppresses the last active).</li>
-</ul>
-</li>
-<li>RRULE 'until' is inclusive of a start at that instant; half‑open intervals keep [start, end) correct via computeOccurrenceEnd.</li>
-</ul>
-<p>Performance</p>
-<ul>
-<li>Earliest start: O(n) + a handful of rrule.after calls; small forward sweep only when needed.</li>
-<li>Open‑end detection: O(n), stack inspection; no scans to 2099.</li>
-<li>Latest end: bounded:
-<ul>
-<li>Finite probe uses local enumeration only for count/ until contributors,</li>
-<li>The reverse sweep starts at a finite cursor and walks backwards via rrule.before and numeric spans,</li>
-<li>No global scans from 1970 or to far‑future.</li>
-</ul>
-</li>
-<li>Open‑ended schedules return in ~constant time; common daily/weekly patterns avoid expensive probes.</li>
-</ul>
-<p>Examples &amp; scenarios</p>
-<ol>
-<li>Closed daily rule (UTC)</li>
-</ol>
-<ul>
-<li>Rule A: Active daily 05:00–06:00, Jan 10–12.</li>
-<li>Bounds:
-<ul>
-<li>earliest start → 2024‑01‑10 05:00,</li>
-<li>latest end → 2024‑01‑11 06:00 (the last occurrence end),</li>
-<li>empty: false.</li>
-</ul>
-</li>
-</ul>
-<ol start="2">
-<li>Blackout override on the last day</li>
-</ol>
-<ul>
-<li>Rule A: Active daily 05:00–06:00, Jan 10–12,</li>
-<li>Rule B: Blackout Jan 11 at 05:00–06:00,</li>
-<li>Bounds:
-<ul>
-<li>earliest start → 2024‑01‑10 05:00,</li>
-<li>latest end → 2024‑01‑10 06:00 (blackout suppresses the last day),</li>
-<li>empty: false.</li>
-</ul>
-</li>
-</ul>
-<ol start="3">
-<li>Same‑instant tie (blackout and active start at the same instant)</li>
-</ol>
-<ul>
-<li>On the first day, blackout and active both start at 05:00–06:00,</li>
-<li>The blackout is later in the list → the first day is suppressed;</li>
-<li>Bounds:
-<ul>
-<li>earliest start → next day’s 05:00,</li>
-<li>latest end → that day’s 06:00,</li>
-<li>empty: false.</li>
-</ul>
-</li>
-</ul>
-<ol start="4">
-<li>Open start with finite end clamp</li>
-</ol>
-<ul>
-<li>Rule A: Active 00:00–00:30 daily, ends at 1970‑01‑02 (open start),</li>
-<li>Rule B: Early blackout 1970‑01‑01 00:10–00:20,</li>
-<li>Bounds:
-<ul>
-<li>start: undefined (coverage begins at domain min with open start),</li>
-<li>end: 1970‑01‑02 00:30 (inclusive of the 00:00 start at 'until'),</li>
-<li>empty: false.</li>
-</ul>
-</li>
-</ul>
-<ol start="5">
-<li>Weekend open‑ended schedule (America/New_York)</li>
-</ol>
-<ul>
-<li>Rule A: Active weekly Saturday 00:00 for 48 hours (2 days),</li>
-<li>No end clamp; baseline blackout.</li>
-<li>Bounds:
-<ul>
-<li>earliest start → first Saturday 00:00 in the domain (unless open start is chosen),</li>
-<li>latest end → undefined (open‑ended coverage),</li>
-<li>empty: false.</li>
-</ul>
-</li>
-</ul>
-<h2 id="dst-and-timeunit-semantics" class="tsd-anchor-link">DST and time‑unit semantics<a href="#dst-and-timeunit-semantics" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>Timezone/DST</p>
-<ul>
-<li>All coverage is computed in the rule timezone via Luxon,</li>
-<li>DST behavior is correct:
-<ul>
-<li>Spring forward (America/Chicago 2021‑03‑14 01:30 + 1h → 03:30 local),</li>
-<li>Fall back (2021‑11‑07 01:30 + 1h → 01:30 local, repeated hour).</li>
-</ul>
-</li>
-</ul>
-<p>'s' mode rounding</p>
-<ul>
-<li>In 's' mode, computeOccurrenceEnd rounds up to the next integer second:
-<ul>
-<li>Preserves [start, end) against boundary false negatives at integer seconds,</li>
-<li>Keeps duration spans exact integer seconds across DST.</li>
-</ul>
-</li>
-</ul>
-<h2 id="complexity--performance-summary" class="tsd-anchor-link">Complexity &amp; performance summary<a href="#complexity--performance-summary" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
-<li>isActiveAt: O(n + small local enumeration); no global scans.</li>
-<li>getSegments: streaming, memory bounded; complexity proportional to the number of boundary events in [from, to).</li>
-<li>classifyRange: O(#segments) over the window; early‑exit on 'partial'.</li>
-<li>getEffectiveBounds:
-<ul>
-<li>earliest: O(n) + small sweep,</li>
-<li>open‑end detection: O(n), probe‑free,</li>
-<li>latest: bounded, starts from a finite probe; reverse sweep is local; no 1970→2099 scans.</li>
-</ul>
-</li>
-</ul>
-<h2 id="troubleshooting--faqs" class="tsd-anchor-link">Troubleshooting &amp; FAQs<a href="#troubleshooting--faqs" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
-<li>“Why is end undefined for my open‑ended rule?”
-<ul>
-<li>Because there is no finite latest instant after which the cascade is never active again; open‑ended schedules intentionally return end: undefined.</li>
-</ul>
-</li>
-<li>“How do blackout overlays affect the last day?”
-<ul>
-<li>When a blackout and an active tie on a boundary, ends are processed before starts to respect last‑wins; the reverse sweep ensures blackout suppression reduces the last active end accordingly.</li>
-</ul>
-</li>
-<li>“What does 's' rounding do?”
-<ul>
-<li>Ends are rounded up to the next second; intervals remain half‑open and integer‑second safe.</li>
-</ul>
-</li>
-<li>“How are clamps handled?”
-<ul>
-<li>starts/ends map to dtstart/until; RRULE 'until' is inclusive of a start at that instant; RRStack keeps intervals half‑open via occurrence end math.</li>
-<li>spans use numeric clamps directly (open sides allowed).</li>
-</ul>
-</li>
-</ul>
-<p>References (selected sources)</p>
-<ul>
-<li>src/rrstack/coverage.ts — ruleCoversInstant orchestration,</li>
-<li>src/rrstack/segments.ts — streaming segment engine,</li>
-<li>src/rrstack/bounds/*.ts — earliest/openEnd/latest passes and orchestrator,</li>
-<li>src/rrstack/coverage/time.ts — unit/timezone helpers and DST‑correct end math.</li>
-</ul>
-</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg><h3>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#algorithms-deep-dive"><span>Algorithms (deep dive)</span></a><ul><li><a href="#point-query-isactiveatt"><span>Point query: is<wbr/>Active<wbr/>At(t)</span></a></li><li><a href="#streaming-segments-getsegmentsfrom-to"><span>Streaming segments: get<wbr/>Segments(from, to)</span></a></li><li><a href="#range-classification-classifyrangefrom-to"><span>Range classification: classify<wbr/>Range(from, to)</span></a></li><li><a href="#effective-bounds-geteffectivebounds"><span>Effective bounds: get<wbr/>Effective<wbr/>Bounds()</span></a></li><li><a href="#dst-and-timeunit-semantics"><span>DST and time‑unit semantics</span></a></li><li><a href="#complexity--performance-summary"><span>Complexity &amp; performance summary</span></a></li><li><a href="#troubleshooting--faqs"><span>Troubleshooting &amp; <wbr/>FA<wbr/>Qs</span></a></li></ul></div></details></div><div class="site-menu"><nav id="tsd-sidebar-links" class="tsd-navigation"><a href="https://github.com/karmaniverous/rrstack" class="tsd-nav-link">GitHub</a></nav><nav class="tsd-navigation"><a href="../modules.html">@karmaniverous/rrstack</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer><p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer><div class="overlay"></div></body></html>
+</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg><h3>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#algorithms-deep-dive"><span>Algorithms (deep dive)</span></a><ul><li><a href="#point-query-isactiveatt"><span>Point query: is<wbr/>Active<wbr/>At(t)</span></a></li><li><a href="#streaming-segments-getsegmentsfrom-to"><span>Streaming segments: get<wbr/>Segments(from, to)</span></a></li><li><a href="#range-classification-classifyrangefrom-to"><span>Range classification: classify<wbr/>Range(from, to)</span></a></li><li><a href="#effective-bounds-geteffectivebounds"><span>Effective bounds: get<wbr/>Effective<wbr/>Bounds()</span></a></li><li><a href="#timezones-and-dst"><span>Timezones and <wbr/>DST</span></a></li><li><a href="#see-also"><span>See also</span></a></li></ul></div></details></div><div class="site-menu"><nav id="tsd-sidebar-links" class="tsd-navigation"><a href="https://github.com/karmaniverous/rrstack" class="tsd-nav-link">GitHub</a></nav><nav class="tsd-navigation"><a href="../modules.html">@karmaniverous/rrstack</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer><p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer><div class="overlay"></div></body></html>
