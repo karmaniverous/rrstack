@@ -3,7 +3,6 @@
 When updated: 2025-10-08 (UTC)
 
 Next up (near‑term, prioritized)
-
 1. Docs polish
    - Consider a dedicated "Time conversion helpers" page in Handbook if usage grows; otherwise keep README section concise.
 2. Tests
@@ -17,10 +16,13 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Types: fix RRStackJson byweekday typing
+  - Updated the zod options shape builder in RRStack.options.ts to be generic
+    over the provided weekday schema (ZodTypeAny). This preserves the concrete
+    input type so RRStackJson.rules[].options.byweekday is number|number[]|undefined.
 - DescribeConfig flattening (final cleanup):
   - Updated the remaining test (rrstack.describe.test.ts) to use the flattened
-    keys (showBounds/boundsFormat) instead of the old nested bounds config.
-  - Resolves the last TS/build error and assertion for recurring bounds formatting.
+    keys (showBounds/boundsFormat) instead of the old nested bounds config.  - Resolves the last TS/build error and assertion for recurring bounds formatting.
 
 - Descriptions & lint fixes:
   - Fixed recurring bounds (“from …”) formatting to honor the rule’s timezone by converting rrule “floating” dtstart/until via floatingDateToZonedEpoch when building descriptor clamps. This resolves America/Chicago (local midnight) and Europe/London (01:00 vs 00:00) test failures.

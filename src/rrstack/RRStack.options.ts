@@ -2,9 +2,9 @@
  * Requirements addressed (stan.project.md):
  * - Keep large modules under ~300 LOC by factoring cohesive concerns.
  * - Minimal zod-based validation for options and mutations.
+ * - Minimal zod-based validation for options and mutations.
  *
- * This module centralizes RRStack option and JSON schemas, decoupling them
- * from the RRStack class implementation.
+ * This module centralizes RRStack option and JSON schemas, decoupling them * from the RRStack class implementation.
  */
 
 import { IANAZone } from 'luxon';
@@ -81,7 +81,9 @@ const freqSchema = z.enum([
 
 // Helper to build a strict options shape, parameterized by the weekday element type.
 const weekdayNumber = z.number().int().min(0).max(6);
-const makeOptionsShape = (weekdayAtom: z.ZodType) => ({
+// Generic over the provided weekday schema to preserve input/output types
+// and avoid unknown inference in consumers like RRStackJson.
+const makeOptionsShape = <W extends z.ZodType>(weekdayAtom: W) => ({
   // RRStack JSON extras
   freq: freqSchema.optional(),
   starts: z.number().optional(),
@@ -181,37 +183,37 @@ const RRuleRuntimeOptionsSchema = z
   .object(makeOptionsShape(z.union([weekdayNumber, z.instanceof(Weekday)])))
   .strict();
 
-/** JSON rule schema (strict keys; options defaults to empty). */
-export const ruleLiteSchemaJson = z
-  .object({
-    effect: z.enum(['active', 'blackout']),
-    duration: DurationPartsSchema.optional(),
-    options: RRuleJsonOptionsSchema.default({}).optional(),
-    label: z.string().optional(),
-  })
-  .superRefine((val, ctx) => {
-    const rawFreq = (val as { options?: { freq?: unknown } }).options?.freq;
-    const hasFreq = typeof rawFreq === 'string';
-    if (hasFreq) {
-      // Recurring rule must provide a duration.
-      if (!val.duration) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Recurring rules require a positive duration.',
-          path: ['duration'],
-        });
+/** JSON rule schema (strict keys; options defaults to empty). */ export const ruleLiteSchemaJson =
+  z
+    .object({
+      effect: z.enum(['active', 'blackout']),
+      duration: DurationPartsSchema.optional(),
+      options: RRuleJsonOptionsSchema.default({}).optional(),
+      label: z.string().optional(),
+    })
+    .superRefine((val, ctx) => {
+      const rawFreq = (val as { options?: { freq?: unknown } }).options?.freq;
+      const hasFreq = typeof rawFreq === 'string';
+      if (hasFreq) {
+        // Recurring rule must provide a duration.
+        if (!val.duration) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Recurring rules require a positive duration.',
+            path: ['duration'],
+          });
+        }
+      } else {
+        // Span rule (no freq or legacy 'continuous') must omit duration.
+        if (val.duration) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Span rules must omit duration.',
+            path: ['duration'],
+          });
+        }
       }
-    } else {
-      // Span rule (no freq or legacy 'continuous') must omit duration.
-      if (val.duration) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Span rules must omit duration.',
-          path: ['duration'],
-        });
-      }
-    }
-  });
+    });
 
 /** Runtime rule schema (strict keys; options defaults to empty). */
 export const ruleLiteSchema = z
