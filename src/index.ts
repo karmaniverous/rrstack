@@ -5,7 +5,6 @@
  */
 
 export { RRStack } from './rrstack';
-export type { DescribeOptions } from './rrstack/describe';
 export { describeRule } from './rrstack/describe';
 export { fromIsoDuration, toIsoDuration } from './rrstack/duration';
 // JSON input type matching the published JSON Schema
@@ -13,6 +12,7 @@ export type { RRStackJson } from './rrstack/RRStack.options';
 // Time conversion helpers (public utilities)
 export { dateOnlyToEpoch, epochToWallDate, wallTimeToEpoch } from './time';
 // Description translators & lexicon
+export type { DescribeConfig } from './rrstack/describe/config';
 export type {
   RuleDescriptor,
   RuleDescriptorRecur,
@@ -30,11 +30,7 @@ export {
   FREQUENCY_NOUN_EN,
   toFrequencyOptions,
 } from './rrstack/describe/lexicon';
-export type {
-  DescribeTranslator,
-  OrdinalStyle,
-  TranslatorOptions,
-} from './rrstack/describe/translate.strict.en';
+export type { DescribeTranslator } from './rrstack/describe/translate/strict';
 export { RRSTACK_CONFIG_SCHEMA } from './rrstack/RRStack.schema';
 export type {
   DefaultEffect,

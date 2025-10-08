@@ -32,8 +32,7 @@ describe('cross-timezone getEffectiveBounds + descriptions', () => {
     expect(b.end).toBeUndefined(); // open end
 
     const text = s.describeRule(0, {
-      includeBounds: true,
-      boundsFormat: 'yyyy-LL-dd HH:mm',
+      bounds: { show: true, format: 'yyyy-LL-dd HH:mm' },
     });
     const lower = text.toLowerCase();
     expect(lower).toContain('every day');
@@ -71,8 +70,7 @@ describe('cross-timezone getEffectiveBounds + descriptions', () => {
     expect(eL.toFormat('yyyy-LL-dd HH:mm')).toBe('2024-05-15 10:00');
 
     const text = s.describeRule(0, {
-      includeBounds: true,
-      boundsFormat: 'yyyy-LL-dd',
+      bounds: { show: true, format: 'yyyy-LL-dd' },
     });
     const lower = text.toLowerCase();
     // Monthly bymonthday phrasing and time-of-day
@@ -153,7 +151,7 @@ describe('cross-timezone getEffectiveBounds + descriptions', () => {
     expect(eL.toFormat('yyyy-LL-dd HH:mm')).toBe('2024-03-03 19:00');
 
     // Description for the blackout rule should be clear, include duration and timezone
-    const text = s.describeRule(1, { includeTimeZone: true });
+    const text = s.describeRule(1, { tz: { show: true } });
     const lower = text.toLowerCase();
     expect(lower).toContain('blackout');
     expect(lower).toContain('30 minute'); // "30 minutes" phrasing

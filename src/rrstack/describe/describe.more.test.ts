@@ -21,12 +21,9 @@ describe('rule descriptions (extended scenarios)', () => {
         count: 3,
       },
     };
-    const text = describeRule(rule, tz, 'ms', {
-      includeRecurrenceLimits: true,
-    });
+    const text = describeRule(rule, tz, 'ms', { limits: 'dateAndCount' });
     expect(text.toLowerCase()).toContain('for 3 occurrence');
   });
-
   it('appends UNTIL phrasing (“until YYYY-MM-DD”)', () => {
     const until = Date.UTC(2024, 1, 1, 0, 0, 0); // 2024-02-01
     const rule: RuleJson = {
@@ -40,9 +37,7 @@ describe('rule descriptions (extended scenarios)', () => {
         ends: until,
       },
     };
-    const text = describeRule(rule, tz, 'ms', {
-      includeRecurrenceLimits: true,
-    });
+    const text = describeRule(rule, tz, 'ms', { limits: 'dateAndCount' });
     expect(text.toLowerCase()).toContain('until 2024-02-01');
   });
   it('yearly with multiple months: “in january, march and july …”', () => {
