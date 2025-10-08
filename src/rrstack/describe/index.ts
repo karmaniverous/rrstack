@@ -155,7 +155,7 @@ export const describeCompiledRule = (
       ? opts.translator
       : strictEnTranslator;
   const recurText = tx(descriptor, opts.translatorOptions);
-  let s = `${effect} for ${durText}: ${recurText}`;
+  let s = `${effect} for ${durText} ${recurText}`;
   if (includeTimeZone) {
     const tzLabel = formatTimeZone ? formatTimeZone(recur.tz) : recur.tz;
     s += ` (timezone ${tzLabel})`;
