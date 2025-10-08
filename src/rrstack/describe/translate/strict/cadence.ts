@@ -1,7 +1,6 @@
 import type { DescribeConfig } from '../../config';
 import type { RuleDescriptorRecur } from '../../descriptor';
 import {
-  durationToTextFromParts,
   everyWithInterval,
   formatLocalTimeList,
   joinList,
@@ -9,8 +8,7 @@ import {
   localWeekdayName,
   mergeLexicon,
   monthName,
-  ord,
-  ordinalsList,
+  ord,  ordinalsList,
 } from './helpers';
 import { appendLimits } from './limits';
 
