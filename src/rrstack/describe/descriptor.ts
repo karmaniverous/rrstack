@@ -1,6 +1,5 @@
-import { DateTime } from 'luxon';
-
 import type { CompiledRecurRule, CompiledRule } from '../compile';
+import { floatingDateToZonedEpoch } from '../coverage/time';
 import { Frequency, Weekday } from '../rrule.runtime';
 import type { DurationParts, FrequencyStr, UnixTimeUnit } from '../types';
 
@@ -45,11 +44,6 @@ export interface RuleDescriptorSpan extends RuleDescriptorBase {
 }
 
 export type RuleDescriptor = RuleDescriptorRecur | RuleDescriptorSpan;
-
-const toUnitEpoch = (d: Date, tz: string, unit: UnixTimeUnit): number =>
-  unit === 'ms'
-    ? DateTime.fromJSDate(d, { zone: tz }).toMillis()
-    : Math.trunc(DateTime.fromJSDate(d, { zone: tz }).toSeconds());
 
 const asArray = <T>(v: T | T[] | null | undefined): T[] =>
   v == null ? [] : Array.isArray(v) ? v : [v];
@@ -125,8 +119,12 @@ export const buildRuleDescriptor = (c: CompiledRule): RuleDescriptor => {
   const clamps =
     dtstart || untilDate
       ? {
-          starts: dtstart ? toUnitEpoch(dtstart, r.tz, r.unit) : undefined,
-          ends: untilDate ? toUnitEpoch(untilDate, r.tz, r.unit) : undefined,
+          starts: dtstart
+            ? floatingDateToZonedEpoch(dtstart, r.tz, r.unit)
+            : undefined,
+          ends: untilDate
+            ? floatingDateToZonedEpoch(untilDate, r.tz, r.unit)
+            : undefined,
         }
       : undefined;
   const wkst = (r.options as { wkst?: unknown }).wkst;
@@ -171,7 +169,9 @@ export const buildRuleDescriptor = (c: CompiledRule): RuleDescriptor => {
       wkst: toWkst(wkst),
     },
     count: (r.options as { count?: number | null }).count ?? undefined,
-    until: untilDate ? toUnitEpoch(untilDate, r.tz, r.unit) : undefined,
+    until: untilDate
+      ? floatingDateToZonedEpoch(untilDate, r.tz, r.unit)
+      : undefined,
   };
   return desc;
 };

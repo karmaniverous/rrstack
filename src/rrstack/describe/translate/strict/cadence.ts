@@ -8,7 +8,8 @@ import {
   localWeekdayName,
   mergeLexicon,
   monthName,
-  ord,  ordinalsList,
+  ord,
+  ordinalsList,
 } from './helpers';
 import { appendLimits } from './limits';
 
@@ -148,7 +149,7 @@ export const buildCadence = (
         )
         .map((mm) => monthName(d.tz, mm, cfg.locale, cfg.lowercase));
       if (months.length) {
-        const inMonthsAnd = joinList(months);
+        const inMonthsOr = joinListConj(months, 'or');
         const tm2 = formatLocalTimeList(
           d.tz,
           d.by.hours,
@@ -157,31 +158,50 @@ export const buildCadence = (
           cfg.time?.timeFormat ?? 'hm',
           cfg.time?.hourCycle ?? 'h23',
         );
-        const onDays =
-          Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0
-            ? joinList(
-                d.by.weekdays.map((w) =>
-                  localWeekdayName(d.tz, w.weekday, cfg.locale, cfg.lowercase),
-                ),
-              )
-            : undefined;
+        // Weekday phrasing within multiple months
+        const hasWeekdays =
+          Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0;
         if (Array.isArray(d.by.monthDays) && d.by.monthDays.length > 1) {
           const ords = ordinalsList(
             d.by.monthDays.filter((n): n is number => typeof n === 'number'),
             cfg.ordinals ?? 'short',
           );
-          const out = `${base} in ${inMonthsAnd} on the ${ords}${
+          const out = `${base} in ${inMonthsOr} on the ${ords}${
             tm2 ? ` at ${tm2}` : ''
           }`;
           return appendLimits(out, d, cfg.limits ?? 'none');
         }
-        if (onDays) {
-          const out = `${base} in ${inMonthsAnd} on ${onDays}${
+        if (hasWeekdays) {
+          const names = d.by.weekdays.map((w) =>
+            localWeekdayName(d.tz, w.weekday, cfg.locale, cfg.lowercase),
+          );
+          const setpos = Array.isArray(d.by.setpos)
+            ? d.by.setpos.filter((n): n is number => typeof n === 'number')
+            : [];
+          const nthFromW = d.by.weekdays
+            .map((w) => w.nth)
+            .filter((n): n is number => typeof n === 'number');
+          const nthUnique = Array.from(
+            new Set<number>([...setpos, ...nthFromW]),
+          );
+          if (nthUnique.length > 0) {
+            const nthText = joinListConj(
+              nthUnique.map((n) => ord(n, cfg.ordinals ?? 'long')),
+              'or',
+            );
+            const wkText = joinListConj(names, 'or');
+            const out = `${base} in ${inMonthsOr} on the ${nthText} ${wkText}${
+              tm2 ? ` at ${tm2}` : ''
+            }`;
+            return appendLimits(out, d, cfg.limits ?? 'none');
+          }
+          const onDays = joinList(names);
+          const out = `${base} in ${inMonthsOr} on ${onDays}${
             tm2 ? ` at ${tm2}` : ''
           }`;
           return appendLimits(out, d, cfg.limits ?? 'none');
         }
-        const out = `${base} in ${inMonthsAnd}${tm2 ? ` at ${tm2}` : ''}`;
+        const out = `${base} in ${inMonthsOr}${tm2 ? ` at ${tm2}` : ''}`;
         return appendLimits(out, d, cfg.limits ?? 'none');
       }
     }

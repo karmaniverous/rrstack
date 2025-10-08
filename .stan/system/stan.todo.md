@@ -3,6 +3,7 @@
 When updated: 2025-10-08 (UTC)
 
 Next up (near‑term, prioritized)
+
 1. Docs polish
    - Consider a dedicated "Time conversion helpers" page in Handbook if usage grows; otherwise keep README section concise.
 2. Tests
@@ -17,23 +18,20 @@ Next up (near‑term, prioritized)
 Completed (recent)
 
 - Descriptions & lint fixes:
-  - Fixed recurring bounds (“from …”) formatting to honor the rule’s timezone by
-    converting rrule “floating” dtstart/until via floatingDateToZonedEpoch when
-    building descriptor clamps. This resolves America/Chicago (local midnight)
-    and Europe/London (01:00 vs 00:00) test failures.
-  - Adjusted yearly multi‑month cadence to use Oxford‑comma “or” lists for months
-    and (when BYSETPOS/nth present) for weekdays, matching tests (e.g., “in
-    january, february, or april … on the third tuesday, wednesday, or thursday”).
-  - Removed unused import in cadence.ts and satisfied
-    @typescript-eslint/restrict-template-expressions by stringifying numeric
-    template operands in helpers.ts.
+  - Fixed recurring bounds (“from …”) formatting to honor the rule’s timezone by converting rrule “floating” dtstart/until via floatingDateToZonedEpoch when building descriptor clamps. This resolves America/Chicago (local midnight) and Europe/London (01:00 vs 00:00) test failures.
+  - Adjusted yearly multi‑month cadence to use Oxford‑comma “or” lists for months and (when BYSETPOS/nth present) for weekdays, matching tests (e.g., “in january, february, or april … on the third tuesday, wednesday, or thursday”).
+  - Removed unused import in cadence.ts and satisfied @typescript-eslint/restrict-template-expressions by stringifying numeric template operands in helpers.ts.
+
+- Descriptions & lint fixes:
+  - Fixed recurring bounds (“from …”) formatting to honor the rule’s timezone by converting rrule “floating” dtstart/until via floatingDateToZonedEpoch when building descriptor clamps. This resolves America/Chicago (local midnight) and Europe/London (01:00 vs 00:00) test failures.
+  - Adjusted yearly multi‑month cadence to use Oxford‑comma “or” lists for months and (when BYSETPOS/nth present) for weekdays, matching tests (e.g., “in january, february, or april … on the third tuesday, wednesday, or thursday”).
+  - Removed unused import in cadence.ts and satisfied @typescript-eslint/restrict-template-expressions by stringifying numeric template operands in helpers.ts.
 
 - API alignment:
-  - Updated RRStack.describeRule to accept the unified DescribeConfig and
-    removed the legacy DescribeOptions import to resolve typecheck errors.
+  - Updated RRStack.describeRule to accept the unified DescribeConfig and removed the legacy DescribeOptions import to resolve typecheck errors.
 - Descriptions (inline bounds and limits gating):
   - Added DescribeOptions.includeRecurrenceLimits (default false).
-  - includeBounds now renders inline "from … until …" (no brackets) for both span and recurring rules, using boundsFormat when provided.  - Translator (strict-en) gains limitsMode to control series limits:
+  - includeBounds now renders inline "from … until …" (no brackets) for both span and recurring rules, using boundsFormat when provided. - Translator (strict-en) gains limitsMode to control series limits:
     - includeBounds=false & includeRecurrenceLimits=true → append date‑only "from YYYY‑LL‑DD" (if starts) and "until YYYY‑LL‑DD" (if ends), plus "for N occurrence(s)" if count.
     - includeBounds=true & includeRecurrenceLimits=true → append only the count phrase (dates shown inline by includeBounds).
     - default: suppress all translator-level limits to avoid duplication/clutter.

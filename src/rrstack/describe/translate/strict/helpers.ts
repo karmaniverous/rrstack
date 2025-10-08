@@ -188,7 +188,7 @@ export const durationToTextFromParts = (parts: DurationParts): string => {
   for (const k of order) {
     const v = parts[k];
     if (typeof v === 'number' && v > 0)
-      chunks.push(`${v} ${labels[k]}${v === 1 ? '' : 's'}`);
+      chunks.push(`${String(v)} ${labels[k]}${v === 1 ? '' : 's'}`);
   }
   return chunks.join(' ');
 };
