@@ -2,9 +2,23 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.16.0](https://github.com/karmaniverous/rrstack/compare/0.15.5...0.16.0)
+
+- refactor(descriptions): unify config and modularize strict-en translator [`274e88e`](https://github.com/karmaniverous/rrstack/commit/274e88eabac070a2e5d0cc421cf957452e7147cc)
+- feat(descriptions): inline bounds + includeRecurrenceLimits; suppress limits by default [`ec4d017`](https://github.com/karmaniverous/rrstack/commit/ec4d017f4d1edcdd54e4707c301d4d26d1fef0e4)
+- feat(describe): flatten DescribeConfig; simplify limits [`a7deead`](https://github.com/karmaniverous/rrstack/commit/a7deead47c0a25e44be1628d7b5bebb8e884d86f)
+- fix: timezone clamps in descriptions; “or” lists; lint [`ff0be16`](https://github.com/karmaniverous/rrstack/commit/ff0be16a5df90d812bee7b5a08cc0e8fe929b66d)
+- fix(describe): TS18048 and months-only list uses “and” [`0c68b71`](https://github.com/karmaniverous/rrstack/commit/0c68b71838bb6c1d4dad7d697e8e025b4b8a8c4e)
+- fix: timezone clamps in descriptions; “or” lists; lint [`d17a182`](https://github.com/karmaniverous/rrstack/commit/d17a182024cbbc92d2103fc40c7712697829dc5c)
+- fix(descriptions): update RRStack.describeRule to use DescribeConfig [`3f6da50`](https://github.com/karmaniverous/rrstack/commit/3f6da503edaaddb970d0f0457fecc8ed29a5bf00)
+- test(describe): finalize DescribeConfig flattening in recurring bounds [`15e82f6`](https://github.com/karmaniverous/rrstack/commit/15e82f67f820b6f339ba76613bb77058a5b11385)
+
 #### [0.15.5](https://github.com/karmaniverous/rrstack/compare/0.15.4...0.15.5)
 
+> 8 October 2025
+
 - docs: streamline README and expand Handbook (API, config, time, schema) [`96d0c13`](https://github.com/karmaniverous/rrstack/commit/96d0c1304011189476d59ced6696cf3110505183)
+- chore: release v0.15.5 [`9628cd1`](https://github.com/karmaniverous/rrstack/commit/9628cd1da4bdffffd85993af8ddbe4af94c73ce8)
 - updated docs [`c9b1e6b`](https://github.com/karmaniverous/rrstack/commit/c9b1e6bd34df66a73c6f7baeb4ebc19c0ad27f32)
 - updated docs [`0737142`](https://github.com/karmaniverous/rrstack/commit/0737142abb32c76c7f5731fb936da0c9abb0c46d)
 - test: add Singapore span includeBounds description assertions [`c71e946`](https://github.com/karmaniverous/rrstack/commit/c71e94617e51346e8694f9cf6b4406bc28329635)
