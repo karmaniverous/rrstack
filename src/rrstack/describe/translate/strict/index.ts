@@ -39,22 +39,24 @@ export const strictEnTranslator: DescribeTranslator = (
 ): string => {
   if (desc.kind === 'span') {
     let s = `${desc.effect === 'active' ? 'Active' : 'Blackout'} continuously`;
-    if (cfg.tz?.show) {
-      const label = cfg.tz.formatLabel ? cfg.tz.formatLabel(desc.tz) : desc.tz;
+    if (cfg.showTimezone) {
+      const label = cfg.formatTimezoneLabel
+        ? cfg.formatTimezoneLabel(desc.tz)
+        : desc.tz;
       s += ` (timezone ${label})`;
     }
-    if (cfg.bounds?.show) {
+    if (cfg.showBounds) {
       const from = formatBound(
         desc.clamps?.starts,
         desc.tz,
         desc.unit,
-        cfg.bounds.format,
+        cfg.boundsFormat,
       );
       const until = formatBound(
         desc.clamps?.ends,
         desc.tz,
         desc.unit,
-        cfg.bounds.format,
+        cfg.boundsFormat,
       );
       if (from) s += ` from ${from}`;
       if (until) s += ` until ${until}`;
@@ -68,23 +70,25 @@ export const strictEnTranslator: DescribeTranslator = (
   const cadence = buildCadence(desc, cfg);
   let s = `${effect} for ${durText} ${cadence}`;
 
-  if (cfg.tz?.show) {
-    const label = cfg.tz.formatLabel ? cfg.tz.formatLabel(desc.tz) : desc.tz;
+  if (cfg.showTimezone) {
+    const label = cfg.formatTimezoneLabel
+      ? cfg.formatTimezoneLabel(desc.tz)
+      : desc.tz;
     s += ` (timezone ${label})`;
   }
 
-  if (cfg.bounds?.show) {
+  if (cfg.showBounds) {
     const from = formatBound(
       desc.clamps?.starts,
       desc.tz,
       desc.unit,
-      cfg.bounds.format,
+      cfg.boundsFormat,
     );
     const until = formatBound(
       desc.clamps?.ends,
       desc.tz,
       desc.unit,
-      cfg.bounds.format,
+      cfg.boundsFormat,
     );
     if (from) s += ` from ${from}`;
     if (until) s += ` until ${until}`;

@@ -8,30 +8,20 @@ import type { DescribeTranslator } from './translate/strict';
 export interface DescribeConfig {
   /** Translator chooser (default: 'strict-en'). */
   translator?: 'strict-en' | DescribeTranslator;
-  /** Timezone label policy. */
-  tz?: {
-    show?: boolean;
-    formatLabel?: (tzId: string) => string;
-  };
-  /** Inline bounds policy (no brackets). */
-  bounds?: {
-    show?: boolean;
-    /** Luxon toFormat string when provided; otherwise ISO without ms. */
-    format?: string;
-  };
-  /**
-   * Series limits policy:
-   * - 'none' (default): no count/until/from appended.
-   * - 'dateOnly': append date-only "from YYYY-LL-DD" (if starts) and "until YYYY-LL-DD" (if ends).
-   * - 'countOnly': append only "for N occurrence(s)" (if count).
-   * - 'dateAndCount': append date-only from/until and count.
-   */
-  limits?: 'none' | 'dateOnly' | 'countOnly' | 'dateAndCount';
+  /** Show "(timezone <label>)" after the sentence. */
+  showTimezone?: boolean;
+  /** Customize timezone label string. */
+  formatTimezoneLabel?: (tzId: string) => string;
+  /** Show inline bounds: "from … until …". */
+  showBounds?: boolean;
+  /** Format for bounds when shown (Luxon toFormat); default ISO without ms. */
+  boundsFormat?: string;
+  /** Append "for N occurrence(s)" when a COUNT is present. */
+  showRecurrenceCount?: boolean;
   /** Time-of-day formatting in the rule timezone. */
-  time?: {
-    timeFormat?: 'hm' | 'hms' | 'auto';
-    hourCycle?: 'h23' | 'h12';
-  };
+  timeFormat?: 'hm' | 'hms' | 'auto';
+  /** 24h vs 12h clock for time-of-day formatting. */
+  hourCycle?: 'h23' | 'h12';
   /** Locale applied to label/time rendering (Luxon setLocale). */
   locale?: string;
   /** Ordinal labels (e.g., third vs 3rd). */

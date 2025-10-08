@@ -17,8 +17,8 @@ describe('RRStack.describeRule(index, opts)', () => {
     };
     const stack = new RRStack({ timezone: 'UTC', rules: [rule] });
     const text = stack.describeRule(0, {
-      tz: { show: true },
-      bounds: { show: false },
+      showTimezone: true,
+      showBounds: false,
     });
     const lower = text.toLowerCase();
     expect(lower).toContain('active');
@@ -37,11 +37,10 @@ describe('RRStack.describeRule(index, opts)', () => {
       options: { starts: start, ends: end },
     };
     const stack = new RRStack({ timezone: 'UTC', rules: [span] });
-    const text = stack.describeRule(0, { bounds: { show: true } });
+    const text = stack.describeRule(0, { showBounds: true });
     // Base phrasing for spans
     expect(text.toLowerCase()).toContain('active continuously');
-    // Bounds should be appended when includeBounds=true    expect(text).toContain('from 2025-04-01T00:00:00Z');
-    expect(text).toContain('until 2025-04-02T00:00:00Z');
+    // Bounds should be appended when includeBounds=true    expect(text).toContain('from 2025-04-01T00:00:00Z');    expect(text).toContain('until 2025-04-02T00:00:00Z');
   });
 
   it("span with starts/ends includes bounds when includeBounds=true ('s' unit)", () => {
@@ -58,7 +57,7 @@ describe('RRStack.describeRule(index, opts)', () => {
       timeUnit: 's',
       rules: [span],
     });
-    const text = stack.describeRule(0, { bounds: { show: true } });
+    const text = stack.describeRule(0, { showBounds: true });
     expect(text.toLowerCase()).toContain('active continuously');
     // With 's' unit, formatting still yields ISO with Z, derived from seconds
     expect(text).toContain('from 2025-04-01T00:00:00Z');
@@ -74,7 +73,8 @@ describe('RRStack.describeRule(index, opts)', () => {
     };
     const stack = new RRStack({ timezone: 'UTC', rules: [span] });
     const text = stack.describeRule(0, {
-      bounds: { show: true, format: 'yyyy-LL-dd HH:mm' },
+      showBounds: true,
+      boundsFormat: 'yyyy-LL-dd HH:mm',
     });
     expect(text).toContain('from 2025-04-01 00:00');
     expect(text).toContain('until 2025-04-02 00:00');
@@ -116,11 +116,11 @@ describe('RRStack.describeRule(index, opts)', () => {
     };
     const stack = new RRStack({ timezone: 'America/Chicago', rules: [rule] });
     const text = stack.describeRule(0, {
-      bounds: { show: true, format: 'yyyy-LL-dd HH:mm' },
+      showBounds: true,
+      boundsFormat: 'yyyy-LL-dd HH:mm',
     });
     // Core phrasing
-    expect(text).toContain('Active for 1 day every day');
-    // Bounds should reflect local midnight, not a UTC-based time
+    expect(text).toContain('Active for 1 day every day'); // Bounds should reflect local midnight, not a UTC-based time
     expect(text).toContain('from 2025-10-01 00:00'); // Guard against the incorrect prior value
     expect(text).not.toContain('from 2025-09-30 07:00');
   });
@@ -138,22 +138,21 @@ describe('RRStack.describeRule(index, opts)', () => {
       rules: [span],
     });
 
-    // Default ISO bounds (local offset +08:00)
-    const iso = stack.describeRule(0, { bounds: { show: true } });
+    const iso = stack.describeRule(0, { showBounds: true });
     expect(iso.toLowerCase()).toContain('active continuously');
     expect(iso).toContain('from 2025-10-07T00:00:00+08:00');
     expect(iso).toContain('until 2025-10-11T00:00:00+08:00');
-
     // With timezone label
     const withTz = stack.describeRule(0, {
-      tz: { show: true },
-      bounds: { show: true },
+      showTimezone: true,
+      showBounds: true,
     });
     expect(withTz.toLowerCase()).toContain('timezone asia/singapore');
 
     // Date-only formatting
     const dOnly = stack.describeRule(0, {
-      bounds: { show: true, format: 'yyyy-LL-dd' },
+      showBounds: true,
+      boundsFormat: 'yyyy-LL-dd',
     });
     expect(dOnly).toContain('from 2025-10-07');
     expect(dOnly).toContain('until 2025-10-11');

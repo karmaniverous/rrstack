@@ -15,7 +15,8 @@ import { appendLimits } from './limits';
 
 /**
  * Build the cadence phrase ("every day at 5:00", "in July on the third Tuesday", ...),
- * with limits (date-only and/or count) appended per cfg.limits.
+ * with optional count appender per cfg.showRecurrenceCount (date bounds are handled
+ * by the top-level translator via cfg.showBounds).
  */
 export const buildCadence = (
   d: RuleDescriptorRecur,
@@ -31,11 +32,11 @@ export const buildCadence = (
       d.by.hours,
       d.by.minutes,
       d.by.seconds,
-      cfg.time?.timeFormat ?? 'hm',
-      cfg.time?.hourCycle ?? 'h23',
+      cfg.timeFormat ?? 'hm',
+      cfg.hourCycle ?? 'h23',
     );
     const out = tm ? `${base} at ${tm}` : base;
-    return appendLimits(out, d, cfg.limits ?? 'none');
+    return appendLimits(out, d, !!cfg.showRecurrenceCount);
   }
 
   // WEEKLY (weekday list)
@@ -50,11 +51,11 @@ export const buildCadence = (
         d.by.hours,
         d.by.minutes,
         d.by.seconds,
-        cfg.time?.timeFormat ?? 'hm',
-        cfg.time?.hourCycle ?? 'h23',
+        cfg.timeFormat ?? 'hm',
+        cfg.hourCycle ?? 'h23',
       );
       const out = `${base} on ${onDays}${tm ? ` at ${tm}` : ''}`;
-      return appendLimits(out, d, cfg.limits ?? 'none');
+      return appendLimits(out, d, !!cfg.showRecurrenceCount);
     }
   }
 
@@ -70,8 +71,8 @@ export const buildCadence = (
         d.by.hours,
         d.by.minutes,
         d.by.seconds,
-        cfg.time?.timeFormat ?? 'hm',
-        cfg.time?.hourCycle ?? 'h23',
+        cfg.timeFormat ?? 'hm',
+        cfg.hourCycle ?? 'h23',
       );
       if (Array.isArray(d.by.monthDays) && d.by.monthDays.length === 1) {
         const dayStr = String(d.by.monthDays[0]);
@@ -81,7 +82,7 @@ export const buildCadence = (
           cfg.locale,
           cfg.lowercase,
         )} ${dayStr}${tm ? ` at ${tm}` : ''}`;
-        return appendLimits(out, d, cfg.limits ?? 'none');
+        return appendLimits(out, d, !!cfg.showRecurrenceCount);
       }
       if (Array.isArray(d.by.monthDays) && d.by.monthDays.length > 1) {
         const days = d.by.monthDays.filter(
@@ -95,7 +96,7 @@ export const buildCadence = (
             cfg.locale,
             cfg.lowercase,
           )} on the ${ords}${tm ? ` at ${tm}` : ''}`;
-          return appendLimits(out, d, cfg.limits ?? 'none');
+          return appendLimits(out, d, !!cfg.showRecurrenceCount);
         }
       }
       if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
@@ -121,7 +122,7 @@ export const buildCadence = (
             cfg.locale,
             cfg.lowercase,
           )} on the ${nthText} ${wkText}${tm ? ` at ${tm}` : ''}`;
-          return appendLimits(out, d, cfg.limits ?? 'none');
+          return appendLimits(out, d, !!cfg.showRecurrenceCount);
         }
         const onDays = joinList(names);
         const out = `${base} in ${monthName(
@@ -130,7 +131,7 @@ export const buildCadence = (
           cfg.locale,
           cfg.lowercase,
         )} on ${onDays}${tm ? ` at ${tm}` : ''}`;
-        return appendLimits(out, d, cfg.limits ?? 'none');
+        return appendLimits(out, d, !!cfg.showRecurrenceCount);
       }
       {
         const out = `${base} in ${monthName(
@@ -139,7 +140,7 @@ export const buildCadence = (
           cfg.locale,
           cfg.lowercase,
         )}${tm ? ` at ${tm}` : ''}`;
-        return appendLimits(out, d, cfg.limits ?? 'none');
+        return appendLimits(out, d, !!cfg.showRecurrenceCount);
       }
     }
     if (Array.isArray(d.by.months) && d.by.months.length > 1) {
@@ -160,8 +161,8 @@ export const buildCadence = (
           d.by.hours,
           d.by.minutes,
           d.by.seconds,
-          cfg.time?.timeFormat ?? 'hm',
-          cfg.time?.hourCycle ?? 'h23',
+          cfg.timeFormat ?? 'hm',
+          cfg.hourCycle ?? 'h23',
         );
         if (Array.isArray(d.by.monthDays) && d.by.monthDays.length > 1) {
           const ords = ordinalsList(
@@ -171,7 +172,7 @@ export const buildCadence = (
           const out = `${base} in ${inMonths} on the ${ords}${
             tm2 ? ` at ${tm2}` : ''
           }`;
-          return appendLimits(out, d, cfg.limits ?? 'none');
+          return appendLimits(out, d, !!cfg.showRecurrenceCount);
         }
         if (hasWeekdays) {
           const wds = d.by.weekdays!;
@@ -196,16 +197,16 @@ export const buildCadence = (
             const out = `${base} in ${inMonths} on the ${nthText} ${wkText}${
               tm2 ? ` at ${tm2}` : ''
             }`;
-            return appendLimits(out, d, cfg.limits ?? 'none');
+            return appendLimits(out, d, !!cfg.showRecurrenceCount);
           }
           const onDays = joinList(names);
           const out = `${base} in ${inMonths} on ${onDays}${
             tm2 ? ` at ${tm2}` : ''
           }`;
-          return appendLimits(out, d, cfg.limits ?? 'none');
+          return appendLimits(out, d, !!cfg.showRecurrenceCount);
         }
         const out = `${base} in ${inMonths}${tm2 ? ` at ${tm2}` : ''}`;
-        return appendLimits(out, d, cfg.limits ?? 'none');
+        return appendLimits(out, d, !!cfg.showRecurrenceCount);
       }
     }
     if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
@@ -214,8 +215,8 @@ export const buildCadence = (
         d.by.hours,
         d.by.minutes,
         d.by.seconds,
-        cfg.time?.timeFormat ?? 'hm',
-        cfg.time?.hourCycle ?? 'h23',
+        cfg.timeFormat ?? 'hm',
+        cfg.hourCycle ?? 'h23',
       );
       const names = d.by.weekdays.map((w) =>
         localWeekdayName(d.tz, w.weekday, cfg.locale, cfg.lowercase),
@@ -236,11 +237,11 @@ export const buildCadence = (
         const out = `${base} on the ${nthText} ${wkText}${
           tm3 ? ` at ${tm3}` : ''
         }`;
-        return appendLimits(out, d, cfg.limits ?? 'none');
+        return appendLimits(out, d, !!cfg.showRecurrenceCount);
       }
       const onDays = joinList(names);
       const out = `${base} on ${onDays}${tm3 ? ` at ${tm3}` : ''}`;
-      return appendLimits(out, d, cfg.limits ?? 'none');
+      return appendLimits(out, d, !!cfg.showRecurrenceCount);
     }
   }
 
@@ -254,11 +255,11 @@ export const buildCadence = (
         d.by.hours,
         d.by.minutes,
         d.by.seconds,
-        cfg.time?.timeFormat ?? 'hm',
-        cfg.time?.hourCycle ?? 'h23',
+        cfg.timeFormat ?? 'hm',
+        cfg.hourCycle ?? 'h23',
       );
       const out = `${base} on the ${dayLabel}${tm ? ` at ${tm}` : ''}`;
-      return appendLimits(out, d, cfg.limits ?? 'none');
+      return appendLimits(out, d, !!cfg.showRecurrenceCount);
     }
     if (Array.isArray(d.by.monthDays) && d.by.monthDays.length > 1) {
       const ords = ordinalsList(
@@ -270,11 +271,11 @@ export const buildCadence = (
         d.by.hours,
         d.by.minutes,
         d.by.seconds,
-        cfg.time?.timeFormat ?? 'hm',
-        cfg.time?.hourCycle ?? 'h23',
+        cfg.timeFormat ?? 'hm',
+        cfg.hourCycle ?? 'h23',
       );
       const out = `${base} on the ${ords}${tm ? ` at ${tm}` : ''}`;
-      return appendLimits(out, d, cfg.limits ?? 'none');
+      return appendLimits(out, d, !!cfg.showRecurrenceCount);
     }
     if (Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0) {
       const setpos = Array.isArray(d.by.setpos)
@@ -292,8 +293,8 @@ export const buildCadence = (
         d.by.hours,
         d.by.minutes,
         d.by.seconds,
-        cfg.time?.timeFormat ?? 'hm',
-        cfg.time?.hourCycle ?? 'h23',
+        cfg.timeFormat ?? 'hm',
+        cfg.hourCycle ?? 'h23',
       );
       if (nthUnique.length > 0) {
         const nthText = joinListConj(
@@ -302,14 +303,14 @@ export const buildCadence = (
         );
         const wkText = joinListConj(names, 'or');
         const out = `${base} on the ${nthText} ${wkText}${tm ? ` at ${tm}` : ''}`;
-        return appendLimits(out, d, cfg.limits ?? 'none');
+        return appendLimits(out, d, !!cfg.showRecurrenceCount);
       }
       const onDays = joinList(names);
       const out = `${base} on ${onDays}${tm ? ` at ${tm}` : ''}`;
-      return appendLimits(out, d, cfg.limits ?? 'none');
+      return appendLimits(out, d, !!cfg.showRecurrenceCount);
     }
   }
 
   // Fallback
-  return appendLimits(base, d, cfg.limits ?? 'none');
+  return appendLimits(base, d, !!cfg.showRecurrenceCount);
 };

@@ -20,7 +20,7 @@ describe('rule description helpers', () => {
   };
   it('describeCompiledRule includes effect, duration, and recurrence text', () => {
     const compiled = compileRule(rule, tz, 'ms');
-    const text = describeCompiledRule(compiled, { tz: { show: true } });
+    const text = describeCompiledRule(compiled, { showTimezone: true });
     const lower = text.toLowerCase();
     expect(lower).toContain('active');
     expect(lower).toContain('1 hour 30 minutes'); // rrule.toText() default English typically includes "every day"
@@ -45,8 +45,8 @@ describe('rule description helpers', () => {
       },
     };
     const text = describeRule(span, tz, 'ms', {
-      tz: { show: true },
-      bounds: { show: true },
+      showTimezone: true,
+      showBounds: true,
     });
     const lower = text.toLowerCase();
     expect(lower).toContain('active');
@@ -56,7 +56,8 @@ describe('rule description helpers', () => {
 
   it('formatTimeZone customizes timezone label (recurring)', () => {
     const text = describeRule(rule, tz, 'ms', {
-      tz: { show: true, formatLabel: () => 'FriendlyTZ' },
+      showTimezone: true,
+      formatTimezoneLabel: () => 'FriendlyTZ',
     });
     const lower = text.toLowerCase();
     expect(lower).toContain('timezone friendlytz');
@@ -73,10 +74,12 @@ describe('rule description helpers', () => {
       },
     };
     const text = describeRule(span, tz, 'ms', {
-      tz: { show: true, formatLabel: () => 'FriendlyTZ' },
+      showTimezone: true,
+      formatTimezoneLabel: () => 'FriendlyTZ',
     });
     expect(text.toLowerCase()).toContain('timezone friendlytz');
   });
+
   it('describeRule helper (span, Asia/Singapore): includeBounds ISO and date-only formatting', () => {
     // Same data as prior stack-based test; verify the pure utility API.
     const starts = 1_759_766_400_000; // 2025-10-06T16:00:00Z → 2025-10-07 00:00 +08:00
@@ -89,21 +92,22 @@ describe('rule description helpers', () => {
     const tzId = RRStack.asTimeZoneId('Asia/Singapore');
 
     // Default ISO bounds (local offset +08:00)
-    const iso = describeRule(rule, tzId, 'ms', { bounds: { show: true } });
+    const iso = describeRule(rule, tzId, 'ms', { showBounds: true });
     expect(iso.toLowerCase()).toContain('active continuously');
     expect(iso).toContain('from 2025-10-07T00:00:00+08:00');
     expect(iso).toContain('until 2025-10-11T00:00:00+08:00');
 
     // With timezone label
     const withTz = describeRule(rule, tzId, 'ms', {
-      bounds: { show: true },
-      tz: { show: true },
+      showBounds: true,
+      showTimezone: true,
     });
     expect(withTz.toLowerCase()).toContain('timezone asia/singapore');
 
     // Date-only formatting
     const dOnly = describeRule(rule, tzId, 'ms', {
-      bounds: { show: true, format: 'yyyy-LL-dd HH:mm' },
+      showBounds: true,
+      boundsFormat: 'yyyy-LL-dd HH:mm',
     });
     expect(dOnly).toContain('from 2025-10-07 00:00');
     expect(dOnly).toContain('until 2025-10-11 00:00');
