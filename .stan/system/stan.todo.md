@@ -17,10 +17,13 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- API alignment:
+  - Updated RRStack.describeRule to accept the unified DescribeConfig and
+    removed the legacy DescribeOptions import to resolve typecheck errors.
+
 - Descriptions (inline bounds and limits gating):
   - Added DescribeOptions.includeRecurrenceLimits (default false).
-  - includeBounds now renders inline "from … until …" (no brackets) for both span and recurring rules, using boundsFormat when provided.
-  - Translator (strict-en) gains limitsMode to control series limits:
+  - includeBounds now renders inline "from … until …" (no brackets) for both span and recurring rules, using boundsFormat when provided.  - Translator (strict-en) gains limitsMode to control series limits:
     - includeBounds=false & includeRecurrenceLimits=true → append date‑only "from YYYY‑LL‑DD" (if starts) and "until YYYY‑LL‑DD" (if ends), plus "for N occurrence(s)" if count.
     - includeBounds=true & includeRecurrenceLimits=true → append only the count phrase (dates shown inline by includeBounds).
     - default: suppress all translator-level limits to avoid duplication/clutter.

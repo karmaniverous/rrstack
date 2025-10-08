@@ -19,7 +19,8 @@ import { DateTime } from 'luxon';
 import { type CompiledRule, compileRule } from './compile';
 import { isValidTimeZone } from './coverage/time';
 import { DEFAULT_DEFAULT_EFFECT } from './defaults';
-import { describeCompiledRule, type DescribeOptions } from './describe';
+import { describeCompiledRule } from './describe';
+import type { DescribeConfig } from './describe/config';
 import {
   normalizeOptions,
   ruleLiteSchema,
@@ -501,17 +502,16 @@ export class RRStack {
    * // e.g., "Active for 1 hour: every day at 5:00 (timezone UTC) [from 2024-01-10T00:00:00Z]"
    * ```
    */
-  describeRule(index: number, opts: DescribeOptions = {}): string {
+  describeRule(index: number, cfg: DescribeConfig = {}): string {
     if (!Number.isInteger(index)) {
       throw new TypeError('rule index must be an integer');
     }
     if (index < 0 || index >= this.compiled.length)
       throw new RangeError('rule index out of range');
-    return describeCompiledRule(this.compiled[index], opts);
+    return describeCompiledRule(this.compiled[index], cfg);
   }
 
   // Convenience rule mutators -------------------------------------------------
-
   /**
    * Insert a rule at a specific index (or append when index is omitted).
    * Delegates to the {@link rules} setter (single recompile).
