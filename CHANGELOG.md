@@ -2,9 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.16.1](https://github.com/karmaniverous/rrstack/compare/0.16.0...0.16.1)
+
+- fix(types): byweekday in RRStackJson now number | number[] | undefined [`4bb5aa0`](https://github.com/karmaniverous/rrstack/commit/4bb5aa0bcd166dac14cde5ef515fafde11b26ff3)
+
 #### [0.16.0](https://github.com/karmaniverous/rrstack/compare/0.15.5...0.16.0)
 
+> 8 October 2025
+
 - refactor(descriptions): unify config and modularize strict-en translator [`274e88e`](https://github.com/karmaniverous/rrstack/commit/274e88eabac070a2e5d0cc421cf957452e7147cc)
+- chore: release v0.16.0 [`dfb5b4c`](https://github.com/karmaniverous/rrstack/commit/dfb5b4cdd8303f9f2f876fc6714ce8d9fe70cde1)
 - feat(descriptions): inline bounds + includeRecurrenceLimits; suppress limits by default [`ec4d017`](https://github.com/karmaniverous/rrstack/commit/ec4d017f4d1edcdd54e4707c301d4d26d1fef0e4)
 - feat(describe): flatten DescribeConfig; simplify limits [`a7deead`](https://github.com/karmaniverous/rrstack/commit/a7deead47c0a25e44be1628d7b5bebb8e884d86f)
 - fix: timezone clamps in descriptions; “or” lists; lint [`ff0be16`](https://github.com/karmaniverous/rrstack/commit/ff0be16a5df90d812bee7b5a08cc0e8fe929b66d)
