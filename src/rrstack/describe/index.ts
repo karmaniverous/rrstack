@@ -75,6 +75,15 @@ export interface DescribeOptions {
   /** Append "[from <dtstart>; until <until>]" if clamps are present — default false */
   includeBounds?: boolean;
   /**
+   * Show series limits (dates and/or count) in the cadence when desired.
+   * - Default false: suppress translator-level UNTIL/COUNT phrasing.
+   * - When true and includeBounds=false: append date-only "from YYYY-LL-DD" (if starts)
+   *   and "until YYYY-LL-DD" (if ends), plus "for N occurrence(s)" when count exists.
+   * - When true and includeBounds=true: append only the count phrase; dates are shown
+   *   inline by includeBounds to avoid duplication.
+   */
+  includeRecurrenceLimits?: boolean;
+  /**
    * Optional formatter for the timezone label. When provided and
    * includeTimeZone is true, the description will use
    * `(timezone formatTimeZone(tzId))` instead of the raw tz id.
@@ -110,6 +119,7 @@ export const describeCompiledRule = (
   const {
     includeTimeZone = false,
     includeBounds = false,
+    includeRecurrenceLimits = false,
     boundsFormat,
     formatTimeZone,
   } = opts;
@@ -137,13 +147,8 @@ export const describeCompiledRule = (
       };
       const from = fmt(compiled.start);
       const until = fmt(compiled.end);
-      if (from || until) {
-        s += ' [';
-        if (from) s += `from ${from}`;
-        if (from && until) s += '; ';
-        if (until) s += `until ${until}`;
-        s += ']';
-      }
+      if (from) s += ` from ${from}`;
+      if (until) s += ` until ${until}`;
     }
     return s;
   }
@@ -154,7 +159,20 @@ export const describeCompiledRule = (
     typeof opts.translator === 'function'
       ? opts.translator
       : strictEnTranslator;
-  const recurText = tx(descriptor, opts.translatorOptions);
+  // Gate translator-level limits by DescribeOptions.
+  // - includeBounds=false & includeRecurrenceLimits=true  → dateAndCount (date-only + count)
+  // - includeBounds=true  & includeRecurrenceLimits=true  → countOnly (dates shown inline by includeBounds)
+  // - otherwise → none (suppress)
+  const limitsMode: TranslatorOptions['limitsMode'] =
+    includeRecurrenceLimits && includeBounds
+      ? 'countOnly'
+      : includeRecurrenceLimits && !includeBounds
+        ? 'dateAndCount'
+        : 'none';
+  const recurText = tx(descriptor, {
+    ...(opts.translatorOptions ?? {}),
+    limitsMode,
+  });
   let s = `${effect} for ${durText} ${recurText}`;
   if (includeTimeZone) {
     const tzLabel = formatTimeZone ? formatTimeZone(recur.tz) : recur.tz;
@@ -162,18 +180,7 @@ export const describeCompiledRule = (
   }
 
   if (includeBounds) {
-    // Example:
-    // describeCompiledRule(compiled, { includeBounds: true })
-    // → "... [from 2024-01-10T00:00:00.000Z; until 2024-02-01T00:00:00.000Z]"
-    // (bounds appear only if the rule options include clamps that compiled
-    //  to dtstart/until)
-
     const tz = recur.tz;
-    // dtstart/until are RRULE "floating" Dates — their UTC fields represent the
-    // local wall time (year/month/day/hour/min/sec) in the rule’s timezone.
-    // For human-friendly bounds we must rebuild a Luxon DateTime using those
-    // UTC fields in the rule’s timezone instead of interpreting the JS Date as
-    // an absolute instant.
     const fmt = (d: Date | null | undefined) => {
       if (!d) return undefined;
       const dt = DateTime.fromObject(
@@ -201,13 +208,8 @@ export const describeCompiledRule = (
     const until = !recur.isOpenEnd
       ? fmt((recur.options as { until?: Date | null }).until)
       : undefined;
-    if (from || until) {
-      s += ' [';
-      if (from) s += `from ${from}`;
-      if (from && until) s += '; ';
-      if (until) s += `until ${until}`;
-      s += ']';
-    }
+    if (from) s += ` from ${from}`;
+    if (until) s += ` until ${until}`;
   }
   return s;
 };

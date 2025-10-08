@@ -14,6 +14,14 @@ export interface TranslatorOptions {
   locale?: string;
   /** Lowercase labels (strict style). Defaults to true. */
   lowercase?: boolean;
+  /**
+   * Controls whether the translator appends series limits.
+   * - 'none' (default): no count/until/from appended.
+   * - 'dateOnly': append date-only "from YYYY-LL-DD" (if starts) and "until YYYY-LL-DD" (if ends).
+   * - 'countOnly': append only "for N occurrence(s)" (if count).
+   * - 'dateAndCount': append date-only from/until and count.
+   */
+  limitsMode?: 'none' | 'dateOnly' | 'countOnly' | 'dateAndCount';
 }
 
 export type DescribeTranslator = (
@@ -74,6 +82,35 @@ const mergeLexicon = (
   };
 };
 
+// Append date-only (from/until) and/or count limits based on mode.
+const appendLimits = (
+  phrase: string,
+  d: RuleDescriptorRecur,
+  mode: NonNullable<TranslatorOptions['limitsMode']>,
+): string => {
+  if (mode === 'none') return phrase;
+  const appendDates = mode === 'dateOnly' || mode === 'dateAndCount';
+  const appendCount = mode === 'countOnly' || mode === 'dateAndCount';
+
+  const toYMD = (epoch?: number): string | undefined => {
+    if (typeof epoch !== 'number') return undefined;
+    const dt =
+      d.unit === 'ms'
+        ? DateTime.fromMillis(epoch, { zone: d.tz })
+        : DateTime.fromSeconds(epoch, { zone: d.tz });
+    return dt.toISODate() ?? undefined;
+  };
+  if (appendDates) {
+    const from = toYMD(d.clamps?.starts);
+    const until = toYMD(d.until);
+    if (from) phrase += ` from ${from}`;
+    if (until) phrase += ` until ${until}`;
+  }
+  if (appendCount && typeof d.count === 'number' && d.count > 0) {
+    phrase += ` for ${String(d.count)} occurrence${d.count === 1 ? '' : 's'}`;
+  }
+  return phrase;
+};
 // Use Luxon to render a local time-of-day string in the rule’s timezone.
 const formatLocalTime = (
   tz: string,
@@ -197,23 +234,6 @@ const ordinalsList = (days: number[], style: OrdinalStyle): string => {
   return joinList(items);
 };
 
-// Append COUNT / UNTIL phrasing to the produced sentence.
-const withCountUntil = (phrase: string, d: RuleDescriptorRecur): string => {
-  let out = phrase;
-  if (typeof d.count === 'number' && d.count > 0) {
-    const c = d.count;
-    out += ` for ${String(c)} occurrence${c === 1 ? '' : 's'}`;
-  }
-  if (typeof d.until === 'number') {
-    const ymd =
-      d.unit === 'ms'
-        ? DateTime.fromMillis(d.until, { zone: d.tz }).toISODate()
-        : DateTime.fromSeconds(d.until, { zone: d.tz }).toISODate();
-    if (ymd) out += ` until ${ymd}`;
-  }
-  return out;
-};
-
 const phraseRecur = (
   d: RuleDescriptorRecur,
   opts?: TranslatorOptions,
@@ -231,7 +251,8 @@ const phraseRecur = (
       opts?.timeFormat ?? 'hm',
       opts?.hourCycle ?? 'h23',
     );
-    return withCountUntil(tm ? `${base} at ${tm}` : base, d);
+    const out = tm ? `${base} at ${tm}` : base;
+    return appendLimits(out, d, opts?.limitsMode ?? 'none');
   }
 
   // WEEKLY: list weekdays “on monday, wednesday and friday”
@@ -249,7 +270,8 @@ const phraseRecur = (
         opts?.timeFormat ?? 'hm',
         opts?.hourCycle ?? 'h23',
       );
-      return withCountUntil(`${base} on ${onDays}${tm ? ` at ${tm}` : ''}`, d);
+      const out = `${base} on ${onDays}${tm ? ` at ${tm}` : ''}`;
+      return appendLimits(out, d, opts?.limitsMode ?? 'none');
     }
   }
 
@@ -275,10 +297,8 @@ const phraseRecur = (
       );
       if (Array.isArray(d.by.monthDays) && d.by.monthDays.length === 1) {
         const dayStr = String(d.by.monthDays[0]);
-        return withCountUntil(
-          `${base} on ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} ${dayStr}${tm ? ` at ${tm}` : ''}`,
-          d,
-        );
+        const out = `${base} on ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} ${dayStr}${tm ? ` at ${tm}` : ''}`;
+        return appendLimits(out, d, opts?.limitsMode ?? 'none');
       }
       // Multiple month-days (e.g., 1st, 15th, 28th)
       if (Array.isArray(d.by.monthDays) && d.by.monthDays.length > 1) {
@@ -287,10 +307,8 @@ const phraseRecur = (
         );
         if (days.length > 0) {
           const ords = ordinalsList(days, opts?.ordinals ?? 'short');
-          return withCountUntil(
-            `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on the ${ords}${tm ? ` at ${tm}` : ''}`,
-            d,
-          );
+          const out = `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on the ${ords}${tm ? ` at ${tm}` : ''}`;
+          return appendLimits(out, d, opts?.limitsMode ?? 'none');
         }
       }
       // Weekdays (positioned or not)
@@ -311,23 +329,19 @@ const phraseRecur = (
             'or',
           );
           const wkText = joinListConj(names, 'or');
-          return withCountUntil(
-            `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on the ${nthText} ${wkText}${tm ? ` at ${tm}` : ''}`,
-            d,
-          );
+          const out = `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on the ${nthText} ${wkText}${tm ? ` at ${tm}` : ''}`;
+          return appendLimits(out, d, opts?.limitsMode ?? 'none');
         }
         // No position → simple weekday list
         const onDays = joinList(names);
-        return withCountUntil(
-          `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on ${onDays}${tm ? ` at ${tm}` : ''}`,
-          d,
-        );
+        const out = `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)} on ${onDays}${tm ? ` at ${tm}` : ''}`;
+        return appendLimits(out, d, opts?.limitsMode ?? 'none');
       }
       // Single month only (no month-days/weekday constraints)
-      return withCountUntil(
-        `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)}${tm ? ` at ${tm}` : ''}`,
-        d,
-      );
+      {
+        const out = `${base} in ${monthName(d.tz, m, opts?.locale, opts?.lowercase)}${tm ? ` at ${tm}` : ''}`;
+        return appendLimits(out, d, opts?.limitsMode ?? 'none');
+      }
     }
     if (Array.isArray(d.by.months) && d.by.months.length > 1) {
       const months = d.by.months
@@ -353,10 +367,8 @@ const phraseRecur = (
           );
           if (days.length > 0) {
             const ords = ordinalsList(days, opts?.ordinals ?? 'short');
-            return withCountUntil(
-              `${base} in ${inMonthsAnd} on the ${ords}${tm2 ? ` at ${tm2}` : ''}`,
-              d,
-            );
+            const out = `${base} in ${inMonthsAnd} on the ${ords}${tm2 ? ` at ${tm2}` : ''}`;
+            return appendLimits(out, d, opts?.limitsMode ?? 'none');
           }
         }
         // Weekdays (positioned or not)
@@ -379,21 +391,17 @@ const phraseRecur = (
               'or',
             );
             const wkText = joinListConj(names, 'or');
-            return withCountUntil(
-              `${base} in ${inMonthsOr} on the ${nthText} ${wkText}${tm2 ? ` at ${tm2}` : ''}`,
-              d,
-            );
+            const out = `${base} in ${inMonthsOr} on the ${nthText} ${wkText}${tm2 ? ` at ${tm2}` : ''}`;
+            return appendLimits(out, d, opts?.limitsMode ?? 'none');
           }
           const onDays = joinList(names);
-          return withCountUntil(
-            `${base} in ${inMonthsAnd} on ${onDays}${tm2 ? ` at ${tm2}` : ''}`,
-            d,
-          );
+          const out = `${base} in ${inMonthsAnd} on ${onDays}${tm2 ? ` at ${tm2}` : ''}`;
+          return appendLimits(out, d, opts?.limitsMode ?? 'none');
         }
-        return withCountUntil(
-          `${base} in ${inMonthsAnd}${tm2 ? ` at ${tm2}` : ''}`,
-          d,
-        );
+        {
+          const out = `${base} in ${inMonthsAnd}${tm2 ? ` at ${tm2}` : ''}`;
+          return appendLimits(out, d, opts?.limitsMode ?? 'none');
+        }
       }
     }
     // No months configured, but weekdays present (yearly): reflect weekdays.
@@ -422,16 +430,12 @@ const phraseRecur = (
           'or',
         );
         const wkText = joinListConj(names, 'or');
-        return withCountUntil(
-          `${base} on the ${nthText} ${wkText}${tm3 ? ` at ${tm3}` : ''}`,
-          d,
-        );
+        const out = `${base} on the ${nthText} ${wkText}${tm3 ? ` at ${tm3}` : ''}`;
+        return appendLimits(out, d, opts?.limitsMode ?? 'none');
       }
       const onDays = joinList(names);
-      return withCountUntil(
-        `${base} on ${onDays}${tm3 ? ` at ${tm3}` : ''}`,
-        d,
-      );
+      const out = `${base} on ${onDays}${tm3 ? ` at ${tm3}` : ''}`;
+      return appendLimits(out, d, opts?.limitsMode ?? 'none');
     }
   }
 
@@ -450,10 +454,8 @@ const phraseRecur = (
         opts?.timeFormat ?? 'hm',
         opts?.hourCycle ?? 'h23',
       );
-      return withCountUntil(
-        `${base} on the ${dayLabel}${tm ? ` at ${tm}` : ''}`,
-        d,
-      );
+      const out = `${base} on the ${dayLabel}${tm ? ` at ${tm}` : ''}`;
+      return appendLimits(out, d, opts?.limitsMode ?? 'none');
     }
 
     // Multiple BYMONTHDAY
@@ -471,10 +473,8 @@ const phraseRecur = (
           opts?.timeFormat ?? 'hm',
           opts?.hourCycle ?? 'h23',
         );
-        return withCountUntil(
-          `${base} on the ${ords}${tm ? ` at ${tm}` : ''}`,
-          d,
-        );
+        const out = `${base} on the ${ords}${tm ? ` at ${tm}` : ''}`;
+        return appendLimits(out, d, opts?.limitsMode ?? 'none');
       }
     }
 
@@ -504,18 +504,17 @@ const phraseRecur = (
           'or',
         );
         const wkText = joinListConj(names, 'or');
-        return withCountUntil(
-          `${base} on the ${nthText} ${wkText}${tm ? ` at ${tm}` : ''}`,
-          d,
-        );
+        const out = `${base} on the ${nthText} ${wkText}${tm ? ` at ${tm}` : ''}`;
+        return appendLimits(out, d, opts?.limitsMode ?? 'none');
       }
       // No position → simple weekday list (retain "and" behavior here)
       const onDays = joinList(names);
-      return withCountUntil(`${base} on ${onDays}${tm ? ` at ${tm}` : ''}`, d);
+      const out = `${base} on ${onDays}${tm ? ` at ${tm}` : ''}`;
+      return appendLimits(out, d, opts?.limitsMode ?? 'none');
     }
   }
   // Fallback: base only (further constraints can be added incrementally)
-  return withCountUntil(base, d);
+  return appendLimits(base, d, opts?.limitsMode ?? 'none');
 };
 
 export const strictEnTranslator: DescribeTranslator = (

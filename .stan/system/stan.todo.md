@@ -3,6 +3,7 @@
 When updated: 2025-10-08 (UTC)
 
 Next up (near‑term, prioritized)
+
 1. Docs polish
    - Consider a dedicated "Time conversion helpers" page in Handbook if usage grows; otherwise keep README section concise.
 2. Tests
@@ -16,6 +17,16 @@ Next up (near‑term, prioritized)
 
 Completed (recent)
 
+- Descriptions (inline bounds and limits gating):
+  - Added DescribeOptions.includeRecurrenceLimits (default false).
+  - includeBounds now renders inline "from … until …" (no brackets) for both span and recurring rules, using boundsFormat when provided.
+  - Translator (strict-en) gains limitsMode to control series limits:
+    - includeBounds=false & includeRecurrenceLimits=true → append date‑only "from YYYY‑LL‑DD" (if starts) and "until YYYY‑LL‑DD" (if ends), plus "for N occurrence(s)" if count.
+    - includeBounds=true & includeRecurrenceLimits=true → append only the count phrase (dates shown inline by includeBounds).
+    - default: suppress all translator-level limits to avoid duplication/clutter.
+  - Updated tests that previously asserted default COUNT/UNTIL to opt-in via includeRecurrenceLimits.
+  - Preserved style: no colon after duration (e.g., "Active for 1 hour every …").
+
 - Style (descriptions):
   - Removed the colon after the duration in rule descriptions (e.g., "Active for 1 hour every day at 5:00"). Updated tests and docs examples accordingly.
   - Implemented in code (describeCompiledRule) to match tests; recurrence descriptions now read "Active for 1 day every day ..." without a colon.
@@ -24,7 +35,7 @@ Completed (recent)
   - Cross‑link pass: added explicit links from API → Descriptions and React → API/Configuration/Getting started to improve navigation without losing detail.
 
 - rrule floating-date seam (host-agnostic):
-  - Construct rrule Dates with rrule.datetime(y,m,d,hh,mi,ss) (UTC fields carrying wall parts in the rule tz). Decode via UTC getters and rebuild Luxon DateTime in the rule tz for epoch math. Eliminates host offset drift.- Bounds timezone remediation:  - Implemented rrule README cautions: rrule-facing Dates are now built with host-local constructors from wall parts in the rule timezone (floating).
+  - Construct rrule Dates with rrule.datetime(y,m,d,hh,mi,ss) (UTC fields carrying wall parts in the rule tz). Decode via UTC getters and rebuild Luxon DateTime in the rule tz for epoch math. Eliminates host offset drift.- Bounds timezone remediation: - Implemented rrule README cautions: rrule-facing Dates are now built with host-local constructors from wall parts in the rule timezone (floating).
   - Decoding uses LOCAL getters on rrule Dates and Luxon to obtain epoch in the rule timezone (ms/s unit-aware).
   - Removed all raw .getTime() usage on rrule Date outputs; all comparisons go through floatingDateToZonedEpoch + computeOccurrenceEnd.
 
@@ -37,11 +48,10 @@ Completed (recent)
     - Default ISO with +08:00 offset,
     - Date-only boundsFormat ('yyyy-LL-dd'), and optional timezone label.
 - Tests (describeRule utility, Asia/Singapore span):
-  - Added a companion test that calls the describeRule helper directly with the same
-    data and assertions (ISO +08:00, date-only format, timezone label).
+  - Added a companion test that calls the describeRule helper directly with the same data and assertions (ISO +08:00, date-only format, timezone label).
 - Bounds & descriptions (America/Chicago daily 1‑day rule):
   - Fixed recurring bounds rendering when `includeBounds=true` by treating RRULE floating dates correctly (UTC fields reflect local wall time) and rebuilding them in the rule’s timezone before formatting. Removes wrong outputs like “from 2025‑09‑30 19:00”.
-  - Improved earliest‑bound pre‑pass: when the earliest blackout candidate is the domain minimum (baseline blackout), accept the earliest active start directly. This corrects the earliest start for the Chicago daily 1‑day case.  - Earliest pre‑pass refinement: use compiled `dtstart` as the base for `rrule.after(base, true)` (do not treat `dtstart` itself as the earliest start), falling back to the rule wall‑min when `dtstart` is absent. This removes environment‑dependent drift and preserves correct first occurrence selection (e.g., BYHOUR 05:00 with a midnight `dtstart`).  - Guard for “no BY time” recurrences: when no BYHOUR/BYMINUTE/BYSECOND are specified and a `dtstart` exists, treat `dtstart` as the earliest start directly (convert via `floatingDateToZonedEpoch`) instead of relying on `rrule.after(base, true)`. This eliminates the remaining +13 h drift on hosts far ahead of America/Chicago.
+  - Improved earliest‑bound pre‑pass: when the earliest blackout candidate is the domain minimum (baseline blackout), accept the earliest active start directly. This corrects the earliest start for the Chicago daily 1‑day case. - Earliest pre‑pass refinement: use compiled `dtstart` as the base for `rrule.after(base, true)` (do not treat `dtstart` itself as the earliest start), falling back to the rule wall‑min when `dtstart` is absent. This removes environment‑dependent drift and preserves correct first occurrence selection (e.g., BYHOUR 05:00 with a midnight `dtstart`). - Guard for “no BY time” recurrences: when no BYHOUR/BYMINUTE/BYSECOND are specified and a `dtstart` exists, treat `dtstart` as the earliest start directly (convert via `floatingDateToZonedEpoch`) instead of relying on `rrule.after(base, true)`. This eliminates the remaining +13 h drift on hosts far ahead of America/Chicago.
 
 - Description tests:
   - Added America/Chicago assertion that the daily 1‑day rule with a `starts` clamp renders bounds as local midnight (`from 2025-10-01 00:00`) and not the incorrect `from 2025-09-30 07:00`.
@@ -165,4 +175,4 @@ Completed (recent)
 
 - JSON input strictness (follow-up):
   - Kept rule.options strict and enumerated while allowing `byweekday` to accept either numeric 0..6, rrule Weekday instances, or mixed arrays. This preserves type-safety for keys and unblocks existing tests/usage. Also resolved TSDoc warnings by avoiding ambiguous `{}` in comments.
-  - Split schemas: rrstackJsonSchema (JSON-safe; numeric byweekday only) and rrstackRuntimeSchema (accepts Weekday). normalizeOptions now uses the runtime schema; the JSON Schema generator continues to use the JSON schema (no custom types).
+  - Split schemas: rrstackJsonSchema (JSON-safe; numeric byweekday only) and rrstackRuntimeSchema (accepts Weekday). normalizeOptions now uses the runtime schema; the JSON Schema generator continues to use the JSON schema (no custom types).
