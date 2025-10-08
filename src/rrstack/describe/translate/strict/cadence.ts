@@ -149,7 +149,12 @@ export const buildCadence = (
         )
         .map((mm) => monthName(d.tz, mm, cfg.locale, cfg.lowercase));
       if (months.length) {
-        const inMonthsOr = joinListConj(months, 'or');
+        // Default months-only list uses "and"; switch to "or" when weekdays are also present.
+        const hasWeekdays =
+          Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0;
+        const inMonths = hasWeekdays
+          ? joinListConj(months, 'or')
+          : joinList(months);
         const tm2 = formatLocalTimeList(
           d.tz,
           d.by.hours,
@@ -158,27 +163,25 @@ export const buildCadence = (
           cfg.time?.timeFormat ?? 'hm',
           cfg.time?.hourCycle ?? 'h23',
         );
-        // Weekday phrasing within multiple months
-        const hasWeekdays =
-          Array.isArray(d.by.weekdays) && d.by.weekdays.length > 0;
         if (Array.isArray(d.by.monthDays) && d.by.monthDays.length > 1) {
           const ords = ordinalsList(
             d.by.monthDays.filter((n): n is number => typeof n === 'number'),
             cfg.ordinals ?? 'short',
           );
-          const out = `${base} in ${inMonthsOr} on the ${ords}${
+          const out = `${base} in ${inMonths} on the ${ords}${
             tm2 ? ` at ${tm2}` : ''
           }`;
           return appendLimits(out, d, cfg.limits ?? 'none');
         }
         if (hasWeekdays) {
-          const names = d.by.weekdays.map((w) =>
+          const wds = d.by.weekdays!;
+          const names = wds.map((w) =>
             localWeekdayName(d.tz, w.weekday, cfg.locale, cfg.lowercase),
           );
           const setpos = Array.isArray(d.by.setpos)
             ? d.by.setpos.filter((n): n is number => typeof n === 'number')
             : [];
-          const nthFromW = d.by.weekdays
+          const nthFromW = wds
             .map((w) => w.nth)
             .filter((n): n is number => typeof n === 'number');
           const nthUnique = Array.from(
@@ -190,18 +193,18 @@ export const buildCadence = (
               'or',
             );
             const wkText = joinListConj(names, 'or');
-            const out = `${base} in ${inMonthsOr} on the ${nthText} ${wkText}${
+            const out = `${base} in ${inMonths} on the ${nthText} ${wkText}${
               tm2 ? ` at ${tm2}` : ''
             }`;
             return appendLimits(out, d, cfg.limits ?? 'none');
           }
           const onDays = joinList(names);
-          const out = `${base} in ${inMonthsOr} on ${onDays}${
+          const out = `${base} in ${inMonths} on ${onDays}${
             tm2 ? ` at ${tm2}` : ''
           }`;
           return appendLimits(out, d, cfg.limits ?? 'none');
         }
-        const out = `${base} in ${inMonthsOr}${tm2 ? ` at ${tm2}` : ''}`;
+        const out = `${base} in ${inMonths}${tm2 ? ` at ${tm2}` : ''}`;
         return appendLimits(out, d, cfg.limits ?? 'none');
       }
     }
