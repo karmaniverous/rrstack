@@ -2,44 +2,28 @@
 title: Handbook
 children:
   - ./overview.md
-  - ./algorithms.md
-  - ./react.md
+  - ./getting-started.md
+  - ./api.md
+  - ./configuration.md
+  - ./time.md
   - ./descriptions.md
+  - ./react.md
+  - ./algorithms.md
+  - ./json-schema.md
   - ./performance.md
 ---
 
 # RRStack Handbook
 
-Welcome to the RRStack handbook. This section contains practical, narrative
-documentation that complements the API reference and guides you through common
-workflows, patterns, and integration points.
+This handbook is the narrative companion to the API reference. It explains concepts, shows end‑to‑end examples, and consolidates options and types so you can build with confidence.
 
-## Contents
-
-- Overview
-
-  See an end-to-end introduction to RRStack:
-  - Why this library and when to use it
-  - Key capabilities (point queries, streaming segments, range classification,
-    effective bounds, JSON round-tripping, human-readable rule descriptions)
-  - Time zone and DST behavior
-  - Quick Start and tips for long windows and performance
-
-  Read: [Overview](./overview.md)
-
-- React hooks
-
-  Integrate a live RRStack instance with React using tiny hooks that preserve
-  the library as the single source of truth:
-  - useRRStack({ json, onChange?, resetKey?, changeDebounce?, mutateDebounce?,
-    renderDebounce?, logger? }) — returns
-    { rrstack, version, flushChanges, flushMutations, cancelMutations, flushRender }
-  - useRRStackSelector({ rrstack, selector, isEqual?, renderDebounce?, logger?,
-    resetKey? }) — returns { selection, version, flushRender } with minimal
-    re-renders
-
-- Descriptions
-
-  Pluggable translators for human-friendly rule descriptions (strict-en
-  included), translator options (time format, hour cycle, ordinals, locale),
-  and examples for common cadences.
+- Overview — high‑level capabilities and mental model
+- Getting started — installation, quick start, and common tasks
+- Core API and Types — enumerated methods/arguments/returns and public types
+- Configuration & update() — options, baseline, time units, version/notice policy
+- Time & timezones — wall time ↔ epoch helpers, DST behavior
+- Rule descriptions — plain‑language text (translators, options, examples)
+- React — hooks, staged vs compiled, debouncing
+- Algorithms — deep dive into coverage, segments, and bounds
+- JSON Schema — validating config with an OpenAPI‑safe schema
+- Performance — benches and guidance

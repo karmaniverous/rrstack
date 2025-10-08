@@ -14,7 +14,7 @@ Highlights
 - COUNT/UNTIL (“for N occurrences”, “until YYYY‑MM‑DD”)
 - Local time formatting in the rule’s timezone
 
-By default, boolean options are opt‑in: includeTimeZone is false, includeBounds is false.
+By default, boolean options are opt‑in: `includeTimeZone` is false, `includeBounds` is false.
 
 ## Basic usage
 
@@ -22,10 +22,10 @@ Instance method
 
 ```ts
 const text = stack.describeRule(0);
-// e.g., "Active for 1 hour: every day at 5:00"
+// e.g., "Active for 1 hour every day at 5:00"
 
 const withZone = stack.describeRule(0, { includeTimeZone: true });
-// e.g., "Active for 1 hour: every day at 5:00 (timezone UTC)"
+// e.g., "Active for 1 hour every day at 5:00 (timezone UTC)"
 ```
 
 Pure helper (compile on the fly)
@@ -37,35 +37,52 @@ const text = describeRule(ruleJson, RRStack.asTimeZoneId('UTC'), 'ms');
 // default: timezone label omitted
 ```
 
-## Translator options (strict‑en)
+## Options
 
 ```ts
-type TranslatorOptions = {
-  timeFormat?: 'hm' | 'hms' | 'auto'; // default 'hm'
-  hourCycle?: 'h23' | 'h12'; // default 'h23'
-  ordinals?: 'long' | 'short'; // default 'long'
-  locale?: string; // BCP-47, applied via Luxon
-  lowercase?: boolean; // default true
-};
+export interface DescribeOptions {
+  includeTimeZone?: boolean; // "(timezone <tz>)"
+  includeBounds?: boolean; // append "[from …; until …]" when clamps exist
+  formatTimeZone?: (tzId: string) => string; // customize tz label
+  boundsFormat?: string; // Luxon format for bound timestamps (when includeBounds)
+  translator?: 'strict-en' | DescribeTranslator;
+  translatorOptions?: TranslatorOptions;
+}
 ```
 
-Examples
+Translator options (`strict-en`):
 
 ```ts
-// 12-hour clock with seconds, short ordinals
-const pretty = describeRule(
-  rule,
-  RRStack.asTimeZoneId('America/Chicago'),
-  'ms',
-  {
-    translatorOptions: {
-      hourCycle: 'h12',
-      timeFormat: 'hms',
-      ordinals: 'short',
-    },
-  },
-);
-// "Active for 1 hour: every day at 9:00:00 AM"
+export interface TranslatorOptions {
+  frequency?: Partial<FrequencyLexicon>; // labels for "every day/week/..."
+  timeFormat?: 'hm' | 'hms' | 'auto'; // 24h or 12h handled via hourCycle
+  hourCycle?: 'h23' | 'h12';
+  ordinals?: 'long' | 'short'; // "third" vs "3rd"
+  locale?: string; // Luxon setLocale
+  lowercase?: boolean; // default true
+}
+```
+
+## Bounds formatting
+
+When `includeBounds` is true, descriptions append brackets:
+
+```
+[from <formatted-from>; until <formatted-until>]
+```
+
+- `boundsFormat` customizes the timestamp rendering (Luxon `toFormat`) in the rule’s timezone.
+- When omitted, ISO strings are used with milliseconds suppressed.
+- For spans (no recurrence), bounds reflect numeric `[starts, ends)`.
+
+Examples:
+
+```ts
+stack.describeRule(0, {
+  includeBounds: true,
+  boundsFormat: 'yyyy-LL-dd HH:mm',
+});
+// "... [from 2025-04-01 00:00; until 2025-04-02 00:00]"
 ```
 
 ## Common patterns
@@ -90,7 +107,7 @@ const text = describeRule(
   RRStack.asTimeZoneId('UTC'),
   'ms',
 );
-// "Active for 1 hour: every month on the third tuesday at 5:00"
+// "Active for 1 hour every month on the third tuesday at 5:00"
 ```
 
 Monthly — last Tuesday
@@ -112,7 +129,7 @@ const text = describeRule(
   RRStack.asTimeZoneId('UTC'),
   'ms',
 );
-// "Active for 1 hour: every month on the last tuesday at 5:00"
+// "Active for 1 hour every month on the last tuesday at 5:00"
 ```
 
 Monthly — by‑month‑day
@@ -133,7 +150,7 @@ const text = describeRule(
   RRStack.asTimeZoneId('UTC'),
   'ms',
 );
-// "Active for 1 hour: every month on the 15th at 5:00"
+// "Active for 1 hour every month on the 15th at 5:00"
 ```
 
 Yearly — multiple months
@@ -155,55 +172,30 @@ const text = describeRule(
   RRStack.asTimeZoneId('UTC'),
   'ms',
 );
-// "Active for 1 hour: every year in january, march and july at 5:00"
-```
-
-## Bounds and timezone label
-
-```ts
-const text = describeRule(rule, RRStack.asTimeZoneId('UTC'), 'ms', {
-  includeTimeZone: true, // "(timezone UTC)"
-  includeBounds: true, // "[from …; until …]" when clamps exist
-  formatTimeZone: (tz) => (tz === 'UTC' ? 'Coordinated Universal Time' : tz),
-});
-```
-
-### Bounds format (custom date rendering)
-
-You can customize how clamp bounds are rendered when `includeBounds` is true.
-Pass `boundsFormat` to `describeRule`/`stack.describeRule`. It uses Luxon’s
-`toFormat(boundsFormat)` in the rule’s timezone.
-
-```ts
-// ISO with Z is used when boundsFormat is omitted.
-const text1 = stack.describeRule(0, {
-  includeBounds: true,
-  boundsFormat: 'yyyy-LL-dd', // e.g., "from 2025-04-01; until 2025-04-02"
-});
-
-// With both zone label and custom bounds format
-const text2 = stack.describeRule(0, {
-  includeTimeZone: true,
-  includeBounds: true,
-  boundsFormat: "dd LLL yyyy 'at' HH:mm",
-});
+// "Active for 1 hour every year in january, march and july at 5:00"
 ```
 
 ## Frequency lexicon (UI helpers)
 
-Exported from `@karmaniverous/rrstack`:
-
-- Constants: `FREQUENCY_LEXICON_EN`, `FREQUENCY_ADJECTIVE_EN`, `FREQUENCY_NOUN_EN`
-- Types: `FrequencyLexicon`, `FrequencyAdjectiveLabels`, `FrequencyNounLabels`
-- Helper: `toFrequencyOptions(labels?)` → ordered frequency options for pickers
-
 ```ts
-import { toFrequencyOptions } from '@karmaniverous/rrstack';
-const options = toFrequencyOptions(); // [{ value: 'yearly', label: 'yearly' }, ...]
+export type FrequencyAdjectiveLabels = Record<FrequencyStr, string>;
+export type FrequencyNounLabels = Record<FrequencyStr, string>;
+
+export interface FrequencyLexicon {
+  adjective: FrequencyAdjectiveLabels;
+  noun: FrequencyNounLabels;
+  pluralize?: (noun: string, n: number) => string;
+}
 ```
 
-## Tips
+Exports:
 
-- Boolean options default to false (opt‑in); pass `{ includeTimeZone: true }` to append the timezone label.
-- COUNT/UNTIL appended as “for N occurrences” / “until YYYY‑MM‑DD”.
-- You can swap in a different translator in the future; the descriptor shape is stable and independent of rrule’s runtime objects.
+- `FREQUENCY_ADJECTIVE_EN`, `FREQUENCY_NOUN_EN`, `FREQUENCY_LEXICON_EN`
+- `toFrequencyOptions(labels?)` → ordered options for pickers
+
+See type definitions in [Core API and Types](./api.md#types-selected).
+
+## See also
+
+- Translator options and labels: [Core API and Types](./api.md)
+- Bounds & time formats: [Time & timezones](./time.md)

@@ -6,400 +6,44 @@ title: React
 
 Subpath export: `@karmaniverous/rrstack/react`
 
-Two small hooks observe a live RRStack instance without re‑wrapping its control surface. RRStack remains the single source of truth: you call its methods directly; the hooks subscribe to its post‑mutation notifications.
-
-## Install / import
-
-```ts
-import { useRRStack, useRRStackSelector } from '@karmaniverous/rrstack/react';
-import type { RRStack, RRStackOptions, UpdatePolicy } from '@karmaniverous/rrstack';
-```
+Two hooks observe a live RRStack instance without re‑wrapping its control surface. RRStack remains the single source of truth: you call its methods directly; the hooks subscribe to post‑mutation notifications.
 
 ## useRRStack
 
 Create (or reset) and observe a live RRStack instance from JSON, with optional debounced change notifications. Advanced options allow debouncing how edits are applied to RRStack and how renders are coalesced:
 
-- mutateDebounce: coalesce frequent UI → rrstack edits (staged + commit).
-- renderDebounce: coalesce version bumps (rrstack → UI) to reduce repaint churn (optional leading).
-- changeDebounce: autosave/onChange debounce (always trailing).
-
-Signature
-
 ```ts
 function useRRStack(props: {
-  json: RRStackOptions;
+  json: RRStackOptions | null | undefined;
   onChange?: (s: RRStack) => void;
   resetKey?: string | number;
   policy?: UpdatePolicy;
   changeDebounce?: true | number | { delay?: number; leading?: boolean };
   mutateDebounce?: true | number | { delay?: number; leading?: boolean };
   renderDebounce?: true | number | { delay?: number; leading?: boolean };
-  logger?:
-    | boolean
-    | ((e: {
-        type:
-          | 'init'
-          | 'reset'
-          | 'mutate'
-          | 'commit'
-          | 'flushChanges'
-          | 'flushMutations'
-          | 'flushRender'
-          | 'cancel';
-        rrstack: RRStack;
-      }) => void);
+  logger?: boolean | ((e: { type: LogEventType; rrstack: RRStack }) => void);
 }): {
   rrstack: RRStack; // façade (proxy)
   version: number;
-  flushChanges: () => void;
-  flushMutations: () => void;
-  cancelMutations: () => void;
-  flushRender: () => void;
+  flushChanges(): void;
+  flushMutations(): void;
+  cancelMutations(): void;
+  flushRender(): void;
 };
 ```
 
-Hook props and outputs (quick reference)
+Highlights
 
-- Props
-  - resetKey: string | number
-    - Recreate the RRStack instance intentionally when this value changes (e.g., switching documents).
-  - changeDebounce: true | number | { delay?: number; leading?: boolean }
-    - Debounce autosave/onChange; trailing is always true. true = default delay; number = ms delay.
-  - mutateDebounce: true | number | { delay?: number; leading?: boolean }
-    - Debounce UI → rrstack edits. Edits to rrstack.rules/timezone are staged and committed once per window.
-  - renderDebounce: true | number | { delay?: number; leading?: boolean }
-    - Debounce rrstack → UI paints by coalescing version bumps; final trailing paint always occurs.
-  - policy?: UpdatePolicy
-    - Optional passthrough to RRStack.update. Applied to both:
-      - Prop ingestion (json → engine), and
-      - Staged UI commits (timezone/rules, including timeUnit changes).
-    - Use onNotice to route notices:
-      `useRRStack({ json, policy: { onVersionDown: 'warn', onNotice: console.log } })`
-
-  - logger: boolean | (e: { type: LogEvent; rrstack: RRStack }) => void
-    - true logs to console.debug; function receives structured events.
-- Outputs
-  - rrstack: RRStack (façade)
-  - version: number (incremented on debounced render); use as a memo key for heavy derivations.
-  - flushChanges(): void; flushMutations(): void; cancelMutations(): void; flushRender(): void
-
-Parameters (props object)
-
-- `json: RRStackOptions` — JSON input for the stack (same shape as `new RRStack(opts)`). A new instance is only created when `resetKey` changes.
-- `onChange?: (s: RRStack) => void` — optional callback fired after successful mutations (post‑compile). The constructor does not trigger this callback.
-- `resetKey?: string | number` — change to intentionally rebuild the instance (e.g., switching documents).
-- `policy?: UpdatePolicy` — forwarded to `rrstack.update()` for both ingestion and staged commits. Set `onNotice` here to centralize notice handling.
-- `changeDebounce?: true | number | { delay?: number; leading?: boolean }` — autosave debounce.
-- `mutateDebounce?: true | number | { delay?: number; leading?: boolean }` — coalesce UI edits into a single commit per window (staged rules/timezone).
-- `renderDebounce?: true | number | { delay?: number; leading?: boolean }` — coalesce version bumps (rrstack → UI).
-- `logger?: boolean | (e) => void` — `true` logs basic events via `console.debug`; a function receives `{ type, rrstack }`.
-
-Ingestion (json → rrstack.update)
-
-- The hook watches `json` and calls `rrstack.update(json, policy)` (debounced if configured). On commit, it triggers one `onChange` (debounced if configured) where you typically persist `rrstack.toJson()`.
-- The default comparator ignores `version` to avoid ping‑pong when your `onChange` writes back `toJson()`.
-- Provide `policy` to apply version/unit handling and `onNotice` during both ingestion and staged commits.
-- Time unit changes are handled inside `update()` — retained rules have clamp timestamps converted; incoming rules are treated as already in the new unit when provided. No special adapter logic is required.
-
-Returns
-
-- `rrstack: RRStack` — façade (proxy) overlaying staged `rules/timezone` and intercepting mutators.
-- `version: number` — increments after (debounced) renders; use to memoize heavy derived values.
-- `flushChanges(): void` — flush pending trailing `onChange` (autosave).
-- `flushMutations(): void` — commit staged edits immediately.
-- `cancelMutations(): void` — discard staged edits.
-- `flushRender(): void` — flush pending render debounce (force a paint).
-
-Behavior notes
-
-- The hook subscribes to RRStack notifications and schedules the debounced `onChange` before notifying React, so `flushChanges()` can observe a pending trailing call (including with fake timers).
-- Debounce state is stable across renders; pending trailing calls persist until delivered or flushed.
-- RRStack core stays synchronous; debouncing is purely in the hook. `mutateDebounce` stages edits and commits once per window. Call `flushMutations()` when you need rrstack current (e.g., Save). `renderDebounce` reduces repaint churn; `flushRender()` forces an immediate render when needed (e.g., preview).
-
-Example (debounced autosave + “save now”)
-
-```tsx
-import { useRRStack } from '@karmaniverous/rrstack/react';
-import type { RRStackOptions } from '@karmaniverous/rrstack';
-
-async function saveToServer(json: RRStackOptions) {
-  // your persistence
-}
-
-function Editor({ json, docId }: { json: RRStackOptions; docId: string }) {
-  const onChange = (s: RRStack) => {
-    // autosave (debounced by the hook if configured)
-    void saveToServer(s.toJson());
-  };
-  const { rrstack, version, flushChanges, flushMutations, flushRender } =
-    useRRStack({
-      json,
-      onChange,
-      resetKey: docId,
-      // Autosave: coalesce onChange. Trailing is always true.
-      changeDebounce: { delay: 600 /*, leading: false */ },
-      // UI → rrstack: stage frequent edits (rules/timezone) and commit once per window.
-      // leading: true commits the first change immediately to keep queries in sync.
-      mutateDebounce: { delay: 150, leading: true },
-      // rrstack → UI: coalesce paints; allow an immediate paint for responsiveness.
-      renderDebounce: { delay: 50, leading: true },
-    });
-
-  // use version to memoize heavy derived values
-  // e.g., segments over a long window
-
-  return (
-    <div>
-      <button onClick={() => rrstack.addRule(/*...*/)}>Add rule</button>
-      <button
-        onClick={() => {
-          // Ensure the latest staged edits are compiled and saved immediately.
-          flushMutations();
-          flushChanges();
-          void saveToServer(rrstack.toJson());
-        }}
-      >
-        Save now
-      </button>
-      <div>Rules: {rrstack.rules.length}</div>
-    </div>
-  );
-}
-```
-
-Leading example
-
-```tsx
-const { rrstack } = useRRStack({
-  json,
-  onChange,
-  // Autosave: fire once immediately, then again at the end of the window.
-  changeDebounce: { delay: 200, leading: true },
-  // Stage → commit UI edits (rules/timezone) once per window; first commit immediate.
-  mutateDebounce: { delay: 150, leading: true },
-  // Coalesce paints; allow an immediate paint for responsive UI.
-  renderDebounce: { delay: 50, leading: true },
-});
-```
-
-Mutate/render debounces example
-
-```tsx
-function Editor({
-  json,
-  docId,
-  save,
-}: {
-  json: RRStackOptions;
-  docId: string;
-  save: (j: RRStackOptions) => Promise<void>;
-}) {
-  const onChange = (s: RRStack) => {
-    void save(s.toJson());
-  };
-  const {
-    rrstack,
-    flushChanges,
-    flushMutations,
-    cancelMutations,
-    flushRender,
-  } = useRRStack({
-    json,
-    onChange,
-    resetKey: docId,
-    // Autosave: coalesce onChange. Trailing is always true.
-    changeDebounce: { delay: 600 },
-    // UI → rrstack: stage and commit once per window (first commit immediate).
-    mutateDebounce: { delay: 150, leading: true },
-    // rrstack → UI: coalesce paints; allow an immediate paint for responsiveness.
-    renderDebounce: { delay: 50, leading: true },
-  });
-
-  // Example: stage edits quickly from a form
-  // rrstack.update({ rules: nextRules });
-
-  return (
-    <div>
-      {' '}
-      <button
-        onClick={() => {
-          flushMutations();
-          flushChanges();
-        }}
-      >
-        Save now
-      </button>
-      <button
-        onClick={() => {
-          flushRender();
-        }}
-      >
-        Force paint
-      </button>
-      {/* Provide staged values to your form via rrstack.rules/timezone */}
-      {/* rrstack.toJson() overlays staged values as well */}
-    </div>
-  );
-}
-```
-
-## Debounced form controls
-
-These patterns show how to wire form inputs to RRStack with minimal repaint churn and clean autosave behavior. In both cases, the hook’s mutateDebounce stages edits on the way in and commits once per window; changeDebounce coalesces autosave calls on the way out.
-
-Notes
-
-- Reads of rrstack.rules/rrstack.timezone (and rrstack.toJson()) reflect staged values prior to commit; queries still use the last committed compiled state until the commit occurs.
-- For Save now buttons, call flushMutations() then flushChanges() to ensure the latest staged edits are committed and autosaved immediately.
-
-### Uncontrolled input (debounced, simple)
-
-Use defaultValue and onInput to keep the input decoupled from React state. Assign directly to rrstack — the façade stages and commits via mutateDebounce.
-
-```tsx
-import { useEffect, useRef } from 'react';
-import { useRRStack } from '@karmaniverous/rrstack/react';
-import type { RRStack, RRStackOptions } from '@karmaniverous/rrstack';
-
-async function saveToServer(json: RRStackOptions) {
-  // your persistence
-}
-
-export function TimeZoneFieldUncontrolled({ json }: { json: RRStackOptions }) {
-  const { rrstack, flushMutations, flushChanges } = useRRStack({
-    json,
-    onChange: (s: RRStack) => {
-      // autosave (debounced by changeDebounce)
-      void saveToServer(s.toJson());
-    },
-    // Autosave: debounce onChange; trailing is always true.
-    changeDebounce: { delay: 600 },
-    // UI → rrstack: stage + commit timezone/rules once per window.
-    mutateDebounce: { delay: 150 },
-    // rrstack → UI: coalesce paints; leading paint keeps typing snappy.
-    renderDebounce: { delay: 50, leading: true },
-  });
-
-  const ref = useRef<HTMLInputElement>(null);
-
-  // Keep the uncontrolled input in sync when the source switches (e.g., resetKey) or tz changes externally.
-  useEffect(() => {
-    if (ref.current) ref.current.value = rrstack.timezone;
-  }, [rrstack, rrstack.timezone]);
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        // Ensure latest staged value is committed and autosaved immediately
-        flushMutations();
-        flushChanges();
-      }}
-    >
-      <label>
-        Time zone (uncontrolled):
-        <input
-          ref={ref}
-          name="tz"
-          defaultValue={rrstack.timezone}
-          onInput={(e) => {
-            const next = (e.currentTarget as HTMLInputElement).value;
-            // UI → rrstack staging; commit is debounced by mutateDebounce
-            rrstack.timezone = next;
-          }}
-        />
-      </label>
-      <button type="submit">Save now</button>
-    </form>
-  );
-}
-```
-
-Why uncontrolled here?
-
-- Keeps the input snappy without coupling keystrokes to React state.
-- rrstack’s façade provides the “model” value; mutateDebounce stages updates efficiently.
-
-### Controlled input (debounced, local state)
-
-Use React state when you need validation, transformation, or dependent UI. Still assign to rrstack on each change — commit is debounced.
-
-```tsx
-import { useEffect, useState } from 'react';
-import { useRRStack } from '@karmaniverous/rrstack/react';
-import type { RRStack, RRStackOptions } from '@karmaniverous/rrstack';
-
-async function saveToServer(json: RRStackOptions) {
-  // your persistence
-}
-
-export function TimeZoneFieldControlled({ json }: { json: RRStackOptions }) {
-  const { rrstack, flushMutations, cancelMutations, flushChanges } = useRRStack(
-    {
-      json,
-      onChange: (s: RRStack) => {
-        void saveToServer(s.toJson());
-      },
-      // Autosave: coalesce onChange calls; trailing is always true.
-      changeDebounce: { delay: 600 },
-      // UI → rrstack: stage frequent input changes and commit once per window.
-      // leading: true commits the first change immediately to keep queries in sync.
-      mutateDebounce: { delay: 200, leading: true },
-      // rrstack → UI: coalesce paints to reduce repaint churn; leading paint keeps UI responsive.
-      renderDebounce: { delay: 50, leading: true },
-    },
-  );
-
-  const [tz, setTz] = useState(rrstack.timezone);
-
-  // Re-sync when the underlying instance resets or external mutations occur.
-  useEffect(() => {
-    setTz(rrstack.timezone);
-  }, [rrstack, rrstack.timezone]);
-
-  return (
-    <div>
-      <label>
-        Time zone (controlled):
-        <input
-          value={tz}
-          onChange={(e) => {
-            const next = e.currentTarget.value;
-            setTz(next); // local echo
-            rrstack.timezone = next; // staged; commit debounced by mutateDebounce
-          }}
-          onBlur={() => {
-            // Make sure a final commit/autosave happens on exit
-            flushMutations();
-            flushChanges();
-          }}
-        />
-      </label>
-      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        <button
-          onClick={() => {
-            flushMutations();
-            flushChanges();
-          }}
-        >
-          Save now
-        </button>
-        <button
-          onClick={() => {
-            cancelMutations(); // discard staged edits
-            setTz(rrstack.timezone); // reset local echo
-          }}
-        >
-          Revert pending
-        </button>
-      </div>
-    </div>
-  );
-}
-```
+- `policy?: UpdatePolicy` is applied to both:
+  - Prop ingestion (`json` → `rrstack.update(json, policy)`), and
+  - Staged commits (rules/timezone via `rrstack.update(patch, policy)`).
+- Staged vs compiled:
+  - `rrstack.rules`/`rrstack.timezone` (and `rrstack.toJson()`) reflect staged values before commit.
+  - Queries (`isActiveAt`, `getSegments`, etc.) reflect the last committed compile until commit.
 
 ## useRRStackSelector
 
-Subscribe to an RRStack‑derived value. The selector recomputes on RRStack mutations and the component only re‑renders when `isEqual` deems the derived value changed (default `Object.is`).
+Subscribe to an RRStack‑derived value. The selector recomputes on RRStack mutations and the component only re‑renders when `isEqual` deems the derived value changed.
 
 ```ts
 function useRRStackSelector<T>(props: {
@@ -407,46 +51,19 @@ function useRRStackSelector<T>(props: {
   selector: (s: RRStack) => T;
   isEqual?: (a: T, b: T) => boolean; // default Object.is
   renderDebounce?: true | number | { delay?: number; leading?: boolean };
-  logger?:
-    | boolean
-    | ((e: {
-        type: 'init' | 'reset' | 'mutate' | 'flushRender';
-        rrstack: RRStack;
-      }) => void);
+  logger?: boolean | ((e: { type: LogEventType; rrstack: RRStack }) => void);
   resetKey?: string | number;
 }): {
   selection: T;
   version: number;
-  flushRender: () => void;
+  flushRender(): void;
 };
 ```
 
-Parameters (props object)
+## Debounce knobs
 
-- `rrstack: RRStack` — the live instance from `useRRStack`.
-- `selector: (s) => T` — computes the derived value.
-- `isEqual?: (a, b) => boolean` — equality check to suppress re‑renders; default is `Object.is`.
-- `renderDebounce?`, `logger?`, `resetKey?` — optional knobs mirroring `useRRStack`.
+- `changeDebounce`: coalesce autosave (`onChange`).
+- `mutateDebounce`: stage frequent UI edits and commit once per window (optional leading immediate commit).
+- `renderDebounce`: coalesce paints (optional leading immediate paint).
 
-Returns
-
-- `{ selection, version, flushRender }` — the derived value, a version counter, and a method to flush pending trailing paints.
-
-Example
-
-```tsx
-function RuleCount({ json }: { json: RRStackOptions }) {
-  const { rrstack } = useRRStack({ json });
-  const { selection: count } = useRRStackSelector({
-    rrstack,
-    selector: (s) => s.rules.length,
-  });
-  return <span>{count}</span>;
-}
-```
-
-## Notes & tips
-
-- Hooks subscribe to RRStack notifications (fired post‑mutation). RRStack remains the single source of truth; call its methods directly.
-- For long windows, prefer chunking (day/week) or a Worker for heavy sweeps.
-- In tests using fake timers, call `flushChanges()` and/or `flushMutations()` inside `act(async () => { ... })` and await a microtask to flush effects.
+For code examples and testing tips, see the repository tests and the [API Reference](https://docs.karmanivero.us/rrstack).
