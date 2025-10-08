@@ -2,8 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.16.2](https://github.com/karmaniverous/rrstack/compare/0.16.1...0.16.2)
+
+- fix(describe): don’t show “from …” when rule start is not set [`d5a89e8`](https://github.com/karmaniverous/rrstack/commit/d5a89e89ba7bd9a5676622eb352182683eabd45f)
+
 #### [0.16.1](https://github.com/karmaniverous/rrstack/compare/0.16.0...0.16.1)
 
+> 8 October 2025
+
+- chore: release v0.16.1 [`2240315`](https://github.com/karmaniverous/rrstack/commit/2240315a25803c44f8d6e82734d7f28f6bb2b7f7)
 - fix(types): byweekday in RRStackJson now number | number[] | undefined [`4bb5aa0`](https://github.com/karmaniverous/rrstack/commit/4bb5aa0bcd166dac14cde5ef515fafde11b26ff3)
 
 #### [0.16.0](https://github.com/karmaniverous/rrstack/compare/0.15.5...0.16.0)
