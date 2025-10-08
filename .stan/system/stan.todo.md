@@ -1,6 +1,6 @@
 # RRStack — Development Plan
 
-When updated: 2025-10-07 (UTC)
+When updated: 2025-10-08 (UTC)
 
 Next up (near‑term, prioritized)
 
@@ -30,11 +30,16 @@ Completed (recent)
   - Hardened new cross‑timezone bounds/describe tests to assert local wall‑clock values in the rule’s timezone (using Luxon) instead of raw epoch equality, ensuring determinism on UTC+8 hosts.
 - Tests (cross timezones):
   - Added realistic non‑UTC tests validating getEffectiveBounds and rule descriptions across Europe/London, Asia/Tokyo, Australia/Sydney, and Asia/Kolkata.
+- Tests (span description, Asia/Singapore):
+  - Added a test to confirm span description with includeBounds in Asia/Singapore:
+    - Default ISO with +08:00 offset,
+    - Date-only boundsFormat ('yyyy-LL-dd'), and optional timezone label.
+- Tests (describeRule utility, Asia/Singapore span):
+  - Added a companion test that calls the describeRule helper directly with the same
+    data and assertions (ISO +08:00, date-only format, timezone label).
 - Bounds & descriptions (America/Chicago daily 1‑day rule):
   - Fixed recurring bounds rendering when `includeBounds=true` by treating RRULE floating dates correctly (UTC fields reflect local wall time) and rebuilding them in the rule’s timezone before formatting. Removes wrong outputs like “from 2025‑09‑30 19:00”.
-  - Improved earliest‑bound pre‑pass: when the earliest blackout candidate is the domain minimum (baseline blackout), accept the earliest active start directly. This corrects the earliest start for the Chicago daily 1‑day case.
-  - Earliest pre‑pass refinement: use compiled `dtstart` as the base for `rrule.after(base, true)` (do not treat `dtstart` itself as the earliest start), falling back to the rule wall‑min when `dtstart` is absent. This removes environment‑dependent drift and preserves correct first occurrence selection (e.g., BYHOUR 05:00 with a midnight `dtstart`).
-  - Guard for “no BY time” recurrences: when no BYHOUR/BYMINUTE/BYSECOND are specified and a `dtstart` exists, treat `dtstart` as the earliest start directly (convert via `floatingDateToZonedEpoch`) instead of relying on `rrule.after(base, true)`. This eliminates the remaining +13 h drift on hosts far ahead of America/Chicago.
+  - Improved earliest‑bound pre‑pass: when the earliest blackout candidate is the domain minimum (baseline blackout), accept the earliest active start directly. This corrects the earliest start for the Chicago daily 1‑day case.  - Earliest pre‑pass refinement: use compiled `dtstart` as the base for `rrule.after(base, true)` (do not treat `dtstart` itself as the earliest start), falling back to the rule wall‑min when `dtstart` is absent. This removes environment‑dependent drift and preserves correct first occurrence selection (e.g., BYHOUR 05:00 with a midnight `dtstart`).  - Guard for “no BY time” recurrences: when no BYHOUR/BYMINUTE/BYSECOND are specified and a `dtstart` exists, treat `dtstart` as the earliest start directly (convert via `floatingDateToZonedEpoch`) instead of relying on `rrule.after(base, true)`. This eliminates the remaining +13 h drift on hosts far ahead of America/Chicago.
 
 - Description tests:
   - Added America/Chicago assertion that the daily 1‑day rule with a `starts` clamp renders bounds as local midnight (`from 2025-10-01 00:00`) and not the incorrect `from 2025-09-30 07:00`.

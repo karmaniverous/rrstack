@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { compileRule } from '../compile';
 import { describeCompiledRule, describeRule } from '../describe';
+import { RRStack } from '../RRStack';
 import type { RuleJson, TimeZoneId } from '../types';
 
 describe('rule description helpers', () => {
@@ -78,5 +79,38 @@ describe('rule description helpers', () => {
       formatTimeZone: () => 'FriendlyTZ',
     });
     expect(text.toLowerCase()).toContain('timezone friendlytz');
+  });
+
+  it('describeRule helper (span, Asia/Singapore): includeBounds ISO and date-only formatting', () => {
+    // Same data as prior stack-based test; verify the pure utility API.
+    const starts = 1_759_766_400_000; // 2025-10-06T16:00:00Z → 2025-10-07 00:00 +08:00
+    const ends = 1_760_112_000_000; // 2025-10-10T16:00:00Z → 2025-10-11 00:00 +08:00
+    const rule: RuleJson = {
+      effect: 'active',
+      // Span: no freq; duration omitted
+      options: { starts, ends },
+    };
+    const tzId = RRStack.asTimeZoneId('Asia/Singapore');
+
+    // Default ISO bounds (local offset +08:00)
+    const iso = describeRule(rule, tzId, 'ms', { includeBounds: true });
+    expect(iso.toLowerCase()).toContain('active continuously');
+    expect(iso).toContain('from 2025-10-07T00:00:00+08:00');
+    expect(iso).toContain('until 2025-10-11T00:00:00+08:00');
+
+    // With timezone label
+    const withTz = describeRule(rule, tzId, 'ms', {
+      includeBounds: true,
+      includeTimeZone: true,
+    });
+    expect(withTz.toLowerCase()).toContain('timezone asia/singapore');
+
+    // Date-only formatting
+    const dOnly = describeRule(rule, tzId, 'ms', {
+      includeBounds: true,
+      boundsFormat: 'yyyy-LL-dd HH:mm',
+    });
+    expect(dOnly).toContain('from 2025-10-07 00:00');
+    expect(dOnly).toContain('until 2025-10-11 00:00');
   });
 });

@@ -130,4 +130,39 @@ describe('RRStack.describeRule(index, opts)', () => {
     // Guard against the incorrect prior value
     expect(text).not.toContain('from 2025-09-30 07:00');
   });
+
+  it('span (Asia/Singapore): includeBounds ISO and date-only formatting', () => {
+    // Given data (ms epoch)
+    const starts = 1_759_766_400_000; // 2025-10-06T16:00:00Z → 2025-10-07 00:00 +08:00
+    const ends = 1_760_112_000_000; // 2025-10-10T16:00:00Z → 2025-10-11 00:00 +08:00
+    const span: RuleJson = {
+      effect: 'active',
+      options: { starts, ends },
+    };
+    const stack = new RRStack({
+      timezone: 'Asia/Singapore',
+      rules: [span],
+    });
+
+    // Default ISO bounds (local offset +08:00)
+    const iso = stack.describeRule(0, { includeBounds: true });
+    expect(iso.toLowerCase()).toContain('active continuously');
+    expect(iso).toContain('from 2025-10-07T00:00:00+08:00');
+    expect(iso).toContain('until 2025-10-11T00:00:00+08:00');
+
+    // With timezone label
+    const withTz = stack.describeRule(0, {
+      includeTimeZone: true,
+      includeBounds: true,
+    });
+    expect(withTz.toLowerCase()).toContain('timezone asia/singapore');
+
+    // Date-only formatting
+    const dOnly = stack.describeRule(0, {
+      includeBounds: true,
+      boundsFormat: 'yyyy-LL-dd',
+    });
+    expect(dOnly).toContain('from 2025-10-07');
+    expect(dOnly).toContain('until 2025-10-11');
+  });
 });
