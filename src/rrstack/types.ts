@@ -11,6 +11,8 @@ import type { Options as RRuleOptions } from 'rrule';
 
 /** Instant status classification for a timestamp. */
 export type InstantStatus = 'active' | 'blackout';
+/** Effect type for rules (includes event for zero-duration instants). */
+export type EffectType = InstantStatus | 'event';
 /** Default effect classification for an RRStack. */
 export type DefaultEffect = InstantStatus | 'auto';
 /** Range classification across `[from, to)`. */
@@ -78,8 +80,8 @@ export type RuleOptionsJson = Partial<
 
 /** A single rule in the cascade. */
 export interface RuleJson {
-  /** `'active' | 'blackout'` — effect applied at covered instants. */
-  effect: InstantStatus;
+  /** `'active' | 'blackout' | 'event'` — effect applied at covered instants. */
+  effect: EffectType;
   /** Structured duration for recurring rules; must be omitted for span rules. */
   duration?: DurationParts;
   /** Subset of rrule options (see {@link RuleOptionsJson}). */

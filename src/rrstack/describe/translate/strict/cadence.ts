@@ -1,5 +1,5 @@
 import type { DescribeConfig } from '../../config';
-import type { RuleDescriptorRecur } from '../../descriptor';
+import type { RuleDescriptorEvent, RuleDescriptorRecur } from '../../descriptor';
 import {
   everyWithInterval,
   formatLocalTimeList,

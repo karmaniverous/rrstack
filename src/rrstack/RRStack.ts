@@ -16,7 +16,7 @@
 
 import { DateTime } from 'luxon';
 
-import { type CompiledRule, compileRule } from './compile';
+import { type CompiledCoverageRule, type CompiledEventRule, type CompiledRule, compileRule } from './compile';
 import { isValidTimeZone } from './coverage/time';
 import { DEFAULT_DEFAULT_EFFECT } from './defaults';
 import { describeCompiledRule } from './describe';
@@ -30,6 +30,7 @@ import { toJsonSnapshot } from './RRStack.persistence';
 import {
   classifyRangeOverWindow,
   getEffectiveBoundsFromCompiled,
+  getEventsInRange,
   getSegmentsOverWindow,
   isActiveAtCompiled,
 } from './RRStack.queries';
@@ -59,6 +60,10 @@ export class RRStack {
   public readonly options: RRStackOptionsNormalized;
 
   private compiled: CompiledRule[] = [];
+  /** Compiled event rules (not part of coverage cascade). */
+  private compiledEvents: CompiledEventRule[] = [];
+  /** All compiled rules in original order (for describe/index operations). */
+  private allCompiled: CompiledRule[] = [];
   /** Cached working set with baseline prepended. Invalidated on recompile. */
   private __compiledWithBaseline: CompiledRule[] | null = null;
 
@@ -107,7 +112,9 @@ export class RRStack {
 
   private recompile(): void {
     const { timezone, timeUnit, rules } = this.options;
-    this.compiled = rules.map((r) => compileRule(r, timezone, timeUnit));
+    this.allCompiled = rules.map((r) => compileRule(r, timezone, timeUnit));
+    this.compiled = this.allCompiled.filter((r): r is CompiledCoverageRule => r.kind !== 'event') as CompiledRule[];
+    this.compiledEvents = this.allCompiled.filter((r): r is CompiledEventRule => r.kind === 'event');
     this.__compiledWithBaseline = null;
     if (this.__initialized) this.__notify();
   }
@@ -512,9 +519,9 @@ export class RRStack {
     if (!Number.isInteger(index)) {
       throw new TypeError('rule index must be an integer');
     }
-    if (index < 0 || index >= this.compiled.length)
+    if (index < 0 || index >= this.allCompiled.length)
       throw new RangeError('rule index out of range');
-    return describeCompiledRule(this.compiled[index], cfg);
+    return describeCompiledRule(this.allCompiled[index], cfg);
   }
 
   // Convenience rule mutators -------------------------------------------------

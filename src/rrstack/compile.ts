@@ -49,7 +49,15 @@ export interface CompiledSpanRule extends CompiledRuleBase {
   end?: number;
 }
 
-export type CompiledRule = CompiledRecurRule | CompiledSpanRule;
+export interface CompiledEventRule extends CompiledRuleBase {
+  kind: 'event';
+  options: RRuleOptions;
+  rrule: RRuleClass;
+}
+
+export type CompiledRule = CompiledRecurRule | CompiledSpanRule | CompiledEventRule;
+/** Coverage-only rules (excludes events). */
+export type CompiledCoverageRule = CompiledRecurRule | CompiledSpanRule;
 
 // Internal mapping from human-readable freq to rrule enum
 const FREQ_MAP: Record<FrequencyStr, RRuleFrequency> = {

@@ -4,8 +4,9 @@
  * - Reuse existing streaming and coverage services.
  */
 
-import type { CompiledRule } from './compile';
+import type { CompiledEventRule, CompiledRule } from './compile';
 import { ruleCoversInstant } from './coverage';
+import { epochToWallDate, floatingDateToZonedEpoch } from './coverage/time';
 import { classifyRange, getEffectiveBounds, getSegments } from './sweep';
 import type { RangeStatus } from './types';
 
@@ -38,3 +39,48 @@ export const classifyRangeOverWindow = (
 
 export const getEffectiveBoundsFromCompiled = (compiled: CompiledRule[]) =>
   getEffectiveBounds(compiled);
+
+/**
+ * Enumerate event instants in [from, to) that survive the coverage cascade.
+ * Events are yielded in chronological order. An event at time T is suppressed
+ * if the coverage cascade classifies T as 'blackout'.
+ *
+ * @param coverageRules - Compiled coverage rules (with baseline prepended).
+ * @param eventRules - Compiled event rules.
+ * @param from - Window start (inclusive).
+ * @param to - Window end (exclusive).
+ */
+export function* getEventsInRange(
+  coverageRules: CompiledRule[],
+  eventRules: CompiledEventRule[],
+  from: number,
+  to: number,
+): Iterable<{ at: number; label?: string }> {
+  if (eventRules.length === 0 || !(from < to)) return;
+
+  // Collect all candidate event instants from all event rules
+  const candidates: { at: number; label?: string }[] = [];
+
+  for (const rule of eventRules) {
+    const wallFrom = epochToWallDate(from, rule.tz, rule.unit);
+    const wallTo = epochToWallDate(to, rule.tz, rule.unit);
+    // rrule.between with inc=true includes starts at exactly 'from'
+    const occurrences = rule.rrule.between(wallFrom, wallTo, true);
+    for (const d of occurrences) {
+      const at = floatingDateToZonedEpoch(d, rule.tz, rule.unit);
+      if (at >= from && at < to) {
+        candidates.push({ at, label: rule.label });
+      }
+    }
+  }
+
+  // Sort chronologically
+  candidates.sort((a, b) => a.at - b.at);
+
+  // Filter by coverage: only yield events where the cascade is active
+  for (const evt of candidates) {
+    if (isActiveAtCompiled(coverageRules, evt.at)) {
+      yield evt;
+    }
+  }
+}

@@ -64,6 +64,34 @@ export const strictEnTranslator: DescribeTranslator = (
     return s;
   }
 
+  if (desc.kind === 'event') {
+    const cadence = buildCadence(desc, cfg);
+    let s = `Event ${cadence}`;
+    if (cfg.showTimezone) {
+      const label = cfg.formatTimezoneLabel
+        ? cfg.formatTimezoneLabel(desc.tz)
+        : desc.tz;
+      s += ` (timezone ${label})`;
+    }
+    if (cfg.showBounds) {
+      const from = formatBound(
+        desc.clamps?.starts,
+        desc.tz,
+        desc.unit,
+        cfg.boundsFormat,
+      );
+      const until = formatBound(
+        desc.clamps?.ends,
+        desc.tz,
+        desc.unit,
+        cfg.boundsFormat,
+      );
+      if (from) s += ` from ${from}`;
+      if (until) s += ` until ${until}`;
+    }
+    return s;
+  }
+
   // Recurring rule
   const effect = desc.effect === 'active' ? 'Active' : 'Blackout';
   const durText = durationToTextFromParts(desc.duration);
