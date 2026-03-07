@@ -47,7 +47,9 @@ describe("'s' timeUnit: DST handling and rounded ends", () => {
     const cr = compileRule(rule, tzId, 's');
 
     // Disambiguate: use CDT (pre-transition, UTC-5) explicitly.
-    const start = Math.trunc(DateTime.fromISO('2021-11-07T01:30:00', { zone: 'UTC-5' }).toSeconds());
+    const start = Math.trunc(
+      DateTime.fromISO('2021-11-07T01:30:00', { zone: 'UTC-5' }).toSeconds(),
+    );
     if (cr.kind !== 'recur') throw new Error('expected recurring rule');
     const end = computeOccurrenceEnd(cr, start);
     const endLocal = DateTime.fromSeconds(end, { zone: tz });

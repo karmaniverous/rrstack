@@ -16,7 +16,11 @@
 
 import { DateTime } from 'luxon';
 
-import { type CompiledAnyEventRule, type CompiledCoverageRule, type CompiledEventRule, type CompiledRule, compileRule } from './compile';
+import {
+  type CompiledAnyEventRule,
+  type CompiledRule,
+  compileRule,
+} from './compile';
 import { isValidTimeZone } from './coverage/time';
 import { DEFAULT_DEFAULT_EFFECT } from './defaults';
 import { describeCompiledRule } from './describe';
@@ -91,9 +95,7 @@ export class RRStack {
   }
   /** Working set with baseline prepended (lowest priority). Cached; invalidated on recompile. */
   private compiledWithBaseline(): CompiledRule[] {
-    if (this.__compiledWithBaseline === null) {
-      this.__compiledWithBaseline = [this.makeBaseline(), ...this.compiled];
-    }
+    this.__compiledWithBaseline ??= [this.makeBaseline(), ...this.compiled];
     return this.__compiledWithBaseline;
   }
   /**
@@ -113,8 +115,13 @@ export class RRStack {
   private recompile(): void {
     const { timezone, timeUnit, rules } = this.options;
     this.allCompiled = rules.map((r) => compileRule(r, timezone, timeUnit));
-    this.compiled = this.allCompiled.filter((r) => r.kind !== 'event' && r.kind !== 'oneTimeEvent');
-    this.compiledEvents = this.allCompiled.filter((r): r is CompiledAnyEventRule => r.kind === 'event' || r.kind === 'oneTimeEvent');
+    this.compiled = this.allCompiled.filter(
+      (r) => r.kind !== 'event' && r.kind !== 'oneTimeEvent',
+    );
+    this.compiledEvents = this.allCompiled.filter(
+      (r): r is CompiledAnyEventRule =>
+        r.kind === 'event' || r.kind === 'oneTimeEvent',
+    );
     this.__compiledWithBaseline = null;
     if (this.__initialized) this.__notify();
   }
@@ -516,7 +523,12 @@ export class RRStack {
     from: number,
     to: number,
   ): Iterable<{ at: number; label?: string }> {
-    yield* getEventsInRange(this.compiledWithBaseline(), this.compiledEvents, from, to);
+    yield* getEventsInRange(
+      this.compiledWithBaseline(),
+      this.compiledEvents,
+      from,
+      to,
+    );
   }
 
   /**
@@ -532,9 +544,10 @@ export class RRStack {
     lookAhead?: number,
   ): { at: number; label?: string } | undefined {
     const now = t ?? this.now();
-    const defaultLookAhead = this.options.timeUnit === 'ms'
-      ? 366 * 24 * 60 * 60 * 1000
-      : 366 * 24 * 60 * 60;
+    const defaultLookAhead =
+      this.options.timeUnit === 'ms'
+        ? 366 * 24 * 60 * 60 * 1000
+        : 366 * 24 * 60 * 60;
     const to = now + (lookAhead ?? defaultLookAhead);
     for (const evt of this.getEvents(now, to)) {
       return evt;

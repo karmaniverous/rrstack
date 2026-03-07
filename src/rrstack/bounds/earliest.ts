@@ -51,35 +51,34 @@ export const computeEarliestStart = (
         // as the earliest candidate to avoid environment-local drift.
         // Otherwise (BY time parts are present), ask RRULE for the first occurrence
         // at/after the base via rrule.after(base, true).
-        const recur = r;
         const dtstart =
-          (recur.options as { dtstart?: Date | null }).dtstart ?? null;
+          (r.options as { dtstart?: Date | null }).dtstart ?? null;
 
         const hasByHour =
-          Array.isArray(recur.options.byhour) ||
-          typeof recur.options.byhour === 'number';
+          Array.isArray(r.options.byhour) ||
+          typeof r.options.byhour === 'number';
         const hasByMinute =
-          Array.isArray(recur.options.byminute) ||
-          typeof recur.options.byminute === 'number';
+          Array.isArray(r.options.byminute) ||
+          typeof r.options.byminute === 'number';
         const hasBySecond =
-          Array.isArray(recur.options.bysecond) ||
-          typeof recur.options.bysecond === 'number';
+          Array.isArray(r.options.bysecond) ||
+          typeof r.options.bysecond === 'number';
         const hasExplicitTime = hasByHour || hasByMinute || hasBySecond;
 
         if (dtstart instanceof Date && !hasExplicitTime) {
           // No explicit BY time: first occurrence inherits dtstart wall time.
-          t = floatingDateToZonedEpoch(dtstart, recur.tz, recur.unit);
+          t = floatingDateToZonedEpoch(dtstart, r.tz, r.unit);
         } else {
           const base = dtstart ?? wallMinPerRule[i]!;
-          const d = recur.rrule.after(base, true);
+          const d = r.rrule.after(base, true);
           if (!d) continue;
-          t = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
+          t = floatingDateToZonedEpoch(d, r.tz, r.unit);
         }
       } else {
         // span: earliest candidate is the (possibly open) start clamp
-        t = typeof (r as any).start === 'number' ? (r as any).start : min;
+        t = typeof r.start === 'number' ? r.start : min;
         // If the span ends before min, ignore
-        const e = typeof (r as any).end === 'number' ? (r as any).end : domainMax(r.unit);
+        const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
         if (e <= min) t = undefined;
       }
       if (typeof t !== 'number') continue;
@@ -142,8 +141,8 @@ export const computeEarliestStart = (
       const r = rules[i];
       if (r.kind === 'event' || r.kind === 'oneTimeEvent') continue;
       if (r.kind === 'span') {
-        const s = typeof (r as any).start === 'number' ? (r as any).start : domainMin();
-        const e = typeof (r as any).end === 'number' ? (r as any).end : domainMax(r.unit);
+        const s = typeof r.start === 'number' ? r.start : domainMin();
+        const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
         if (s <= cursor && e > cursor) {
           covering[i] = true;
           nextEnd[i] = e;
@@ -153,23 +152,22 @@ export const computeEarliestStart = (
         }
         continue;
       }
-      const recur = r;
-      const s = lastStartBefore(recur, cursor);
-      const wallT = epochToWallDate(cursor, recur.tz, recur.unit);
+      const s = lastStartBefore(r, cursor);
+      const wallT = epochToWallDate(cursor, r.tz, r.unit);
       if (typeof s === 'number') {
-        const e = computeOccurrenceEnd(recur as import('../compile').CompiledRecurRule, s);
+        const e = computeOccurrenceEnd(r, s);
         if (e > cursor) {
           covering[i] = true;
           nextEnd[i] = e;
         }
-        const dAfter = recur.rrule.after(wallT, false);
+        const dAfter = r.rrule.after(wallT, false);
         nextStart[i] = dAfter
-          ? floatingDateToZonedEpoch(dAfter, recur.tz, recur.unit)
+          ? floatingDateToZonedEpoch(dAfter, r.tz, r.unit)
           : undefined;
       } else {
-        const d0 = recur.rrule.after(wallT, true);
+        const d0 = r.rrule.after(wallT, true);
         nextStart[i] = d0
-          ? floatingDateToZonedEpoch(d0, recur.tz, recur.unit)
+          ? floatingDateToZonedEpoch(d0, r.tz, r.unit)
           : undefined;
       }
     }
@@ -249,7 +247,7 @@ export const computeEarliestStart = (
         }
       } else {
         // span
-        const s = typeof (r as any).start === 'number' ? (r as any).start : undefined;
+        const s = typeof r.start === 'number' ? r.start : undefined;
         if (typeof s === 'number') {
           candidate =
             typeof candidate === 'number' ? Math.min(candidate, s) : s;

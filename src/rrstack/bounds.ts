@@ -1,12 +1,11 @@
-import type { CompiledRule } from './compile';
 /**
  * Effective bounds (orchestrator).
  * - Delegates to focused modules for earliest/latest and open-end detection.
  */
-
 import { computeEarliestStart } from './bounds/earliest';
 import { computeLatestEnd } from './bounds/latest';
 import { detectOpenEnd } from './bounds/openEnd';
+import type { CompiledRule } from './compile';
 import { domainMin, epochToWallDate } from './coverage/time';
 import type { UnixTimeUnit } from './types';
 

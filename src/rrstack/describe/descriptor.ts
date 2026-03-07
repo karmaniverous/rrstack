@@ -1,4 +1,9 @@
-import type { CompiledEventRule, CompiledOneTimeEventRule, CompiledRecurRule, CompiledRule } from '../compile';
+import type {
+  CompiledEventRule,
+  CompiledOneTimeEventRule,
+  CompiledRecurRule,
+  CompiledRule,
+} from '../compile';
 import { floatingDateToZonedEpoch } from '../coverage/time';
 import { Frequency, Weekday } from '../rrule.runtime';
 import type { DurationParts, FrequencyStr, UnixTimeUnit } from '../types';
@@ -57,7 +62,11 @@ export interface RuleDescriptorOneTimeEvent extends RuleDescriptorBase {
   at: number;
 }
 
-export type RuleDescriptor = RuleDescriptorRecur | RuleDescriptorSpan | RuleDescriptorEvent | RuleDescriptorOneTimeEvent;
+export type RuleDescriptor =
+  | RuleDescriptorRecur
+  | RuleDescriptorSpan
+  | RuleDescriptorEvent
+  | RuleDescriptorOneTimeEvent;
 
 const asArray = <T>(v: T | T[] | null | undefined): T[] =>
   v == null ? [] : Array.isArray(v) ? v : [v];
@@ -206,8 +215,9 @@ export const buildRuleDescriptor = (c: CompiledRule): RuleDescriptor => {
   return desc;
 };
 
-
-const buildOneTimeEventDescriptor = (c: CompiledOneTimeEventRule): RuleDescriptorOneTimeEvent => ({
+const buildOneTimeEventDescriptor = (
+  c: CompiledOneTimeEventRule,
+): RuleDescriptorOneTimeEvent => ({
   kind: 'oneTimeEvent',
   effect: 'event',
   tz: c.tz,
@@ -245,8 +255,10 @@ const buildEventDescriptor = (c: CompiledEventRule): RuleDescriptorEvent => {
   }
   const wkst = (c.options as { wkst?: unknown }).wkst;
   const toWkst = (w: unknown): 1 | 2 | 3 | 4 | 5 | 6 | 7 | undefined => {
-    if (typeof w === 'number') return ((w + 1) % 7 || 7) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
-    if (w instanceof Weekday) return ((w.weekday + 1) % 7 || 7) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    if (typeof w === 'number')
+      return ((w + 1) % 7 || 7) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    if (w instanceof Weekday)
+      return ((w.weekday + 1) % 7 || 7) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
     return undefined;
   };
   return {
@@ -261,15 +273,31 @@ const buildEventDescriptor = (c: CompiledEventRule): RuleDescriptorEvent => {
         ? c.options.interval
         : 1,
     by: {
-      months: asArray<number>((c.options as { bymonth?: number[] | number | null }).bymonth),
-      monthDays: asArray<number>((c.options as { bymonthday?: number[] | number | null }).bymonthday),
-      yearDays: asArray<number>((c.options as { byyearday?: number[] | number | null }).byyearday),
-      weekNos: asArray<number>((c.options as { byweekno?: number[] | number | null }).byweekno),
+      months: asArray<number>(
+        (c.options as { bymonth?: number[] | number | null }).bymonth,
+      ),
+      monthDays: asArray<number>(
+        (c.options as { bymonthday?: number[] | number | null }).bymonthday,
+      ),
+      yearDays: asArray<number>(
+        (c.options as { byyearday?: number[] | number | null }).byyearday,
+      ),
+      weekNos: asArray<number>(
+        (c.options as { byweekno?: number[] | number | null }).byweekno,
+      ),
       weekdays,
-      hours: asArray<number>((c.options as { byhour?: number[] | number | null }).byhour),
-      minutes: asArray<number>((c.options as { byminute?: number[] | number | null }).byminute),
-      seconds: asArray<number>((c.options as { bysecond?: number[] | number | null }).bysecond),
-      setpos: asArray<number>((c.options as { bysetpos?: number[] | number | null }).bysetpos),
+      hours: asArray<number>(
+        (c.options as { byhour?: number[] | number | null }).byhour,
+      ),
+      minutes: asArray<number>(
+        (c.options as { byminute?: number[] | number | null }).byminute,
+      ),
+      seconds: asArray<number>(
+        (c.options as { bysecond?: number[] | number | null }).bysecond,
+      ),
+      setpos: asArray<number>(
+        (c.options as { bysetpos?: number[] | number | null }).bysetpos,
+      ),
       wkst: toWkst(wkst),
     },
     count: (c.options as { count?: number | null }).count ?? undefined,

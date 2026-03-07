@@ -205,7 +205,8 @@ const RRuleRuntimeOptionsSchema = z
         }
         // One-time event (no freq) must have starts.
         if (!hasFreq) {
-          const starts = (val as { options?: { starts?: unknown } }).options?.starts;
+          const starts = (val as { options?: { starts?: unknown } }).options
+            ?.starts;
           if (typeof starts !== 'number') {
             ctx.addIssue({
               code: 'custom',
@@ -255,7 +256,8 @@ export const ruleLiteSchema = z
         });
       }
       if (!hasFreq) {
-        const starts = (val as { options?: { starts?: unknown } }).options?.starts;
+        const starts = (val as { options?: { starts?: unknown } }).options
+          ?.starts;
         if (typeof starts !== 'number') {
           ctx.addIssue({
             code: 'custom',
