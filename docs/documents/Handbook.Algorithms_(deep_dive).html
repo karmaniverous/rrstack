@@ -1,4 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Algorithms (deep dive) | @karmaniverous/rrstack</title><meta name="description" content="Documentation for @karmaniverous/rrstack"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@karmaniverous/rrstack</a><div id="tsd-toolbar-links"><a href="https://github.com/karmaniverous/rrstack">GitHub</a></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><ul class="tsd-breadcrumb" aria-label="Breadcrumb"><li><a href="Handbook.html">Handbook</a></li><li><a href="" aria-current="page">Algorithms (deep dive)</a></li></ul></div><div class="tsd-panel tsd-typography"><h1 id="algorithms-deep-dive" class="tsd-anchor-link">Algorithms (deep dive)<a href="#algorithms-deep-dive" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1><p>This page explains the core algorithms that power RRStack: how coverage is computed in the cascade, how segments are streamed, how ranges are classified, and how effective bounds are derived — all with timezone/DST‑correct math and unit‑aware operation.</p>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Algorithms (deep dive) | @karmaniverous/rrstack</title><meta name="description" content="Documentation for @karmaniverous/rrstack"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@karmaniverous/rrstack</a><div id="tsd-toolbar-links"><a href="https://github.com/karmaniverous/rrstack">GitHub</a></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><ul class="tsd-breadcrumb" aria-label="Breadcrumb"><li><a href="Handbook.html">Handbook</a></li><li><a href="" aria-current="page">Algorithms (deep dive)</a></li></ul></div><div class="tsd-panel tsd-typography"><h1 id="algorithms-deep-dive" class="tsd-anchor-link">Algorithms (deep dive)<a href="#algorithms-deep-dive" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
+<p>This page explains the core algorithms that power RRStack: how coverage is computed in the cascade, how segments are streamed, how ranges are classified, and how effective bounds are derived — all with timezone/DST‑correct math and unit‑aware operation.</p>
 <p>Goals and constraints</p>
 <ul>
 <li>Time unit is explicit and end‑to‑end.</li>
@@ -31,6 +32,14 @@
 <li>Occurrence end computed by adding the rule’s <code>Duration</code> in the rule timezone.</li>
 </ul>
 </li>
+<li>Events (zero‑duration instants):
+<ul>
+<li><code>effect: ‘event’</code>; <code>duration</code> must be omitted.</li>
+<li>Recurring events have <code>options.freq</code>; one‑time events use only <code>options.starts</code>.</li>
+<li>Events do not contribute to coverage; they are queried separately via <code>getEvents</code>/<code>nextEvent</code>.</li>
+<li>An event is suppressed if the coverage cascade classifies its instant as <code>’blackout’</code>.</li>
+</ul>
+</li>
 </ul>
 <p>Key helpers</p>
 <ul>
@@ -43,7 +52,8 @@
 <ul>
 <li>At any instant <code>t</code>, the cascade status is the effect of the last rule in the list that covers <code>t</code>.</li>
 </ul>
-<h2 id="point-query-isactiveatt" class="tsd-anchor-link">Point query: isActiveAt(t)<a href="#point-query-isactiveatt" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>Strategy (<code>coverage.ts</code>):</p>
+<h2 id="point-query-isactiveatt" class="tsd-anchor-link">Point query: isActiveAt(t)<a href="#point-query-isactiveatt" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Strategy (<code>coverage.ts</code>):</p>
 <ol>
 <li>Spans: <code>s &lt;= t &lt; e</code> (open sides use domain min/max).</li>
 <li>Recurrences: robust coverage in three cooperative steps:
@@ -55,19 +65,24 @@
 </li>
 <li>Cascade status: scan rules in order; last match wins.</li>
 </ol>
-<h2 id="streaming-segments-getsegmentsfrom-to" class="tsd-anchor-link">Streaming segments: getSegments(from, to)<a href="#streaming-segments-getsegmentsfrom-to" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>Streaming, memory‑bounded merge over per‑rule boundary streams (starts/ends). Ends are processed before starts at the same timestamp to preserve last‑wins semantics. Optional <code>limit</code> throws if exceeded. See <code>segments.ts</code>.</p>
-<h2 id="range-classification-classifyrangefrom-to" class="tsd-anchor-link">Range classification: classifyRange(from, to)<a href="#range-classification-classifyrangefrom-to" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><p>Scans streamed segments; early‑exits on mixed coverage. See <code>segments.ts</code>.</p>
-<h2 id="effective-bounds-geteffectivebounds" class="tsd-anchor-link">Effective bounds: getEffectiveBounds()<a href="#effective-bounds-geteffectivebounds" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
+<h2 id="streaming-segments-getsegmentsfrom-to" class="tsd-anchor-link">Streaming segments: getSegments(from, to)<a href="#streaming-segments-getsegmentsfrom-to" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Streaming, memory‑bounded merge over per‑rule boundary streams (starts/ends). Ends are processed before starts at the same timestamp to preserve last‑wins semantics. Optional <code>limit</code> throws if exceeded. See <code>segments.ts</code>.</p>
+<h2 id="range-classification-classifyrangefrom-to" class="tsd-anchor-link">Range classification: classifyRange(from, to)<a href="#range-classification-classifyrangefrom-to" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Scans streamed segments; early‑exits on mixed coverage. See <code>segments.ts</code>.</p>
+<h2 id="effective-bounds-geteffectivebounds" class="tsd-anchor-link">Effective bounds: getEffectiveBounds()<a href="#effective-bounds-geteffectivebounds" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<ul>
 <li>Earliest bound: candidate‑filtered forward sweep; detects open start when coverage is active at domain minimum due to open‑start sources.</li>
 <li>Open‑end detection: stack inspection (no far‑future probes).</li>
 <li>Latest bound: finite/local probe + bounded reverse sweep; never scans far into the future.</li>
 </ul>
 <p>See <code>bounds/*.ts</code> for pass details.</p>
-<h2 id="timezones-and-dst" class="tsd-anchor-link">Timezones and DST<a href="#timezones-and-dst" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
+<h2 id="timezones-and-dst" class="tsd-anchor-link">Timezones and DST<a href="#timezones-and-dst" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<ul>
 <li>All coverage is computed in the rule’s IANA timezone.</li>
 <li>Occurrence end times use Luxon in the rule’s zone. In <code>'s'</code> mode, ends remain exact integer seconds across DST transitions.</li>
 </ul>
-<h2 id="see-also" class="tsd-anchor-link">See also<a href="#see-also" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
+<h2 id="see-also" class="tsd-anchor-link">See also<a href="#see-also" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<ul>
 <li>Public API and types: <a href="Handbook.Core_API_and_Types.html">Core API and Types</a></li>
 <li>Configuration and notices: <a href="Handbook.Configuration___update().html">Configuration &amp; update()</a></li>
 <li>Time helpers and formatting: <a href="Handbook.Time___timezones.html">Time &amp; timezones</a></li>

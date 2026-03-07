@@ -2,8 +2,28 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.17.0](https://github.com/karmaniverous/rrstack/compare/0.16.2...0.17.0)
+
+- bugfix: pin @rollup/plugin-typescript to 12.1.4 [`#5`](https://github.com/karmaniverous/rrstack/pull/5)
+- chore: update dependencies and fix lint errors [`#4`](https://github.com/karmaniverous/rrstack/pull/4)
+- feat: event effect type, one-time events, and perf improvements [`#3`](https://github.com/karmaniverous/rrstack/pull/3)
+- chore: update dependencies, fix lint errors, remove trivial renames [`424894b`](https://github.com/karmaniverous/rrstack/commit/424894b4aeda243f42458b63752518de4976c570)
+- feat: add getEvents/nextEvent methods and event test suite [`72008ac`](https://github.com/karmaniverous/rrstack/commit/72008ac48a5fc80da3c3094d1b0b072aba513bb8)
+- feat: support one-time events [`53e5f9a`](https://github.com/karmaniverous/rrstack/commit/53e5f9acb27cf47581cb3d3f2e3cd1fc4ba1284e)
+- feat: event effect type for zero-duration instant semantics [`b3b0a55`](https://github.com/karmaniverous/rrstack/commit/b3b0a55237c0c0ad3a18e482cff6ca6018a69024)
+- docs: document event rules and one-time events [`211c2de`](https://github.com/karmaniverous/rrstack/commit/211c2de8047cf51bce8d7067459208a074e2d0d3)
+- fix: internal type constraints after adding event effect type [`bb4c07d`](https://github.com/karmaniverous/rrstack/commit/bb4c07d5cfa0b661404bb0be2da854bec48fd2d5)
+- bugfix: pin @rollup/plugin-typescript to 12.1.4 and audit fix [`5b608c3`](https://github.com/karmaniverous/rrstack/commit/5b608c3641575ae408af393fd36a169a9498b993)
+- perf: cache compiledWithBaseline and pre-compute fixed-duration offsets [`6e965b0`](https://github.com/karmaniverous/rrstack/commit/6e965b017a6f0419d7bc43436f1e861bf687f198)
+- pin @rollup/plugin-typescript [`0c0bee3`](https://github.com/karmaniverous/rrstack/commit/0c0bee371255f501fdf9feb22954d780583fe630)
+- fix: disambiguate DST fall-back tests for ICU 77+ compatibility [`e5b2fe2`](https://github.com/karmaniverous/rrstack/commit/e5b2fe294971ce1b7c25907703b9693d59487e44)
+- chore: regenerate JSON Schema with event effect type [`3a023eb`](https://github.com/karmaniverous/rrstack/commit/3a023ebd474bf65c02624e9d37a00d2b5647877d)
+
 #### [0.16.2](https://github.com/karmaniverous/rrstack/compare/0.16.1...0.16.2)
 
+> 9 October 2025
+
+- chore: release v0.16.2 [`cf09297`](https://github.com/karmaniverous/rrstack/commit/cf09297376cf6386e4f229f737f1bf254befbc22)
 - fix(describe): don’t show “from …” when rule start is not set [`d5a89e8`](https://github.com/karmaniverous/rrstack/commit/d5a89e89ba7bd9a5676622eb352182683eabd45f)
 
 #### [0.16.1](https://github.com/karmaniverous/rrstack/compare/0.16.0...0.16.1)
