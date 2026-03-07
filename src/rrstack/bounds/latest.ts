@@ -28,11 +28,10 @@ const hasOpenEndedActive = (rules: CompiledRule[]): boolean => {
     if (r.effect !== 'active' || !r.isOpenEnd) continue;
     if (r.kind === 'event' || r.kind === 'oneTimeEvent') continue;
     if (r.kind === 'span') return true;
-    const recur = r as CompiledRecurRule;
-    const hasUntil = !!(recur.options as { until?: Date | null }).until;
+    const hasUntil = !!(r.options as { until?: Date | null }).until;
     const hasCount =
-      typeof (recur.options as { count?: number | null }).count === 'number';
-    if (!hasUntil && !hasCount && hasAnyStart(recur)) return true;
+      typeof (r.options as { count?: number | null }).count === 'number';
+    if (!hasUntil && !hasCount && hasAnyStart(r)) return true;
   }
   return false;
 };
@@ -46,26 +45,25 @@ const computeFiniteProbe = (rules: CompiledRule[]): number | undefined => {
       if (typeof r.end === 'number') ends.push(r.end);
       continue;
     }
-    const recur = r as CompiledRecurRule;
     const hasCount =
-      typeof (recur.options as { count?: number | null }).count === 'number';
-    const hasUntil = !!(recur.options as { until?: Date | null }).until;
+      typeof (r.options as { count?: number | null }).count === 'number';
+    const hasUntil = !!(r.options as { until?: Date | null }).until;
     if (hasCount) {
-      const starts = recur.rrule.all();
+      const starts = r.rrule.all();
       if (starts.length > 0) {
         const d = starts[starts.length - 1];
-        const s = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
-        ends.push(computeOccurrenceEnd(recur, s));
+        const s = floatingDateToZonedEpoch(d, r.tz, r.unit);
+        ends.push(computeOccurrenceEnd(r, s));
       }
       continue;
     }
     if (hasUntil) {
-      const until = (recur.options as { until?: Date | null }).until!;
+      const until = (r.options as { until?: Date | null }).until!;
       // inclusive of a start at 'until'
-      const d = recur.rrule.before(until, true);
+      const d = r.rrule.before(until, true);
       if (d) {
-        const s = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
-        ends.push(computeOccurrenceEnd(recur, s));
+        const s = floatingDateToZonedEpoch(d, r.tz, r.unit);
+        ends.push(computeOccurrenceEnd(r, s));
       }
     }
   }
@@ -132,18 +130,17 @@ export const computeLatestEnd = (
         if (e > cursor && s <= cursor) covering[i] = true;
         continue;
       }
-      const recur = r as CompiledRecurRule;
       const prevCursor = cursor > domainMin() ? cursor - 1 : cursor;
-      const s0 = lastStartBefore(recur, prevCursor);
+      const s0 = lastStartBefore(r, prevCursor);
       if (typeof s0 === 'number') {
         let s = s0;
-        let e = computeOccurrenceEnd(recur, s);
+        let e = computeOccurrenceEnd(r, s);
         while (e >= cursor) {
-          const wallS = epochToWallDate(s, recur.tz, recur.unit);
-          const sPrev = recur.rrule.before(wallS, false);
+          const wallS = epochToWallDate(s, r.tz, r.unit);
+          const sPrev = r.rrule.before(wallS, false);
           if (!sPrev) break;
-          s = floatingDateToZonedEpoch(sPrev, recur.tz, recur.unit);
-          e = computeOccurrenceEnd(recur, s);
+          s = floatingDateToZonedEpoch(sPrev, r.tz, r.unit);
+          e = computeOccurrenceEnd(r, s);
         }
         prevStart[i] = s;
         prevEnd[i] = e;
@@ -225,18 +222,27 @@ export const computeLatestEnd = (
         if (rules[i].kind === 'span') {
           prevEnd[i] = undefined;
         } else {
-          const recur = rules[i] as CompiledRecurRule;
           const s2 = prevStart[i];
           if (typeof s2 === 'number') {
-            const wallS2 = epochToWallDate(s2, recur.tz, recur.unit);
-            const sPrev = recur.rrule.before(wallS2, false);
+            const wallS2 = epochToWallDate(
+              s2,
+              (rules[i] as CompiledRecurRule).tz,
+              (rules[i] as CompiledRecurRule).unit,
+            );
+            const sPrev = (rules[i] as CompiledRecurRule).rrule.before(
+              wallS2,
+              false,
+            );
             if (sPrev) {
               const sPrevEpoch = floatingDateToZonedEpoch(
                 sPrev,
-                recur.tz,
-                recur.unit,
+                (rules[i] as CompiledRecurRule).tz,
+                (rules[i] as CompiledRecurRule).unit,
               );
-              prevEnd[i] = computeOccurrenceEnd(recur, sPrevEpoch);
+              prevEnd[i] = computeOccurrenceEnd(
+                rules[i] as CompiledRecurRule,
+                sPrevEpoch,
+              );
             } else {
               prevEnd[i] = undefined;
             }
@@ -253,17 +259,26 @@ export const computeLatestEnd = (
         if (rules[i].kind === 'span') {
           prevStart[i] = undefined;
         } else {
-          const recur = rules[i] as CompiledRecurRule;
-          const wallS = epochToWallDate(t, recur.tz, recur.unit);
-          const sPrev = recur.rrule.before(wallS, false);
+          const wallS = epochToWallDate(
+            t,
+            (rules[i] as CompiledRecurRule).tz,
+            (rules[i] as CompiledRecurRule).unit,
+          );
+          const sPrev = (rules[i] as CompiledRecurRule).rrule.before(
+            wallS,
+            false,
+          );
           if (sPrev) {
             const sPrevEpoch = floatingDateToZonedEpoch(
               sPrev,
-              recur.tz,
-              recur.unit,
+              (rules[i] as CompiledRecurRule).tz,
+              (rules[i] as CompiledRecurRule).unit,
             );
             prevStart[i] = sPrevEpoch;
-            prevEnd[i] = computeOccurrenceEnd(recur, sPrevEpoch);
+            prevEnd[i] = computeOccurrenceEnd(
+              rules[i] as CompiledRecurRule,
+              sPrevEpoch,
+            );
           } else {
             prevStart[i] = undefined;
           }

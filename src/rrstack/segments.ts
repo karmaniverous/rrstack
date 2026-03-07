@@ -4,7 +4,7 @@
  * - classifyRange: 'active' | 'blackout' | 'partial' by scanning segments.
  */
 
-import type { CompiledRule, CompiledRecurRule } from './compile';
+import type { CompiledRecurRule, CompiledRule } from './compile';
 import {
   computeOccurrenceEnd,
   domainMax,
@@ -35,11 +35,10 @@ const lastStartBefore = (
     return s <= cursor ? s : undefined;
   }
   if (rule.kind === 'event' || rule.kind === 'oneTimeEvent') return undefined;
-  const recur = rule;
-  const wall = epochToWallDate(cursor, recur.tz, recur.unit);
-  const d = recur.rrule.before(wall, true);
+  const wall = epochToWallDate(cursor, rule.tz, rule.unit);
+  const d = rule.rrule.before(wall, true);
   if (!d) return undefined;
-  return floatingDateToZonedEpoch(d, recur.tz, recur.unit);
+  return floatingDateToZonedEpoch(d, rule.tz, rule.unit);
 };
 
 /**
@@ -93,19 +92,18 @@ export function* getSegments(
       continue;
     }
     // recurring
-    const recur = r;
-    const last = lastStartBefore(recur, from);
+    const last = lastStartBefore(r, from);
     if (typeof last === 'number') {
-      const e = computeOccurrenceEnd(recur as CompiledRecurRule, last);
+      const e = computeOccurrenceEnd(r, last);
       if (e > from) {
         covering[i] = true;
         nextEnd[i] = e;
       }
     }
     // next start at/after from
-    const wallFrom = epochToWallDate(from, recur.tz, recur.unit);
-    const d = recur.rrule.after(wallFrom, true);
-    if (d) nextStart[i] = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
+    const wallFrom = epochToWallDate(from, r.tz, r.unit);
+    const d = r.rrule.after(wallFrom, true);
+    if (d) nextStart[i] = floatingDateToZonedEpoch(d, r.tz, r.unit);
   }
 
   let prevT = from;
@@ -138,14 +136,21 @@ export function* getSegments(
           nextEnd[i] = spanEnd[i];
           nextStart[i] = undefined;
         } else {
-          const recur = rules[i] as CompiledRecurRule;
-          const e = computeOccurrenceEnd(recur as CompiledRecurRule, t);
+          const e = computeOccurrenceEnd(rules[i] as CompiledRecurRule, t);
           nextEnd[i] = e;
           // advance nextStart for this rule
-          const wallT = epochToWallDate(t, recur.tz, recur.unit);
-          const d2 = recur.rrule.after(wallT, false);
+          const wallT = epochToWallDate(
+            t,
+            (rules[i] as CompiledRecurRule).tz,
+            (rules[i] as CompiledRecurRule).unit,
+          );
+          const d2 = (rules[i] as CompiledRecurRule).rrule.after(wallT, false);
           nextStart[i] = d2
-            ? floatingDateToZonedEpoch(d2, recur.tz, recur.unit)
+            ? floatingDateToZonedEpoch(
+                d2,
+                (rules[i] as CompiledRecurRule).tz,
+                (rules[i] as CompiledRecurRule).unit,
+              )
             : undefined;
         }
       }

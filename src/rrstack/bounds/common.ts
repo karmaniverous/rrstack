@@ -38,11 +38,10 @@ export const lastStartBefore = (
     return s <= cursor ? s : undefined;
   }
   if (rule.kind === 'event' || rule.kind === 'oneTimeEvent') return undefined;
-  const recur = rule;
-  const wall = epochToWallDate(cursor, recur.tz, recur.unit);
-  const d = recur.rrule.before(wall, true);
+  const wall = epochToWallDate(cursor, rule.tz, rule.unit);
+  const d = rule.rrule.before(wall, true);
   if (!d) return undefined;
-  return floatingDateToZonedEpoch(d, recur.tz, recur.unit);
+  return floatingDateToZonedEpoch(d, rule.tz, rule.unit);
 };
 
 /**
@@ -55,9 +54,8 @@ export const coversAt = (rule: CompiledRule, t: number): boolean => {
     return s <= t && t < e;
   }
   if (rule.kind === 'event' || rule.kind === 'oneTimeEvent') return false;
-  const recur = rule;
-  const s = lastStartBefore(recur, t);
+  const s = lastStartBefore(rule, t);
   if (typeof s !== 'number') return false;
-  const e = computeOccurrenceEnd(recur as import('../compile').CompiledRecurRule, s);
+  const e = computeOccurrenceEnd(rule, s);
   return s <= t && t < e;
 };

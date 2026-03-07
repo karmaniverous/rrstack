@@ -112,8 +112,10 @@ export interface RRStackOptions {
  * - `rules` is a readonly array.
  * - `timezone` is a branded, validated string.
  */
-export interface RRStackOptionsNormalized
-  extends Omit<RRStackOptions, 'timeUnit' | 'rules' | 'timezone'> {
+export interface RRStackOptionsNormalized extends Omit<
+  RRStackOptions,
+  'timeUnit' | 'rules' | 'timezone'
+> {
   timeUnit: UnixTimeUnit;
   rules: readonly RuleJson[];
   timezone: TimeZoneId;

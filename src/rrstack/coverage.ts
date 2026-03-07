@@ -47,14 +47,12 @@ export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
     const e = typeof rule.end === 'number' ? rule.end : domainMax(rule.unit);
     return s <= t && t < e;
   }
-  const recur = rule;
-
   // 0) Day-window enumeration: all starts occurring on local calendar day of t.
   {
     const local =
-      recur.unit === 'ms'
-        ? DateTime.fromMillis(t, { zone: recur.tz })
-        : DateTime.fromSeconds(t, { zone: recur.tz });
+      rule.unit === 'ms'
+        ? DateTime.fromMillis(t, { zone: rule.tz })
+        : DateTime.fromSeconds(t, { zone: rule.tz });
     const dayStartWall = datetime(local.year, local.month, local.day, 0, 0, 0);
     const nextDay = local.plus({ days: 1 });
     const dayEndWallExclusive = datetime(
@@ -66,42 +64,42 @@ export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
       0,
     );
 
-    const dayStarts = recur.rrule.between(
+    const dayStarts = rule.rrule.between(
       dayStartWall,
       dayEndWallExclusive,
       true,
     );
     for (const sd of dayStarts) {
-      const start = floatingDateToZonedEpoch(sd, recur.tz, recur.unit);
-      const end = computeOccurrenceEnd(recur, start);
+      const start = floatingDateToZonedEpoch(sd, rule.tz, rule.unit);
+      const end = computeOccurrenceEnd(rule, start);
       if (start <= t && t < end) return true;
     }
 
-    if (localDayMatchesDailyTimes(recur, t)) return true;
-    if (localDayMatchesCommonPatterns(recur, t)) return true;
+    if (localDayMatchesDailyTimes(rule, t)) return true;
+    if (localDayMatchesCommonPatterns(rule, t)) return true;
   }
 
   // 1) Robust coverage via rrule.before at wall-clock t.
-  const wallT = epochToWallDate(t, recur.tz, recur.unit);
-  const d = recur.rrule.before(wallT, true);
+  const wallT = epochToWallDate(t, rule.tz, rule.unit);
+  const d = rule.rrule.before(wallT, true);
   if (d) {
-    const start = floatingDateToZonedEpoch(d, recur.tz, recur.unit);
-    const end = computeOccurrenceEnd(recur, start);
+    const start = floatingDateToZonedEpoch(d, rule.tz, rule.unit);
+    const end = computeOccurrenceEnd(rule, start);
     if (start <= t && t < end) return true;
   }
 
   // 2) Fallback enumeration: frequency/interval-aware window [t - horizon, t]
-  const horizon = enumerationHorizon(recur);
+  const horizon = enumerationHorizon(rule);
   const windowStart = epochToWallDate(
     Math.max(0, t - horizon),
-    recur.tz,
-    recur.unit,
+    rule.tz,
+    rule.unit,
   );
-  const starts = recur.rrule.between(windowStart, wallT, true);
+  const starts = rule.rrule.between(windowStart, wallT, true);
 
   for (const sd of starts) {
-    const start = floatingDateToZonedEpoch(sd, recur.tz, recur.unit);
-    const end = computeOccurrenceEnd(recur, start);
+    const start = floatingDateToZonedEpoch(sd, rule.tz, rule.unit);
+    const end = computeOccurrenceEnd(rule, start);
     if (start <= t && t < end) return true;
   }
 
