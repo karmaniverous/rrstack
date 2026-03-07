@@ -26,6 +26,7 @@ const hasAnyStart = (r: CompiledRecurRule): boolean =>
 const hasOpenEndedActive = (rules: CompiledRule[]): boolean => {
   for (const r of rules) {
     if (r.effect !== 'active' || !r.isOpenEnd) continue;
+    if (r.kind === 'event' || r.kind === 'oneTimeEvent') continue;
     if (r.kind === 'span') return true;
     const recur = r as CompiledRecurRule;
     const hasUntil = !!(recur.options as { until?: Date | null }).until;
@@ -40,6 +41,7 @@ const hasOpenEndedActive = (rules: CompiledRule[]): boolean => {
 const computeFiniteProbe = (rules: CompiledRule[]): number | undefined => {
   const ends: number[] = [];
   for (const r of rules) {
+    if (r.kind === 'event' || r.kind === 'oneTimeEvent') continue;
     if (r.kind === 'span') {
       if (typeof r.end === 'number') ends.push(r.end);
       continue;
@@ -121,6 +123,7 @@ export const computeLatestEnd = (
 
     for (let i = 0; i < n; i++) {
       const r = rules[i];
+      if (r.kind === 'event' || r.kind === 'oneTimeEvent') continue;
       if (r.kind === 'span') {
         const s = typeof r.start === 'number' ? r.start : domainMin();
         const e = typeof r.end === 'number' ? r.end : Number.POSITIVE_INFINITY;

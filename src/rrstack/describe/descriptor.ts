@@ -1,10 +1,10 @@
-import type { CompiledEventRule, CompiledRecurRule, CompiledRule } from '../compile';
+import type { CompiledEventRule, CompiledOneTimeEventRule, CompiledRecurRule, CompiledRule } from '../compile';
 import { floatingDateToZonedEpoch } from '../coverage/time';
 import { Frequency, Weekday } from '../rrule.runtime';
 import type { DurationParts, FrequencyStr, UnixTimeUnit } from '../types';
 
 export interface RuleDescriptorBase {
-  kind: 'span' | 'recur' | 'event';
+  kind: 'span' | 'recur' | 'event' | 'oneTimeEvent';
   effect: 'active' | 'blackout' | 'event';
   tz: string;
   unit: UnixTimeUnit;
@@ -52,7 +52,12 @@ export interface RuleDescriptorEvent extends RuleDescriptorBase {
   until?: number;
 }
 
-export type RuleDescriptor = RuleDescriptorRecur | RuleDescriptorSpan | RuleDescriptorEvent;
+export interface RuleDescriptorOneTimeEvent extends RuleDescriptorBase {
+  kind: 'oneTimeEvent';
+  at: number;
+}
+
+export type RuleDescriptor = RuleDescriptorRecur | RuleDescriptorSpan | RuleDescriptorEvent | RuleDescriptorOneTimeEvent;
 
 const asArray = <T>(v: T | T[] | null | undefined): T[] =>
   v == null ? [] : Array.isArray(v) ? v : [v];
@@ -85,6 +90,9 @@ const asDurationParts = (r: CompiledRecurRule): DurationParts => {
 };
 
 export const buildRuleDescriptor = (c: CompiledRule): RuleDescriptor => {
+  if (c.kind === 'oneTimeEvent') {
+    return buildOneTimeEventDescriptor(c);
+  }
   if (c.kind === 'event') {
     return buildEventDescriptor(c);
   }
@@ -198,6 +206,14 @@ export const buildRuleDescriptor = (c: CompiledRule): RuleDescriptor => {
   return desc;
 };
 
+
+const buildOneTimeEventDescriptor = (c: CompiledOneTimeEventRule): RuleDescriptorOneTimeEvent => ({
+  kind: 'oneTimeEvent',
+  effect: 'event',
+  tz: c.tz,
+  unit: c.unit,
+  at: c.at,
+});
 
 const buildEventDescriptor = (c: CompiledEventRule): RuleDescriptorEvent => {
   const dtstart = (c.options as { dtstart?: Date | null }).dtstart ?? undefined;

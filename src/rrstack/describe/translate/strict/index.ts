@@ -64,6 +64,18 @@ export const strictEnTranslator: DescribeTranslator = (
     return s;
   }
 
+  if (desc.kind === 'oneTimeEvent') {
+    const at = formatBound(desc.at, desc.tz, desc.unit, cfg.boundsFormat) ?? 'unknown';
+    let s = `One-time event at ${at}`;
+    if (cfg.showTimezone) {
+      const label = cfg.formatTimezoneLabel
+        ? cfg.formatTimezoneLabel(desc.tz)
+        : desc.tz;
+      s += ` (timezone ${label})`;
+    }
+    return s;
+  }
+
   if (desc.kind === 'event') {
     const cadence = buildCadence(desc, cfg);
     let s = `Event ${cadence}`;

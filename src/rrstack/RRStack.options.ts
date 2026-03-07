@@ -195,20 +195,24 @@ const RRuleRuntimeOptionsSchema = z
       const rawFreq = (val as { options?: { freq?: unknown } }).options?.freq;
       const hasFreq = typeof rawFreq === 'string';
       if (val.effect === 'event') {
-        // Event rules must have freq and must NOT have duration.
-        if (!hasFreq) {
-          ctx.addIssue({
-            code: 'custom',
-            message: 'Event rules must have a frequency (recurring).',
-            path: ['options', 'freq'],
-          });
-        }
+        // Event rules must NOT have duration.
         if (val.duration) {
           ctx.addIssue({
             code: 'custom',
             message: 'Event rules must not have a duration.',
             path: ['duration'],
           });
+        }
+        // One-time event (no freq) must have starts.
+        if (!hasFreq) {
+          const starts = (val as { options?: { starts?: unknown } }).options?.starts;
+          if (typeof starts !== 'number') {
+            ctx.addIssue({
+              code: 'custom',
+              message: 'One-time event rules must have a starts timestamp.',
+              path: ['options', 'starts'],
+            });
+          }
         }
       } else if (hasFreq) {
         // Recurring rule must provide a duration.
@@ -243,19 +247,22 @@ export const ruleLiteSchema = z
     const rawFreq = (val as { options?: { freq?: unknown } }).options?.freq;
     const hasFreq = typeof rawFreq === 'string';
     if (val.effect === 'event') {
-      if (!hasFreq) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Event rules must have a frequency (recurring).',
-          path: ['options', 'freq'],
-        });
-      }
       if (val.duration) {
         ctx.addIssue({
           code: 'custom',
           message: 'Event rules must not have a duration.',
           path: ['duration'],
         });
+      }
+      if (!hasFreq) {
+        const starts = (val as { options?: { starts?: unknown } }).options?.starts;
+        if (typeof starts !== 'number') {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'One-time event rules must have a starts timestamp.',
+            path: ['options', 'starts'],
+          });
+        }
       }
     } else if (hasFreq) {
       if (!val.duration) {

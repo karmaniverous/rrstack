@@ -18,12 +18,23 @@ describe('event effect type', () => {
       expect(s.rules[0].effect).toBe('event');
     });
 
-    it('rejects event rule without freq (span)', () => {
+    it('rejects one-time event without starts', () => {
       const rule: RuleJson = {
         effect: 'event',
         options: {},
       };
       expect(() => new RRStack({ timezone: 'UTC', rules: [rule] })).toThrow();
+    });
+
+    it('accepts one-time event with starts', () => {
+      const rule: RuleJson = {
+        effect: 'event',
+        options: { starts: day },
+        label: 'once',
+      };
+      const s = new RRStack({ timezone: 'UTC', rules: [rule] });
+      expect(s.rules).toHaveLength(1);
+      expect(s.rules[0].effect).toBe('event');
     });
 
     it('rejects event rule with duration', () => {
@@ -249,6 +260,108 @@ describe('event effect type', () => {
       expect(s2.rules[0].effect).toBe('event');
       const events = [...s2.getEvents(day, day + 24 * 3600 * 1000)];
       expect(events).toHaveLength(1);
+    });
+  });
+
+  describe('one-time events', () => {
+    const eventAt = day + 5 * 3600 * 1000; // 5 AM on Jan 10
+
+    it('appears in getEvents window', () => {
+      const rule: RuleJson = {
+        effect: 'event',
+        options: { starts: eventAt },
+        label: 'once',
+      };
+      const s = new RRStack({ timezone: 'UTC', rules: [rule] });
+      const events = [...s.getEvents(day, day + 24 * 3600 * 1000)];
+      expect(events).toHaveLength(1);
+      expect(events[0].at).toBe(eventAt);
+      expect(events[0].label).toBe('once');
+    });
+
+    it('outside window not returned', () => {
+      const rule: RuleJson = {
+        effect: 'event',
+        options: { starts: eventAt },
+        label: 'once',
+      };
+      const s = new RRStack({ timezone: 'UTC', rules: [rule] });
+      // Window is the day before
+      const before = day - 24 * 3600 * 1000;
+      const events = [...s.getEvents(before, day)];
+      expect(events).toHaveLength(0);
+    });
+
+    it('suppressed by blackout', () => {
+      const rule: RuleJson = {
+        effect: 'event',
+        options: { starts: eventAt },
+        label: 'once',
+      };
+      const blackoutRule: RuleJson = {
+        effect: 'blackout',
+        duration: { hours: 2 },
+        options: { freq: 'daily', byhour: [4], byminute: [0], bysecond: [0] },
+      };
+      const s = new RRStack({
+        timezone: 'UTC',
+        defaultEffect: 'active',
+        rules: [blackoutRule, rule],
+      });
+      const events = [...s.getEvents(day, day + 24 * 3600 * 1000)];
+      // 5 AM falls within 4-6 AM blackout
+      expect(events).toHaveLength(0);
+    });
+
+    it('survives outside blackout', () => {
+      const laterEvent = day + 8 * 3600 * 1000; // 8 AM
+      const rule: RuleJson = {
+        effect: 'event',
+        options: { starts: laterEvent },
+        label: 'once-8am',
+      };
+      const blackoutRule: RuleJson = {
+        effect: 'blackout',
+        duration: { hours: 2 },
+        options: { freq: 'daily', byhour: [4], byminute: [0], bysecond: [0] },
+      };
+      const s = new RRStack({
+        timezone: 'UTC',
+        defaultEffect: 'active',
+        rules: [blackoutRule, rule],
+      });
+      const events = [...s.getEvents(day, day + 24 * 3600 * 1000)];
+      expect(events).toHaveLength(1);
+      expect(events[0].at).toBe(laterEvent);
+    });
+
+    it('nextEvent finds it', () => {
+      const rule: RuleJson = {
+        effect: 'event',
+        options: { starts: eventAt },
+        label: 'once',
+      };
+      const s = new RRStack({ timezone: 'UTC', rules: [rule] });
+      const result = s.nextEvent(day);
+      expect(result).toBeDefined();
+      expect(result!.at).toBe(eventAt);
+      expect(result!.label).toBe('once');
+    });
+
+    it('toJson round-trip', () => {
+      const rule: RuleJson = {
+        effect: 'event',
+        options: { starts: eventAt },
+        label: 'once',
+      };
+      const s1 = new RRStack({ timezone: 'UTC', rules: [rule] });
+      const json = s1.toJson();
+      const s2 = new RRStack(json);
+      expect(s2.rules).toHaveLength(1);
+      expect(s2.rules[0].effect).toBe('event');
+      const events = [...s2.getEvents(day, day + 24 * 3600 * 1000)];
+      expect(events).toHaveLength(1);
+      expect(events[0].at).toBe(eventAt);
     });
   });
 });

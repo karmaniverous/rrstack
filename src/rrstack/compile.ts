@@ -62,7 +62,15 @@ export interface CompiledEventRule extends CompiledRuleBase {
   rrule: RRuleClass;
 }
 
-export type CompiledRule = CompiledRecurRule | CompiledSpanRule | CompiledEventRule;
+export interface CompiledOneTimeEventRule extends CompiledRuleBase {
+  kind: 'oneTimeEvent';
+  /** Event instant in the configured unit. */
+  at: number;
+}
+
+export type CompiledAnyEventRule = CompiledEventRule | CompiledOneTimeEventRule;
+
+export type CompiledRule = CompiledRecurRule | CompiledSpanRule | CompiledEventRule | CompiledOneTimeEventRule;
 /** Coverage-only rules (excludes events). Effect is always 'active' | 'blackout'. */
 export type CompiledCoverageRule = (CompiledRecurRule | CompiledSpanRule) & { effect: InstantStatus };
 
@@ -152,13 +160,26 @@ export const compileRule = (
   const freqRaw = (rule.options as { freq?: unknown }).freq;
   const isSpan = freqRaw === undefined;
 
-  // Event rule path: has freq but no duration, effect is 'event'
+  // Event rule path: effect is 'event'
   if (rule.effect === 'event') {
-    if (isSpan) {
-      throw new Error('Event rules must have a frequency (recurring)');
-    }
     if (rule.duration) {
       throw new Error('Event rules must not have a duration');
+    }
+    if (isSpan) {
+      // One-time event: no freq, must have starts
+      if (typeof rule.options.starts !== 'number') {
+        throw new Error('One-time event rules must have a starts timestamp');
+      }
+      return {
+        kind: 'oneTimeEvent' as const,
+        effect: 'event' as const,
+        label: rule.label,
+        tz: timezone,
+        unit,
+        isOpenStart: false,
+        isOpenEnd: rule.options.ends === undefined,
+        at: rule.options.starts,
+      };
     }
     const isOpenStart = rule.options.starts === undefined;
     const isOpenEnd = rule.options.ends === undefined;

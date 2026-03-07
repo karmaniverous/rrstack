@@ -22,6 +22,7 @@ export const detectOpenEnd = (rules: CompiledRule[]): boolean => {
   };
 
   for (const r of rules) {
+    if (r.kind === 'event' || r.kind === 'oneTimeEvent') continue;
     // Open-ended active span
     if (r.effect === 'active' && r.kind === 'span' && r.isOpenEnd) {
       lastKind = 'active';

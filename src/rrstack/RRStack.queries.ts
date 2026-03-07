@@ -5,7 +5,7 @@
  */
 
 import { ruleCoversInstant } from './coverage';
-import type { CompiledEventRule, CompiledRule } from './compile';
+import type { CompiledAnyEventRule, CompiledRule } from './compile';
 import { epochToWallDate, floatingDateToZonedEpoch } from './coverage/time';
 import { classifyRange, getEffectiveBounds, getSegments } from './sweep';
 import type { RangeStatus } from './types';
@@ -52,7 +52,7 @@ export const getEffectiveBoundsFromCompiled = (compiled: CompiledRule[]) =>
  */
 export function* getEventsInRange(
   coverageRules: CompiledRule[],
-  eventRules: CompiledEventRule[],
+  eventRules: CompiledAnyEventRule[],
   from: number,
   to: number,
 ): Iterable<{ at: number; label?: string }> {
@@ -62,6 +62,13 @@ export function* getEventsInRange(
   const candidates: { at: number; label?: string }[] = [];
 
   for (const rule of eventRules) {
+    if (rule.kind === 'oneTimeEvent') {
+      // One-time event: check if `at` falls within [from, to)
+      if (rule.at >= from && rule.at < to) {
+        candidates.push({ at: rule.at, label: rule.label });
+      }
+      continue;
+    }
     const wallFrom = epochToWallDate(from, rule.tz, rule.unit);
     const wallTo = epochToWallDate(to, rule.tz, rule.unit);
     // rrule.between with inc=true includes starts at exactly 'from'

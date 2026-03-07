@@ -37,6 +37,7 @@ export const lastStartBefore = (
     const s = typeof rule.start === 'number' ? rule.start : domainMin();
     return s <= cursor ? s : undefined;
   }
+  if (rule.kind === 'event' || rule.kind === 'oneTimeEvent') return undefined;
   const recur = rule;
   const wall = epochToWallDate(cursor, recur.tz, recur.unit);
   const d = recur.rrule.before(wall, true);
@@ -53,6 +54,7 @@ export const coversAt = (rule: CompiledRule, t: number): boolean => {
     const e = typeof rule.end === 'number' ? rule.end : domainMax(rule.unit);
     return s <= t && t < e;
   }
+  if (rule.kind === 'event' || rule.kind === 'oneTimeEvent') return false;
   const recur = rule;
   const s = lastStartBefore(recur, t);
   if (typeof s !== 'number') return false;

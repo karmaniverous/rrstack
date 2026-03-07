@@ -34,6 +34,7 @@ const lastStartBefore = (
     const s = typeof rule.start === 'number' ? rule.start : domainMin();
     return s <= cursor ? s : undefined;
   }
+  if (rule.kind === 'event' || rule.kind === 'oneTimeEvent') return undefined;
   const recur = rule;
   const wall = epochToWallDate(cursor, recur.tz, recur.unit);
   const d = recur.rrule.before(wall, true);
@@ -73,6 +74,7 @@ export function* getSegments(
   // Initialize per-rule state at "from"
   for (let i = 0; i < n; i++) {
     const r = rules[i];
+    if (r.kind === 'event' || r.kind === 'oneTimeEvent') continue;
     if (r.kind === 'span') {
       const s = typeof r.start === 'number' ? r.start : domainMin();
       const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
