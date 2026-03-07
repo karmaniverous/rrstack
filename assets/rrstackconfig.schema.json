@@ -36,7 +36,8 @@
             "type": "string",
             "enum": [
               "active",
-              "blackout"
+              "blackout",
+              "event"
             ]
           },
           "duration": {
