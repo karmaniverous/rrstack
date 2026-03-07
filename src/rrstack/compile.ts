@@ -145,6 +145,31 @@ export const compileRule = (
   const freqRaw = (rule.options as { freq?: unknown }).freq;
   const isSpan = freqRaw === undefined;
 
+  // Event rule path: has freq but no duration, effect is 'event'
+  if (rule.effect === 'event') {
+    if (isSpan) {
+      throw new Error('Event rules must have a frequency (recurring)');
+    }
+    if (rule.duration) {
+      throw new Error('Event rules must not have a duration');
+    }
+    const isOpenStart = rule.options.starts === undefined;
+    const isOpenEnd = rule.options.ends === undefined;
+    const options = toRRuleOptions(rule.options, timezone, unit);
+    const r = new RRule(options);
+    return {
+      kind: 'event' as const,
+      effect: 'event' as const,
+      label: rule.label,
+      tz: timezone,
+      unit,
+      isOpenStart,
+      isOpenEnd,
+      options,
+      rrule: r,
+    };
+  }
+
   if (!isSpan) {
     // Recurring rule path
     if (!rule.duration) {
