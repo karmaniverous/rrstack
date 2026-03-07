@@ -29,6 +29,11 @@ Core coverage primitives
   - `options.freq` present (daily/weekly/monthly/etc.).
   - `dtstart/until/tzid` synthesized from JSON (unit/timezone aware).
   - Occurrence end computed by adding the rule’s `Duration` in the rule timezone.
+- Events (zero‑duration instants):
+  - `effect: ‘event’`; `duration` must be omitted.
+  - Recurring events have `options.freq`; one‑time events use only `options.starts`.
+  - Events do not contribute to coverage; they are queried separately via `getEvents`/`nextEvent`.
+  - An event is suppressed if the coverage cascade classifies its instant as `’blackout’`.
 
 Key helpers
 

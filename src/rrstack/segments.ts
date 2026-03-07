@@ -4,7 +4,7 @@
  * - classifyRange: 'active' | 'blackout' | 'partial' by scanning segments.
  */
 
-import type { CompiledRecurRule, CompiledRule } from './compile';
+import type { CompiledRule, CompiledRecurRule } from './compile';
 import {
   computeOccurrenceEnd,
   domainMax,
@@ -20,7 +20,7 @@ const cascadedStatus = (
   rules: CompiledRule[],
 ): InstantStatus => {
   for (let i = covering.length - 1; i >= 0; i--) {
-    if (covering[i]) return rules[i].effect;
+    if (covering[i]) return rules[i].effect as InstantStatus;
   }
   return 'blackout';
 };
@@ -34,6 +34,7 @@ const lastStartBefore = (
     const s = typeof rule.start === 'number' ? rule.start : domainMin();
     return s <= cursor ? s : undefined;
   }
+  if (rule.kind === 'event' || rule.kind === 'oneTimeEvent') return undefined;
   const recur = rule;
   const wall = epochToWallDate(cursor, recur.tz, recur.unit);
   const d = recur.rrule.before(wall, true);
@@ -73,6 +74,7 @@ export function* getSegments(
   // Initialize per-rule state at "from"
   for (let i = 0; i < n; i++) {
     const r = rules[i];
+    if (r.kind === 'event' || r.kind === 'oneTimeEvent') continue;
     if (r.kind === 'span') {
       const s = typeof r.start === 'number' ? r.start : domainMin();
       const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
@@ -94,7 +96,7 @@ export function* getSegments(
     const recur = r;
     const last = lastStartBefore(recur, from);
     if (typeof last === 'number') {
-      const e = computeOccurrenceEnd(recur, last);
+      const e = computeOccurrenceEnd(recur as CompiledRecurRule, last);
       if (e > from) {
         covering[i] = true;
         nextEnd[i] = e;
@@ -137,7 +139,7 @@ export function* getSegments(
           nextStart[i] = undefined;
         } else {
           const recur = rules[i] as CompiledRecurRule;
-          const e = computeOccurrenceEnd(recur, t);
+          const e = computeOccurrenceEnd(recur as CompiledRecurRule, t);
           nextEnd[i] = e;
           // advance nextStart for this rule
           const wallT = epochToWallDate(t, recur.tz, recur.unit);

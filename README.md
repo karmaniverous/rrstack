@@ -4,7 +4,7 @@
 
 Timezone‑aware RRULE stacking engine for Node/TypeScript.
 
-RRStack lets you compose a prioritized stack of time‑based rules (using the battle‑tested rrule library) to compute whether a given instant is active or blackout, enumerate active/blackout segments over a window, classify ranges as active/blackout/partial, and derive effective active bounds. It handles real‑world timezone behavior, including DST transitions, by computing coverage in the rule’s IANA timezone.
+RRStack lets you compose a prioritized stack of time‑based rules (using the battle‑tested rrule library) to compute whether a given instant is active or blackout, enumerate active/blackout segments over a window, classify ranges as active/blackout/partial, derive effective active bounds, and query point‑in‑time events (recurring or one‑time) that respect the coverage cascade. It handles real‑world timezone behavior, including DST transitions, by computing coverage in the rule’s IANA timezone.
 
 - Built on rrule for recurrence logic
 - Uses Luxon for timezone/DST‑correct duration arithmetic
@@ -85,6 +85,40 @@ const bounds = stack.getEffectiveBounds(); // { start?: number; end?: number; em
 // 7) Persist / restore
 const json = stack.toJson();
 const same = new RRStack(json);
+
+// 8) Events — zero-duration instants (recurring or one-time)
+const eventRules = [
+  // Recurring daily event at 05:00
+  {
+    effect: 'event' as const,
+    options: {
+      freq: 'daily' as const,
+      byhour: [5],
+      byminute: [0],
+      bysecond: [0],
+    },
+    label: 'daily-5am',
+  },
+  // One-time event (no freq, just a timestamp)
+  {
+    effect: 'event' as const,
+    options: { starts: Date.UTC(2024, 0, 15, 12, 0, 0) },
+    label: 'launch-party',
+  },
+];
+
+const eventStack = new RRStack({
+  timezone: 'America/Chicago',
+  rules: eventRules,
+});
+
+// Enumerate events in a window
+for (const evt of eventStack.getEvents(from, to)) {
+  // { at: number; label?: string }
+}
+
+// Next upcoming event (from now, default 366-day look-ahead)
+const next = eventStack.nextEvent(); // { at, label } | undefined
 ```
 
 ## Where to go next (Handbook)
@@ -112,7 +146,7 @@ For symbol‑level documentation (methods, parameters, and return types with cod
 
 ## Why RRStack?
 
-- Real‑world scheduling usually needs more than one RRULE. You have base activation windows, blackout exceptions, and occasional reactivations. RRStack provides a deterministic cascade: later rules override earlier ones at covered instants.
+- Real‑world scheduling usually needs more than one RRULE. You have base activation windows, blackout exceptions, occasional reactivations, and point‑in‑time events. RRStack provides a deterministic cascade: later rules override earlier ones at covered instants, and event rules let you attach zero‑duration instants (recurring or one‑time) that respect the cascade.
 - Time zones matter. We compute coverage in the rule’s IANA time zone with DST‑aware duration arithmetic (Luxon).
 - Half‑open intervals everywhere. All coverage follows [start, end). In seconds mode ('s'), ends are rounded up to the next second to avoid boundary false negatives.
 - JSON round‑trip. Store and reload stack configuration (with versioning and notices via `update()`).

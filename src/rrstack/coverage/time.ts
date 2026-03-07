@@ -68,9 +68,15 @@ export const floatingDateToZonedEpoch = (
  * - In 's' mode returns integer seconds and rounds up to honor [start,end).
  */
 export const computeOccurrenceEnd = (
-  rule: Pick<CompiledRecurRule, 'unit' | 'tz' | 'duration'>,
+  rule: Pick<CompiledRecurRule, 'unit' | 'tz' | 'duration' | 'fixedOffset'>,
   start: number,
 ): number => {
+  // Fast path: fixed-unit durations (hours/minutes/seconds) are pure arithmetic.
+  if (rule.fixedOffset !== undefined) {
+    if (rule.unit === 'ms') return start + rule.fixedOffset;
+    return Math.ceil(start + rule.fixedOffset);
+  }
+  // Slow path: calendar durations (days/months/years) need DST-aware Luxon math.
   const startZoned =
     rule.unit === 'ms'
       ? DateTime.fromMillis(start, { zone: rule.tz })

@@ -16,7 +16,7 @@
 
 import { DateTime } from 'luxon';
 
-import { type CompiledRule, compileRule } from './compile';
+import { type CompiledAnyEventRule, type CompiledCoverageRule, type CompiledEventRule, type CompiledRule, compileRule } from './compile';
 import { isValidTimeZone } from './coverage/time';
 import { DEFAULT_DEFAULT_EFFECT } from './defaults';
 import { describeCompiledRule } from './describe';
@@ -30,6 +30,7 @@ import { toJsonSnapshot } from './RRStack.persistence';
 import {
   classifyRangeOverWindow,
   getEffectiveBoundsFromCompiled,
+  getEventsInRange,
   getSegmentsOverWindow,
   isActiveAtCompiled,
 } from './RRStack.queries';
@@ -59,6 +60,12 @@ export class RRStack {
   public readonly options: RRStackOptionsNormalized;
 
   private compiled: CompiledRule[] = [];
+  /** Compiled event rules (not part of coverage cascade). */
+  private compiledEvents: CompiledAnyEventRule[] = [];
+  /** All compiled rules in original order (for describe/index operations). */
+  private allCompiled: CompiledRule[] = [];
+  /** Cached working set with baseline prepended. Invalidated on recompile. */
+  private __compiledWithBaseline: CompiledRule[] | null = null;
 
   /**
    * Build the baseline (virtual) span rule from defaultEffect.
@@ -82,9 +89,12 @@ export class RRStack {
       this.options.timeUnit,
     );
   }
-  /** Working set with baseline prepended (lowest priority). */
+  /** Working set with baseline prepended (lowest priority). Cached; invalidated on recompile. */
   private compiledWithBaseline(): CompiledRule[] {
-    return [this.makeBaseline(), ...this.compiled];
+    if (this.__compiledWithBaseline === null) {
+      this.__compiledWithBaseline = [this.makeBaseline(), ...this.compiled];
+    }
+    return this.__compiledWithBaseline;
   }
   /**
    * Create a new RRStack.
@@ -102,7 +112,10 @@ export class RRStack {
 
   private recompile(): void {
     const { timezone, timeUnit, rules } = this.options;
-    this.compiled = rules.map((r) => compileRule(r, timezone, timeUnit));
+    this.allCompiled = rules.map((r) => compileRule(r, timezone, timeUnit));
+    this.compiled = this.allCompiled.filter((r) => r.kind !== 'event' && r.kind !== 'oneTimeEvent');
+    this.compiledEvents = this.allCompiled.filter((r): r is CompiledAnyEventRule => r.kind === 'event' || r.kind === 'oneTimeEvent');
+    this.__compiledWithBaseline = null;
     if (this.__initialized) this.__notify();
   }
 
@@ -489,6 +502,45 @@ export class RRStack {
   getEffectiveBounds(): { start?: number; end?: number; empty: boolean } {
     return getEffectiveBoundsFromCompiled(this.compiledWithBaseline());
   }
+
+  /**
+   * Enumerate event instants within `[from, to)` that survive the coverage
+   * cascade (i.e., are not suppressed by a blackout).
+   *
+   * @param from - Start of the window (inclusive), in the configured unit.
+   * @param to - End of the window (exclusive), in the configured unit.
+   * @returns An iterable of `{ at: number; label?: string }` entries,
+   *          ordered chronologically.
+   */
+  *getEvents(
+    from: number,
+    to: number,
+  ): Iterable<{ at: number; label?: string }> {
+    yield* getEventsInRange(this.compiledWithBaseline(), this.compiledEvents, from, to);
+  }
+
+  /**
+   * Get the next event instant at or after `t` that survives the coverage cascade.
+   *
+   * @param t - Timestamp in the configured unit (defaults to now).
+   * @param lookAhead - Maximum look-ahead window in the configured unit.
+   *                    Defaults to 366 days.
+   * @returns The next event instant, or undefined if none found in the window.
+   */
+  nextEvent(
+    t?: number,
+    lookAhead?: number,
+  ): { at: number; label?: string } | undefined {
+    const now = t ?? this.now();
+    const defaultLookAhead = this.options.timeUnit === 'ms'
+      ? 366 * 24 * 60 * 60 * 1000
+      : 366 * 24 * 60 * 60;
+    const to = now + (lookAhead ?? defaultLookAhead);
+    for (const evt of this.getEvents(now, to)) {
+      return evt;
+    }
+    return undefined;
+  }
   /**
    * Describe a rule by index as human-readable text.
    * Leverages rrule.toText() plus effect and duration phrasing.   *
@@ -506,9 +558,9 @@ export class RRStack {
     if (!Number.isInteger(index)) {
       throw new TypeError('rule index must be an integer');
     }
-    if (index < 0 || index >= this.compiled.length)
+    if (index < 0 || index >= this.allCompiled.length)
       throw new RangeError('rule index out of range');
-    return describeCompiledRule(this.compiled[index], cfg);
+    return describeCompiledRule(this.allCompiled[index], cfg);
   }
 
   // Convenience rule mutators -------------------------------------------------

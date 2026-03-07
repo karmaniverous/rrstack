@@ -186,7 +186,7 @@ const RRuleRuntimeOptionsSchema = z
 /** JSON rule schema (strict keys; options defaults to empty). */ export const ruleLiteSchemaJson =
   z
     .object({
-      effect: z.enum(['active', 'blackout']),
+      effect: z.enum(['active', 'blackout', 'event']),
       duration: DurationPartsSchema.optional(),
       options: RRuleJsonOptionsSchema.default({}).optional(),
       label: z.string().optional(),
@@ -194,7 +194,27 @@ const RRuleRuntimeOptionsSchema = z
     .superRefine((val, ctx) => {
       const rawFreq = (val as { options?: { freq?: unknown } }).options?.freq;
       const hasFreq = typeof rawFreq === 'string';
-      if (hasFreq) {
+      if (val.effect === 'event') {
+        // Event rules must NOT have duration.
+        if (val.duration) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Event rules must not have a duration.',
+            path: ['duration'],
+          });
+        }
+        // One-time event (no freq) must have starts.
+        if (!hasFreq) {
+          const starts = (val as { options?: { starts?: unknown } }).options?.starts;
+          if (typeof starts !== 'number') {
+            ctx.addIssue({
+              code: 'custom',
+              message: 'One-time event rules must have a starts timestamp.',
+              path: ['options', 'starts'],
+            });
+          }
+        }
+      } else if (hasFreq) {
         // Recurring rule must provide a duration.
         if (!val.duration) {
           ctx.addIssue({
@@ -218,7 +238,7 @@ const RRuleRuntimeOptionsSchema = z
 /** Runtime rule schema (strict keys; options defaults to empty). */
 export const ruleLiteSchema = z
   .object({
-    effect: z.enum(['active', 'blackout']),
+    effect: z.enum(['active', 'blackout', 'event']),
     duration: DurationPartsSchema.optional(),
     options: RRuleRuntimeOptionsSchema.default({}).optional(),
     label: z.string().optional(),
@@ -226,7 +246,25 @@ export const ruleLiteSchema = z
   .superRefine((val, ctx) => {
     const rawFreq = (val as { options?: { freq?: unknown } }).options?.freq;
     const hasFreq = typeof rawFreq === 'string';
-    if (hasFreq) {
+    if (val.effect === 'event') {
+      if (val.duration) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Event rules must not have a duration.',
+          path: ['duration'],
+        });
+      }
+      if (!hasFreq) {
+        const starts = (val as { options?: { starts?: unknown } }).options?.starts;
+        if (typeof starts !== 'number') {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'One-time event rules must have a starts timestamp.',
+            path: ['options', 'starts'],
+          });
+        }
+      }
+    } else if (hasFreq) {
       if (!val.duration) {
         ctx.addIssue({
           code: 'custom',

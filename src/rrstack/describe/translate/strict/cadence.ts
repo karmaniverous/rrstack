@@ -1,5 +1,5 @@
 import type { DescribeConfig } from '../../config';
-import type { RuleDescriptorRecur } from '../../descriptor';
+import type { RuleDescriptorEvent, RuleDescriptorRecur } from '../../descriptor';
 import {
   everyWithInterval,
   formatLocalTimeList,
@@ -19,7 +19,7 @@ import { appendLimits } from './limits';
  * by the top-level translator via cfg.showBounds).
  */
 export const buildCadence = (
-  d: RuleDescriptorRecur,
+  d: RuleDescriptorRecur | RuleDescriptorEvent,
   cfg: DescribeConfig = {},
 ): string => {
   const lex = mergeLexicon(undefined, cfg.lexicon);

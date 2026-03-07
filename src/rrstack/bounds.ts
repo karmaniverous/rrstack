@@ -1,3 +1,4 @@
+import type { CompiledRule } from './compile';
 /**
  * Effective bounds (orchestrator).
  * - Delegates to focused modules for earliest/latest and open-end detection.
@@ -6,7 +7,6 @@
 import { computeEarliestStart } from './bounds/earliest';
 import { computeLatestEnd } from './bounds/latest';
 import { detectOpenEnd } from './bounds/openEnd';
-import type { CompiledRule } from './compile';
 import { domainMin, epochToWallDate } from './coverage/time';
 import type { UnixTimeUnit } from './types';
 
@@ -66,6 +66,7 @@ export const getEffectiveBounds = (
 function isCascadeInactiveEverywhere(rules: CompiledRule[]): boolean {
   const min = domainMin();
   const hasAnyStart = (r: CompiledRule): boolean => {
+    if (r.kind === 'event' || r.kind === 'oneTimeEvent') return false;
     if (r.kind === 'span') {
       const s = typeof r.start === 'number' ? r.start : min;
       const e = typeof r.end === 'number' ? r.end : undefined;
@@ -77,6 +78,7 @@ function isCascadeInactiveEverywhere(rules: CompiledRule[]): boolean {
 
   // Any open-ended active source → not empty
   for (const r of rules) {
+    if (r.kind === 'event' || r.kind === 'oneTimeEvent') continue;
     if (r.effect === 'active' && r.isOpenEnd) {
       if (r.kind === 'span') return false;
       const hasUntil = !!(r.options as { until?: Date | null }).until;

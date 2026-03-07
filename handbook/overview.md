@@ -10,6 +10,8 @@ RRStack composes a prioritized stack of time‑based rules (rrule + optional con
 - Stream contiguous segments: `getSegments(from, to)` — half‑open `[start, end)`.
 - Classify windows: `classifyRange(from, to)` — `'active' | 'blackout' | 'partial'`.
 - Compute effective bounds with open‑sided detection: `getEffectiveBounds()`.
+- Enumerate event instants: `getEvents(from, to)` — zero‑duration points (recurring or one‑time) that survive the coverage cascade.
+- Find the next event: `nextEvent(t?)` — first upcoming event instant, or `undefined`.
 
 Key traits
 

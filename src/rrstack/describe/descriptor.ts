@@ -1,11 +1,11 @@
-import type { CompiledRecurRule, CompiledRule } from '../compile';
+import type { CompiledEventRule, CompiledOneTimeEventRule, CompiledRecurRule, CompiledRule } from '../compile';
 import { floatingDateToZonedEpoch } from '../coverage/time';
 import { Frequency, Weekday } from '../rrule.runtime';
 import type { DurationParts, FrequencyStr, UnixTimeUnit } from '../types';
 
 export interface RuleDescriptorBase {
-  kind: 'span' | 'recur';
-  effect: 'active' | 'blackout';
+  kind: 'span' | 'recur' | 'event' | 'oneTimeEvent';
+  effect: 'active' | 'blackout' | 'event';
   tz: string;
   unit: UnixTimeUnit;
   clamps?: { starts?: number; ends?: number };
@@ -43,7 +43,21 @@ export interface RuleDescriptorSpan extends RuleDescriptorBase {
   kind: 'span';
 }
 
-export type RuleDescriptor = RuleDescriptorRecur | RuleDescriptorSpan;
+export interface RuleDescriptorEvent extends RuleDescriptorBase {
+  kind: 'event';
+  freq: FrequencyStr;
+  interval: number;
+  by: RuleDescriptorRecur['by'];
+  count?: number;
+  until?: number;
+}
+
+export interface RuleDescriptorOneTimeEvent extends RuleDescriptorBase {
+  kind: 'oneTimeEvent';
+  at: number;
+}
+
+export type RuleDescriptor = RuleDescriptorRecur | RuleDescriptorSpan | RuleDescriptorEvent | RuleDescriptorOneTimeEvent;
 
 const asArray = <T>(v: T | T[] | null | undefined): T[] =>
   v == null ? [] : Array.isArray(v) ? v : [v];
@@ -76,6 +90,12 @@ const asDurationParts = (r: CompiledRecurRule): DurationParts => {
 };
 
 export const buildRuleDescriptor = (c: CompiledRule): RuleDescriptor => {
+  if (c.kind === 'oneTimeEvent') {
+    return buildOneTimeEventDescriptor(c);
+  }
+  if (c.kind === 'event') {
+    return buildEventDescriptor(c);
+  }
   if (c.kind === 'span') {
     return {
       kind: 'span',
@@ -184,4 +204,78 @@ export const buildRuleDescriptor = (c: CompiledRule): RuleDescriptor => {
         : undefined,
   };
   return desc;
+};
+
+
+const buildOneTimeEventDescriptor = (c: CompiledOneTimeEventRule): RuleDescriptorOneTimeEvent => ({
+  kind: 'oneTimeEvent',
+  effect: 'event',
+  tz: c.tz,
+  unit: c.unit,
+  at: c.at,
+});
+
+const buildEventDescriptor = (c: CompiledEventRule): RuleDescriptorEvent => {
+  const dtstart = (c.options as { dtstart?: Date | null }).dtstart ?? undefined;
+  const untilDate = (c.options as { until?: Date | null }).until ?? undefined;
+  let startsEpoch: number | undefined;
+  let endsEpoch: number | undefined;
+  if (!c.isOpenStart && dtstart instanceof Date) {
+    startsEpoch = floatingDateToZonedEpoch(dtstart, c.tz, c.unit);
+  }
+  if (!c.isOpenEnd && untilDate instanceof Date) {
+    endsEpoch = floatingDateToZonedEpoch(untilDate, c.tz, c.unit);
+  }
+  const clamps =
+    typeof startsEpoch === 'number' || typeof endsEpoch === 'number'
+      ? { starts: startsEpoch, ends: endsEpoch }
+      : undefined;
+  const weekdays: WeekdayPos[] = [];
+  for (const w of asArray<unknown>(
+    (c.options as { byweekday?: unknown }).byweekday,
+  )) {
+    if (w instanceof Weekday) {
+      const idx = ((w.weekday + 1) % 7 || 7) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+      const nth = typeof w.n === 'number' && w.n !== 0 ? w.n : undefined;
+      weekdays.push({ weekday: idx, nth });
+    } else if (typeof w === 'number') {
+      const idx = ((w + 1) % 7 || 7) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+      weekdays.push({ weekday: idx });
+    }
+  }
+  const wkst = (c.options as { wkst?: unknown }).wkst;
+  const toWkst = (w: unknown): 1 | 2 | 3 | 4 | 5 | 6 | 7 | undefined => {
+    if (typeof w === 'number') return ((w + 1) % 7 || 7) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    if (w instanceof Weekday) return ((w.weekday + 1) % 7 || 7) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    return undefined;
+  };
+  return {
+    kind: 'event',
+    effect: 'event',
+    tz: c.tz,
+    unit: c.unit,
+    clamps,
+    freq: freqToStr(c.options.freq as number),
+    interval:
+      typeof c.options.interval === 'number' && c.options.interval > 0
+        ? c.options.interval
+        : 1,
+    by: {
+      months: asArray<number>((c.options as { bymonth?: number[] | number | null }).bymonth),
+      monthDays: asArray<number>((c.options as { bymonthday?: number[] | number | null }).bymonthday),
+      yearDays: asArray<number>((c.options as { byyearday?: number[] | number | null }).byyearday),
+      weekNos: asArray<number>((c.options as { byweekno?: number[] | number | null }).byweekno),
+      weekdays,
+      hours: asArray<number>((c.options as { byhour?: number[] | number | null }).byhour),
+      minutes: asArray<number>((c.options as { byminute?: number[] | number | null }).byminute),
+      seconds: asArray<number>((c.options as { bysecond?: number[] | number | null }).bysecond),
+      setpos: asArray<number>((c.options as { bysetpos?: number[] | number | null }).bysetpos),
+      wkst: toWkst(wkst),
+    },
+    count: (c.options as { count?: number | null }).count ?? undefined,
+    until:
+      !c.isOpenEnd && untilDate instanceof Date
+        ? floatingDateToZonedEpoch(untilDate, c.tz, c.unit)
+        : undefined,
+  };
 };

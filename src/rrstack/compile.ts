@@ -18,6 +18,7 @@ import { domainMin } from './coverage/time';
 import { datetime, Frequency, RRule } from './rrule.runtime';
 import {
   type FrequencyStr,
+  type EffectType,
   type InstantStatus,
   type RuleJson,
   type RuleOptionsJson,
@@ -26,7 +27,7 @@ import {
 } from './types';
 
 export interface CompiledRuleBase {
-  effect: InstantStatus;
+  effect: EffectType;
   label?: string;
   tz: string;
   unit: UnixTimeUnit;
@@ -37,6 +38,12 @@ export interface CompiledRuleBase {
 export interface CompiledRecurRule extends CompiledRuleBase {
   kind: 'recur';
   duration: Duration;
+  /**
+   * Pre-computed fixed offset in the configured unit, or undefined if the
+   * duration contains calendar components (days/months/years) that require
+   * DST-aware arithmetic.
+   */
+  fixedOffset: number | undefined;
   options: RRuleOptions;
   rrule: RRuleClass;
 }
@@ -49,7 +56,23 @@ export interface CompiledSpanRule extends CompiledRuleBase {
   end?: number;
 }
 
-export type CompiledRule = CompiledRecurRule | CompiledSpanRule;
+export interface CompiledEventRule extends CompiledRuleBase {
+  kind: 'event';
+  options: RRuleOptions;
+  rrule: RRuleClass;
+}
+
+export interface CompiledOneTimeEventRule extends CompiledRuleBase {
+  kind: 'oneTimeEvent';
+  /** Event instant in the configured unit. */
+  at: number;
+}
+
+export type CompiledAnyEventRule = CompiledEventRule | CompiledOneTimeEventRule;
+
+export type CompiledRule = CompiledRecurRule | CompiledSpanRule | CompiledEventRule | CompiledOneTimeEventRule;
+/** Coverage-only rules (excludes events). Effect is always 'active' | 'blackout'. */
+export type CompiledCoverageRule = (CompiledRecurRule | CompiledSpanRule) & { effect: InstantStatus };
 
 // Internal mapping from human-readable freq to rrule enum
 const FREQ_MAP: Record<FrequencyStr, RRuleFrequency> = {
@@ -137,6 +160,44 @@ export const compileRule = (
   const freqRaw = (rule.options as { freq?: unknown }).freq;
   const isSpan = freqRaw === undefined;
 
+  // Event rule path: effect is 'event'
+  if (rule.effect === 'event') {
+    if (rule.duration) {
+      throw new Error('Event rules must not have a duration');
+    }
+    if (isSpan) {
+      // One-time event: no freq, must have starts
+      if (typeof rule.options.starts !== 'number') {
+        throw new Error('One-time event rules must have a starts timestamp');
+      }
+      return {
+        kind: 'oneTimeEvent' as const,
+        effect: 'event' as const,
+        label: rule.label,
+        tz: timezone,
+        unit,
+        isOpenStart: false,
+        isOpenEnd: rule.options.ends === undefined,
+        at: rule.options.starts,
+      };
+    }
+    const isOpenStart = rule.options.starts === undefined;
+    const isOpenEnd = rule.options.ends === undefined;
+    const options = toRRuleOptions(rule.options, timezone, unit);
+    const r = new RRule(options);
+    return {
+      kind: 'event' as const,
+      effect: 'event' as const,
+      label: rule.label,
+      tz: timezone,
+      unit,
+      isOpenStart,
+      isOpenEnd,
+      options,
+      rrule: r,
+    };
+  }
+
   if (!isSpan) {
     // Recurring rule path
     if (!rule.duration) {
@@ -155,11 +216,25 @@ export const compileRule = (
     const options = toRRuleOptions(rule.options, timezone, unit);
     const r = new RRule(options);
 
+    // Pre-compute fixed offset for durations with no calendar components.
+    const dObj = rule.duration;
+    const hasCalendar =
+      (dObj.days !== undefined && dObj.days > 0) ||
+      (dObj.weeks !== undefined && dObj.weeks > 0) ||
+      (dObj.months !== undefined && dObj.months > 0) ||
+      (dObj.years !== undefined && dObj.years > 0);
+    const fixedOffset = hasCalendar
+      ? undefined
+      : unit === 'ms'
+        ? duration.as('milliseconds')
+        : duration.as('seconds');
+
     return {
       kind: 'recur',
       effect: rule.effect,
       label: rule.label,
       duration,
+      fixedOffset,
       options,
       tz: timezone,
       unit,

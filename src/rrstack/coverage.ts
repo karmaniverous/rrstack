@@ -39,6 +39,8 @@ export { computeOccurrenceEnd } from './coverage/time';
  * @returns True if `t` lies within a covered occurrence.
  */
 export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
+  // Event rules have no coverage (zero duration); they never "cover" an instant.
+  if (rule.kind === 'event' || rule.kind === 'oneTimeEvent') return false;
   // Span: simple half-open range check with open sides
   if (rule.kind === 'span') {
     const s = typeof rule.start === 'number' ? rule.start : domainMin();

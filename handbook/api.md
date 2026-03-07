@@ -57,6 +57,14 @@ new RRStack(opts: RRStackOptions);
   - Earliest active start and latest active end across the stack.
   - Omits open sides; `empty` indicates “no active coverage.”
 
+- `*getEvents(from: number, to: number): Iterable<{ at: number; label?: string }>`
+  - Enumerates event instants in `[from, to)`, chronologically ordered.
+  - Events suppressed by blackout coverage are excluded.
+
+- `nextEvent(t?: number, lookAhead?: number): { at: number; label?: string } | undefined`
+  - Returns the next event instant at or after `t` (defaults to `now()`).
+  - `lookAhead` caps the search window (defaults to 366 days in the configured unit).
+
 - `formatInstant(t: number, opts?: { format?: string; locale?: string }): string`
   - Formats `t` in the stack’s timezone; ISO by default, or a Luxon format string.
 
@@ -120,11 +128,14 @@ export interface RRStackOptionsNormalized
 
 // Rule JSON and options
 export interface RuleJson {
-  effect: 'active' | 'blackout';
-  duration?: DurationParts; // required for recurring; omit for spans
+  effect: 'active' | 'blackout' | 'event';
+  duration?: DurationParts; // required for recurring coverage; omit for spans and events
   options: RuleOptionsJson; // JSON‑friendly subset of rrule Options
   label?: string;
 }
+// When effect is 'event', duration must be omitted.
+// With freq → recurring event (CompiledEventRule).
+// Without freq but with starts → one-time event (CompiledOneTimeEventRule).
 
 export type RuleOptionsJson = Partial<
   Omit<import('rrule').Options, 'dtstart' | 'until' | 'tzid' | 'freq'>
@@ -154,10 +165,26 @@ export interface DurationParts {
 
 // Outputs and enums
 export type InstantStatus = 'active' | 'blackout';
+export type EffectType = InstantStatus | 'event';
 export type RangeStatus = InstantStatus | 'partial';
 export type UnixTimeUnit = 'ms' | 's';
 export type TimeZoneId = string & { __brand: 'TimeZoneId' };
 export type DefaultEffect = InstantStatus | 'auto';
+
+// Compiled event rule types (internal, returned by compilation)
+export interface CompiledEventRule {
+  kind: 'event';
+  effect: 'event';
+  label?: string;
+  // Recurring event backed by an rrule instance
+}
+
+export interface CompiledOneTimeEventRule {
+  kind: 'oneTimeEvent';
+  effect: 'event';
+  label?: string;
+  at: number; // event instant in the configured unit
+}
 ```
 
 ## Notices and UpdatePolicy
