@@ -1,4 +1,4 @@
-import type { CompiledRule, CompiledRecurRule } from '../compile';
+import type { CompiledRecurRule, CompiledRule } from '../compile';
 /**
  * Open-end detection without far-future probes.
  *

@@ -17,8 +17,8 @@ import type {
 import { domainMin } from './coverage/time';
 import { datetime, Frequency, RRule } from './rrule.runtime';
 import {
-  type FrequencyStr,
   type EffectType,
+  type FrequencyStr,
   type InstantStatus,
   type RuleJson,
   type RuleOptionsJson,
@@ -70,9 +70,15 @@ export interface CompiledOneTimeEventRule extends CompiledRuleBase {
 
 export type CompiledAnyEventRule = CompiledEventRule | CompiledOneTimeEventRule;
 
-export type CompiledRule = CompiledRecurRule | CompiledSpanRule | CompiledEventRule | CompiledOneTimeEventRule;
+export type CompiledRule =
+  | CompiledRecurRule
+  | CompiledSpanRule
+  | CompiledEventRule
+  | CompiledOneTimeEventRule;
 /** Coverage-only rules (excludes events). Effect is always 'active' | 'blackout'. */
-export type CompiledCoverageRule = (CompiledRecurRule | CompiledSpanRule) & { effect: InstantStatus };
+export type CompiledCoverageRule = (CompiledRecurRule | CompiledSpanRule) & {
+  effect: InstantStatus;
+};
 
 // Internal mapping from human-readable freq to rrule enum
 const FREQ_MAP: Record<FrequencyStr, RRuleFrequency> = {

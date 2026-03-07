@@ -213,7 +213,12 @@ describe('event effect type', () => {
     it('skips events suppressed by blackout', () => {
       const eventRule: RuleJson = {
         effect: 'event',
-        options: { freq: 'daily', byhour: [5, 10], byminute: [0], bysecond: [0] },
+        options: {
+          freq: 'daily',
+          byhour: [5, 10],
+          byminute: [0],
+          bysecond: [0],
+        },
         label: 'twice-daily',
       };
       const blackoutRule: RuleJson = {

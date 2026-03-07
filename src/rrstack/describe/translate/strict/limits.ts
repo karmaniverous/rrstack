@@ -1,4 +1,7 @@
-import type { RuleDescriptorEvent, RuleDescriptorRecur } from '../../descriptor';
+import type {
+  RuleDescriptorEvent,
+  RuleDescriptorRecur,
+} from '../../descriptor';
 
 export const appendLimits = (
   phrase: string,

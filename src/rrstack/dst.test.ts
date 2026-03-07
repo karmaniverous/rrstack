@@ -48,7 +48,9 @@ describe('DST handling (America/Chicago)', () => {
     // Disambiguate: use CDT (pre-transition, UTC-5) explicitly.
     // Luxon's fromISO with zone name may pick either offset on ambiguous times,
     // depending on ICU version. CDT is the pre-transition interpretation.
-    const start = DateTime.fromISO('2021-11-07T01:30:00', { zone: 'UTC-5' }).toMillis();
+    const start = DateTime.fromISO('2021-11-07T01:30:00', {
+      zone: 'UTC-5',
+    }).toMillis();
     if (cr.kind !== 'recur') throw new Error('expected recurring rule');
     const end = computeOccurrenceEnd(cr, start);
     const endLocal = DateTime.fromMillis(end, { zone: tz });
