@@ -59,6 +59,8 @@ export class RRStack {
   public readonly options: RRStackOptionsNormalized;
 
   private compiled: CompiledRule[] = [];
+  /** Cached working set with baseline prepended. Invalidated on recompile. */
+  private __compiledWithBaseline: CompiledRule[] | null = null;
 
   /**
    * Build the baseline (virtual) span rule from defaultEffect.
@@ -82,9 +84,12 @@ export class RRStack {
       this.options.timeUnit,
     );
   }
-  /** Working set with baseline prepended (lowest priority). */
+  /** Working set with baseline prepended (lowest priority). Cached; invalidated on recompile. */
   private compiledWithBaseline(): CompiledRule[] {
-    return [this.makeBaseline(), ...this.compiled];
+    if (this.__compiledWithBaseline === null) {
+      this.__compiledWithBaseline = [this.makeBaseline(), ...this.compiled];
+    }
+    return this.__compiledWithBaseline;
   }
   /**
    * Create a new RRStack.
@@ -103,6 +108,7 @@ export class RRStack {
   private recompile(): void {
     const { timezone, timeUnit, rules } = this.options;
     this.compiled = rules.map((r) => compileRule(r, timezone, timeUnit));
+    this.__compiledWithBaseline = null;
     if (this.__initialized) this.__notify();
   }
 
