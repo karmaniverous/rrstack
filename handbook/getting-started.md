@@ -119,6 +119,63 @@ const span = {
 
 Coverage is continuous across `[starts, ends)`; either side may be open.
 
+## Events (recurring and one‑time)
+
+Event rules represent zero‑duration instants rather than coverage windows. They participate in the cascade: an event that falls inside a blackout window is suppressed.
+
+```ts
+// Recurring event: daily at 09:00
+const alarm = {
+  effect: 'event' as const,
+  options: {
+    freq: 'daily' as const,
+    byhour: [9],
+    byminute: [0],
+    bysecond: [0],
+  },
+  label: 'morning-alarm',
+};
+
+// One-time event (no freq, just a timestamp)
+const deadline = {
+  effect: 'event' as const,
+  options: { starts: Date.UTC(2024, 5, 1, 17, 0, 0) },
+  label: 'project-deadline',
+};
+
+const stack = new RRStack({
+  timezone: 'America/Chicago',
+  rules: [alarm, deadline],
+});
+```
+
+### Enumerate events in a window
+
+```ts
+const from = Date.UTC(2024, 0, 10);
+const to = Date.UTC(2024, 0, 11);
+
+for (const evt of stack.getEvents(from, to)) {
+  // { at: number; label?: string }
+}
+```
+
+### Next upcoming event
+
+```ts
+const next = stack.nextEvent(); // from now, 366-day look-ahead
+// { at: number; label?: string } | undefined
+
+// Or from a specific time with a custom look-ahead
+const next2 = stack.nextEvent(Date.UTC(2024, 0, 10), 7 * 24 * 3600 * 1000);
+```
+
+Tips
+
+- Events do not affect coverage queries (`isActiveAt`, `getSegments`, `classifyRange`, `getEffectiveBounds`).
+- Events suppressed by blackout coverage are excluded from `getEvents` and `nextEvent`.
+- Event rules must not have a `duration`.
+
 ## Baseline (defaultEffect)
 
 RRStack behaves as if a virtual, open‑ended span rule is prepended:

@@ -28,7 +28,7 @@ export interface RRStackOptions {
     - `'active' | 'blackout'`: use exactly that baseline anywhere uncovered.
   - Applies uniformly to `isActiveAt`, `getSegments`, `classifyRange`, `getEffectiveBounds`.
 
-See all rule shapes in [Core API and Types](./api.md#types-selected).
+See all rule shapes — including event rules — in [Core API and Types](./api.md#types-selected).
 
 ## Time units and rounding
 
