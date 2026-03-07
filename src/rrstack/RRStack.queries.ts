@@ -4,8 +4,8 @@
  * - Reuse existing streaming and coverage services.
  */
 
-import type { CompiledEventRule, CompiledRule } from './compile';
 import { ruleCoversInstant } from './coverage';
+import type { CompiledEventRule, CompiledRule } from './compile';
 import { epochToWallDate, floatingDateToZonedEpoch } from './coverage/time';
 import { classifyRange, getEffectiveBounds, getSegments } from './sweep';
 import type { RangeStatus } from './types';

@@ -1,8 +1,8 @@
-import type { RuleDescriptorRecur } from '../../descriptor';
+import type { RuleDescriptorEvent, RuleDescriptorRecur } from '../../descriptor';
 
 export const appendLimits = (
   phrase: string,
-  d: RuleDescriptorRecur,
+  d: RuleDescriptorRecur | RuleDescriptorEvent,
   showCount = false,
 ): string => {
   if (showCount && typeof d.count === 'number' && d.count > 0) {

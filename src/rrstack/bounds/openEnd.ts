@@ -1,3 +1,4 @@
+import type { CompiledRule, CompiledRecurRule } from '../compile';
 /**
  * Open-end detection without far-future probes.
  *
@@ -9,7 +10,6 @@
  *   • Baseline active (compiled as open span).
  * - A blackout open-ended span closes the future starting at its start; it is not open-ended.
  */
-import type { CompiledRecurRule, CompiledRule } from '../compile';
 import { domainMin, epochToWallDate } from '../coverage/time';
 
 export const detectOpenEnd = (rules: CompiledRule[]): boolean => {

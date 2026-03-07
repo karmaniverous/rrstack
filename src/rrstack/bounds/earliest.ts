@@ -74,9 +74,9 @@ export const computeEarliestStart = (
         }
       } else {
         // span: earliest candidate is the (possibly open) start clamp
-        t = typeof r.start === 'number' ? r.start : min;
+        t = typeof (r as any).start === 'number' ? (r as any).start : min;
         // If the span ends before min, ignore
-        const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
+        const e = typeof (r as any).end === 'number' ? (r as any).end : domainMax(r.unit);
         if (e <= min) t = undefined;
       }
       if (typeof t !== 'number') continue;
@@ -138,8 +138,8 @@ export const computeEarliestStart = (
     for (let i = 0; i < n; i++) {
       const r = rules[i];
       if (r.kind === 'span') {
-        const s = typeof r.start === 'number' ? r.start : domainMin();
-        const e = typeof r.end === 'number' ? r.end : domainMax(r.unit);
+        const s = typeof (r as any).start === 'number' ? (r as any).start : domainMin();
+        const e = typeof (r as any).end === 'number' ? (r as any).end : domainMax(r.unit);
         if (s <= cursor && e > cursor) {
           covering[i] = true;
           nextEnd[i] = e;
@@ -153,7 +153,7 @@ export const computeEarliestStart = (
       const s = lastStartBefore(recur, cursor);
       const wallT = epochToWallDate(cursor, recur.tz, recur.unit);
       if (typeof s === 'number') {
-        const e = computeOccurrenceEnd(recur, s);
+        const e = computeOccurrenceEnd(recur as import('../compile').CompiledRecurRule, s);
         if (e > cursor) {
           covering[i] = true;
           nextEnd[i] = e;
@@ -244,7 +244,7 @@ export const computeEarliestStart = (
         }
       } else {
         // span
-        const s = typeof r.start === 'number' ? r.start : undefined;
+        const s = typeof (r as any).start === 'number' ? (r as any).start : undefined;
         if (typeof s === 'number') {
           candidate =
             typeof candidate === 'number' ? Math.min(candidate, s) : s;

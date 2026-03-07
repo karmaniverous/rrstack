@@ -16,7 +16,7 @@ export const cascadedStatus = (
   rules: CompiledRule[],
 ): 'active' | 'blackout' => {
   for (let i = covering.length - 1; i >= 0; i--) {
-    if (covering[i]) return rules[i].effect;
+    if (covering[i]) return rules[i].effect as 'active' | 'blackout';
   }
   return 'blackout';
 };
@@ -56,6 +56,6 @@ export const coversAt = (rule: CompiledRule, t: number): boolean => {
   const recur = rule;
   const s = lastStartBefore(recur, t);
   if (typeof s !== 'number') return false;
-  const e = computeOccurrenceEnd(recur, s);
+  const e = computeOccurrenceEnd(recur as import('../compile').CompiledRecurRule, s);
   return s <= t && t < e;
 };

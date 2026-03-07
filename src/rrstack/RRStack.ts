@@ -113,7 +113,7 @@ export class RRStack {
   private recompile(): void {
     const { timezone, timeUnit, rules } = this.options;
     this.allCompiled = rules.map((r) => compileRule(r, timezone, timeUnit));
-    this.compiled = this.allCompiled.filter((r): r is CompiledCoverageRule => r.kind !== 'event') as CompiledRule[];
+    this.compiled = this.allCompiled.filter((r) => r.kind !== 'event');
     this.compiledEvents = this.allCompiled.filter((r): r is CompiledEventRule => r.kind === 'event');
     this.__compiledWithBaseline = null;
     if (this.__initialized) this.__notify();

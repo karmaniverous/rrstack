@@ -4,7 +4,7 @@
  * - classifyRange: 'active' | 'blackout' | 'partial' by scanning segments.
  */
 
-import type { CompiledRecurRule, CompiledRule } from './compile';
+import type { CompiledRule, CompiledRecurRule } from './compile';
 import {
   computeOccurrenceEnd,
   domainMax,
@@ -20,7 +20,7 @@ const cascadedStatus = (
   rules: CompiledRule[],
 ): InstantStatus => {
   for (let i = covering.length - 1; i >= 0; i--) {
-    if (covering[i]) return rules[i].effect;
+    if (covering[i]) return rules[i].effect as InstantStatus;
   }
   return 'blackout';
 };
@@ -94,7 +94,7 @@ export function* getSegments(
     const recur = r;
     const last = lastStartBefore(recur, from);
     if (typeof last === 'number') {
-      const e = computeOccurrenceEnd(recur, last);
+      const e = computeOccurrenceEnd(recur as CompiledRecurRule, last);
       if (e > from) {
         covering[i] = true;
         nextEnd[i] = e;
@@ -137,7 +137,7 @@ export function* getSegments(
           nextStart[i] = undefined;
         } else {
           const recur = rules[i] as CompiledRecurRule;
-          const e = computeOccurrenceEnd(recur, t);
+          const e = computeOccurrenceEnd(recur as CompiledRecurRule, t);
           nextEnd[i] = e;
           // advance nextStart for this rule
           const wallT = epochToWallDate(t, recur.tz, recur.unit);

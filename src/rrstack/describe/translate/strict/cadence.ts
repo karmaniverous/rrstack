@@ -19,7 +19,7 @@ import { appendLimits } from './limits';
  * by the top-level translator via cfg.showBounds).
  */
 export const buildCadence = (
-  d: RuleDescriptorRecur,
+  d: RuleDescriptorRecur | RuleDescriptorEvent,
   cfg: DescribeConfig = {},
 ): string => {
   const lex = mergeLexicon(undefined, cfg.lexicon);
