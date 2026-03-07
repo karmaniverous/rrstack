@@ -33,7 +33,7 @@ describe("'s' timeUnit: DST handling and rounded ends", () => {
     expect(end - start).toBe(60 * 60);
   });
 
-  it('fall back: 2021-11-07 01:30 + 1h => 01:30 local; 3600 seconds', () => {
+  it('fall back: 2021-11-07 01:30 CDT + 1h => 01:30 CST; 3600 seconds', () => {
     const rule: RuleJson = {
       effect: 'active',
       duration: { hours: 1 },
@@ -46,7 +46,8 @@ describe("'s' timeUnit: DST handling and rounded ends", () => {
     };
     const cr = compileRule(rule, tzId, 's');
 
-    const start = sec('2021-11-07T01:30:00', tz);
+    // Disambiguate: use CDT (pre-transition, UTC-5) explicitly.
+    const start = Math.trunc(DateTime.fromISO('2021-11-07T01:30:00', { zone: 'UTC-5' }).toSeconds());
     if (cr.kind !== 'recur') throw new Error('expected recurring rule');
     const end = computeOccurrenceEnd(cr, start);
     const endLocal = DateTime.fromSeconds(end, { zone: tz });
