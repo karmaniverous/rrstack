@@ -5,11 +5,11 @@
  */
 
 import type { CompiledAnyEventRule, CompiledRule } from './compile';
+import { ruleCoversInstant } from './coverage';
 import {
   enumerateStartsArithmetic,
   isSimpleSubDailyEvent,
 } from './coverage/arithmetic';
-import { ruleCoversInstant } from './coverage';
 import { epochToWallDate, floatingDateToZonedEpoch } from './coverage/time';
 import { classifyRange, getEffectiveBounds, getSegments } from './sweep';
 import type { RangeStatus } from './types';

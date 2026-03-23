@@ -7,56 +7,75 @@
  * arithmetic instead of iterating from dtstart.
  */
 
-import type { CompiledRecurRule } from '../compile';
+import type { Options as RRuleOptions } from 'rrule';
+
+import type { CompiledEventRule, CompiledRecurRule } from '../compile';
 import { Frequency } from '../rrule.runtime';
-import { domainMin, floatingDateToZonedEpoch } from './time';
 import type { UnixTimeUnit } from '../types';
+import { domainMin, floatingDateToZonedEpoch } from './time';
 
-/** Frequency unit size in milliseconds. */
-const FREQ_UNIT_MS: Partial<Record<number, number>> = {
-  [Frequency.SECONDLY]: 1_000,
-  [Frequency.MINUTELY]: 60_000,
-  [Frequency.HOURLY]: 3_600_000,
+/**
+ * Sub-daily frequency values from the rrule Frequency enum.
+ * Used to gate arithmetic resolution.
+ */
+const SUB_DAILY_FREQS: ReadonlySet<number> = new Set([
+  Frequency.SECONDLY,
+  Frequency.MINUTELY,
+  Frequency.HOURLY,
+]);
+
+/** Frequency unit size in the configured unit. Keyed by Frequency enum value. */
+const FREQ_UNIT: Record<UnixTimeUnit, Partial<Record<number, number>>> = {
+  ms: {
+    [Frequency.SECONDLY]: 1_000,
+    [Frequency.MINUTELY]: 60_000,
+    [Frequency.HOURLY]: 3_600_000,
+  },
+  s: {
+    [Frequency.SECONDLY]: 1,
+    [Frequency.MINUTELY]: 60,
+    [Frequency.HOURLY]: 3_600,
+  },
 };
 
-/** Frequency unit size in seconds. */
-const FREQ_UNIT_S: Partial<Record<number, number>> = {
-  [Frequency.SECONDLY]: 1,
-  [Frequency.MINUTELY]: 60,
-  [Frequency.HOURLY]: 3_600,
-};
+/**
+ * BY* option keys from rrule's Options type that disqualify a rule from
+ * arithmetic resolution. Derived from `keyof RRuleOptions` to stay in sync
+ * with the rrule type definition.
+ */
+type ByOptionKey = Extract<keyof RRuleOptions, `by${string}`>;
 
-/** BY* option keys that disqualify a rule from arithmetic resolution. */
-const BY_KEYS = [
+const BY_KEYS: readonly ByOptionKey[] = [
   'bysetpos',
   'bymonth',
   'bymonthday',
+  'bynmonthday',
   'byyearday',
   'byweekno',
   'byweekday',
+  'bynweekday',
   'byhour',
   'byminute',
   'bysecond',
   'byeaster',
 ] as const;
 
-const isSimpleSubDailyOptions = (options: Record<string, unknown>): boolean => {
-  const freq = options.freq;
-  if (
-    freq !== Frequency.SECONDLY &&
-    freq !== Frequency.MINUTELY &&
-    freq !== Frequency.HOURLY
-  ) {
-    return false;
-  }
-
+/**
+ * Check whether rrule options represent a simple sub-daily pattern (no BY*
+ * constraints, sub-daily frequency).
+ */
+const hasNoByConstraints = (options: RRuleOptions): boolean => {
+  // Runtime note: our compiled options object is a "shaken" partial,
+  // so BY* keys may be omitted (undefined) even though the rrule type
+  // declares them as nullable fields.
+  const o = options as unknown as Record<string, unknown>;
   for (const key of BY_KEYS) {
-    const v = options[key];
-    if (v !== undefined && v !== null) return false;
+    if (o[key] != null) return false;
   }
-
   return true;
 };
+
+const isSubDailyFreq = (freq: number): boolean => SUB_DAILY_FREQS.has(freq);
 
 /**
  * Whether a compiled recur rule qualifies for O(1) arithmetic resolution.
@@ -68,22 +87,18 @@ const isSimpleSubDailyOptions = (options: Record<string, unknown>): boolean => {
  */
 export const isSimpleSubDaily = (rule: CompiledRecurRule): boolean => {
   if (rule.fixedOffset === undefined) return false;
-
-  // Cast via unknown to avoid TS2352 (rrule Options has no index signature).
-  const o = rule.options as unknown as Record<string, unknown>;
-  return isSimpleSubDailyOptions(o);
+  if (!isSubDailyFreq(rule.options.freq)) return false;
+  return hasNoByConstraints(rule.options);
 };
 
 /**
- * Whether an event rule qualifies for O(1) arithmetic enumeration.
- * Same as isSimpleSubDaily(), but without the fixedOffset requirement.
+ * Whether a compiled event rule qualifies for O(1) arithmetic enumeration.
+ * Same frequency/constraint check as isSimpleSubDaily, but without the
+ * fixedOffset requirement (events have no duration).
  */
-export const isSimpleSubDailyEvent = (rule: {
-  options: unknown;
-}): boolean => {
-  const o = rule.options as Record<string, unknown> | null;
-  if (!o) return false;
-  return isSimpleSubDailyOptions(o);
+export const isSimpleSubDailyEvent = (rule: CompiledEventRule): boolean => {
+  if (!isSubDailyFreq(rule.options.freq)) return false;
+  return hasNoByConstraints(rule.options);
 };
 
 /**
@@ -93,13 +108,12 @@ export const isSimpleSubDailyEvent = (rule: {
  */
 const getAnchor = (rule: {
   isOpenStart: boolean;
-  options: unknown;
+  options: RRuleOptions;
   tz: string;
   unit: UnixTimeUnit;
 }): number => {
   if (rule.isOpenStart) return domainMin();
-  const options = rule.options as { dtstart?: Date | null } | null;
-  const dtstart = options?.dtstart ?? null;
+  const dtstart = rule.options.dtstart;
   if (dtstart instanceof Date) {
     return floatingDateToZonedEpoch(dtstart, rule.tz, rule.unit);
   }
@@ -109,19 +123,22 @@ const getAnchor = (rule: {
 /**
  * Compute the period (in the configured unit) between occurrences.
  */
-const getPeriod = (rule: { options: unknown; unit: UnixTimeUnit }): number => {
-  const o = rule.options as Record<string, unknown> | null;
-  if (!o) throw new Error('Cannot compute period for a rule with no options.');
-  
-  const freqUnit =
-    rule.unit === 'ms'
-      ? FREQ_UNIT_MS[o.freq as number]
-      : FREQ_UNIT_S[o.freq as number];
+const getPeriod = (rule: {
+  options: RRuleOptions;
+  unit: UnixTimeUnit;
+}): number => {
+  const freq = rule.options.freq;
+  const freqUnit = FREQ_UNIT[rule.unit][freq];
+  if (freqUnit === undefined) {
+    throw new Error(
+      `Cannot compute period: frequency ${String(freq)} is not sub-daily.`,
+    );
+  }
   const interval =
-    typeof o.interval === 'number' && o.interval > 0
-      ? o.interval
+    typeof rule.options.interval === 'number' && rule.options.interval > 0
+      ? rule.options.interval
       : 1;
-  return interval * freqUnit!;
+  return interval * freqUnit;
 };
 
 /**
@@ -149,12 +166,16 @@ export const nearestOccurrenceBefore = (
  * Enumerate all occurrence starts in [from, to) for a simple sub-daily rule
  * using O(1) arithmetic per occurrence.
  *
- * @param rule - A compiled recur rule that passes isSimpleSubDaily().
+ * @param rule - A compiled rule (recur or event) that passes the simple
+ *              sub-daily check.
  * @param from - Window start (inclusive).
  * @param to - Window end (exclusive).
  */
 export const enumerateStartsArithmetic = (
-  rule: { isOpenStart: boolean; options: unknown; tz: string; unit: UnixTimeUnit },
+  rule: Pick<
+    CompiledRecurRule | CompiledEventRule,
+    'isOpenStart' | 'options' | 'tz' | 'unit'
+  >,
   from: number,
   to: number,
 ): number[] => {
