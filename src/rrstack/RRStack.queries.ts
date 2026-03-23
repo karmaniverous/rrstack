@@ -5,6 +5,10 @@
  */
 
 import type { CompiledAnyEventRule, CompiledRule } from './compile';
+import {
+  enumerateStartsArithmetic,
+  isSimpleSubDailyEvent,
+} from './coverage/arithmetic';
 import { ruleCoversInstant } from './coverage';
 import { epochToWallDate, floatingDateToZonedEpoch } from './coverage/time';
 import { classifyRange, getEffectiveBounds, getSegments } from './sweep';
@@ -69,6 +73,16 @@ export function* getEventsInRange(
       }
       continue;
     }
+
+    // O(1) fast path for simple sub-daily events.
+    if (isSimpleSubDailyEvent(rule)) {
+      const starts = enumerateStartsArithmetic(rule, from, to);
+      for (const at of starts) {
+        candidates.push({ at, label: rule.label });
+      }
+      continue;
+    }
+
     const wallFrom = epochToWallDate(from, rule.tz, rule.unit);
     const wallTo = epochToWallDate(to, rule.tz, rule.unit);
     // rrule.between with inc=true includes starts at exactly 'from'

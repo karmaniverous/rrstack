@@ -3,6 +3,7 @@
  */
 
 import type { CompiledRule } from '../compile';
+import { isSimpleSubDaily } from '../coverage/arithmetic';
 import {
   computeOccurrenceEnd,
   domainMax,
@@ -42,37 +43,48 @@ export const computeEarliestStart = (
       if (r.kind === 'event' || r.kind === 'oneTimeEvent') continue;
       let t: number | undefined;
       if (r.kind === 'recur') {
-        // Base for first occurrence:
-        // - If dtstart is present (closed-start), use it as the base.
-        // - Otherwise use the rule-specific wall minimum for this rule.
-        //
-        // For rules WITHOUT explicit BY time parts (no BYHOUR/BYMINUTE/BYSECOND),
-        // RRULE inherits dtstart's time-of-day. In that case, treat dtstart itself
-        // as the earliest candidate to avoid environment-local drift.
-        // Otherwise (BY time parts are present), ask RRULE for the first occurrence
-        // at/after the base via rrule.after(base, true).
-        const dtstart =
-          (r.options as { dtstart?: Date | null }).dtstart ?? null;
-
-        const hasByHour =
-          Array.isArray(r.options.byhour) ||
-          typeof r.options.byhour === 'number';
-        const hasByMinute =
-          Array.isArray(r.options.byminute) ||
-          typeof r.options.byminute === 'number';
-        const hasBySecond =
-          Array.isArray(r.options.bysecond) ||
-          typeof r.options.bysecond === 'number';
-        const hasExplicitTime = hasByHour || hasByMinute || hasBySecond;
-
-        if (dtstart instanceof Date && !hasExplicitTime) {
-          // No explicit BY time: first occurrence inherits dtstart wall time.
-          t = floatingDateToZonedEpoch(dtstart, r.tz, r.unit);
+        // O(1) fast path for simple sub-daily rules: compute first start
+        // directly without calling rrule.after().
+        if (isSimpleSubDaily(r)) {
+          const dtstart =
+            (r.options as { dtstart?: Date | null }).dtstart ?? null;
+          t =
+            dtstart instanceof Date
+              ? floatingDateToZonedEpoch(dtstart, r.tz, r.unit)
+              : domainMin();
         } else {
-          const base = dtstart ?? wallMinPerRule[i]!;
-          const d = r.rrule.after(base, true);
-          if (!d) continue;
-          t = floatingDateToZonedEpoch(d, r.tz, r.unit);
+          // Base for first occurrence:
+          // - If dtstart is present (closed-start), use it as the base.
+          // - Otherwise use the rule-specific wall minimum for this rule.
+          //
+          // For rules WITHOUT explicit BY time parts (no BYHOUR/BYMINUTE/BYSECOND),
+          // RRULE inherits dtstart's time-of-day. In that case, treat dtstart itself
+          // as the earliest candidate to avoid environment-local drift.
+          // Otherwise (BY time parts are present), ask RRULE for the first occurrence
+          // at/after the base via rrule.after(base, true).
+          const dtstart =
+            (r.options as { dtstart?: Date | null }).dtstart ?? null;
+
+          const hasByHour =
+            Array.isArray(r.options.byhour) ||
+            typeof r.options.byhour === 'number';
+          const hasByMinute =
+            Array.isArray(r.options.byminute) ||
+            typeof r.options.byminute === 'number';
+          const hasBySecond =
+            Array.isArray(r.options.bysecond) ||
+            typeof r.options.bysecond === 'number';
+          const hasExplicitTime = hasByHour || hasByMinute || hasBySecond;
+
+          if (dtstart instanceof Date && !hasExplicitTime) {
+            // No explicit BY time: first occurrence inherits dtstart wall time.
+            t = floatingDateToZonedEpoch(dtstart, r.tz, r.unit);
+          } else {
+            const base = dtstart ?? wallMinPerRule[i]!;
+            const d = r.rrule.after(base, true);
+            if (!d) continue;
+            t = floatingDateToZonedEpoch(d, r.tz, r.unit);
+          }
         }
       } else {
         // span: earliest candidate is the (possibly open) start clamp

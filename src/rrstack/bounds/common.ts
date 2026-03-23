@@ -4,6 +4,10 @@
  */
 import type { CompiledRule } from '../compile';
 import {
+  isSimpleSubDaily,
+  nearestOccurrenceBefore,
+} from '../coverage/arithmetic';
+import {
   computeOccurrenceEnd,
   domainMax,
   domainMin,
@@ -38,6 +42,10 @@ export const lastStartBefore = (
     return s <= cursor ? s : undefined;
   }
   if (rule.kind === 'event' || rule.kind === 'oneTimeEvent') return undefined;
+  // O(1) fast path for simple sub-daily rules.
+  if (isSimpleSubDaily(rule)) {
+    return nearestOccurrenceBefore(rule, cursor);
+  }
   const wall = epochToWallDate(cursor, rule.tz, rule.unit);
   const d = rule.rrule.before(wall, true);
   if (!d) return undefined;
