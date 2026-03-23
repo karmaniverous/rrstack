@@ -2,12 +2,22 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.17.1](https://github.com/karmaniverous/rrstack/compare/0.17.0...0.17.1)
+
+- fix: O(1) occurrence resolution for sub-daily frequencies (issue #8) [`#9`](https://github.com/karmaniverous/rrstack/pull/9)
+- refactor: derive BY_KEYS from rrule Options types [`5fb239d`](https://github.com/karmaniverous/rrstack/commit/5fb239dcab6e63a8d33ad22feb99a9eb1bae76cf)
+- refactor: normalize compiled options, remove radash/shake dependency [`7f42353`](https://github.com/karmaniverous/rrstack/commit/7f4235384918a3330cf0363f345680462be0cd4d)
+- fix: throw on unreachable null options in getPeriod (Gemini review) [`8914467`](https://github.com/karmaniverous/rrstack/commit/89144676f79bbfd30d293322cfc4b17dc5351b27)
+
 #### [0.17.0](https://github.com/karmaniverous/rrstack/compare/0.16.2...0.17.0)
+
+> 7 March 2026
 
 - bugfix: pin @rollup/plugin-typescript to 12.1.4 [`#5`](https://github.com/karmaniverous/rrstack/pull/5)
 - chore: update dependencies and fix lint errors [`#4`](https://github.com/karmaniverous/rrstack/pull/4)
 - feat: event effect type, one-time events, and perf improvements [`#3`](https://github.com/karmaniverous/rrstack/pull/3)
 - chore: update dependencies, fix lint errors, remove trivial renames [`424894b`](https://github.com/karmaniverous/rrstack/commit/424894b4aeda243f42458b63752518de4976c570)
+- chore: release v0.17.0 [`177e454`](https://github.com/karmaniverous/rrstack/commit/177e454ca8d2a64e4eabf967ba68b0b8f1724e46)
 - feat: add getEvents/nextEvent methods and event test suite [`72008ac`](https://github.com/karmaniverous/rrstack/commit/72008ac48a5fc80da3c3094d1b0b072aba513bb8)
 - feat: support one-time events [`53e5f9a`](https://github.com/karmaniverous/rrstack/commit/53e5f9acb27cf47581cb3d3f2e3cd1fc4ba1284e)
 - feat: event effect type for zero-duration instant semantics [`b3b0a55`](https://github.com/karmaniverous/rrstack/commit/b3b0a55237c0c0ad3a18e482cff6ca6018a69024)
