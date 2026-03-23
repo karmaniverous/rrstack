@@ -4,6 +4,7 @@
 
 import type { CompiledRecurRule } from '../compile';
 import { Frequency } from '../rrule.runtime';
+import { enumerateStartsArithmetic, isSimpleSubDaily } from './arithmetic';
 import {
   dayLength,
   epochToWallDate,
@@ -32,6 +33,11 @@ export const enumerateStarts = (
   to: number,
   horizon: number,
 ): number[] => {
+  // O(1) fast path for simple sub-daily rules.
+  if (isSimpleSubDaily(rule)) {
+    return enumerateStartsArithmetic(rule, from - Math.max(0, horizon), to);
+  }
+
   const tz = rule.tz;
   const unit = rule.unit;
   const windowStart = epochToWallDate(from - Math.max(0, horizon), tz, unit);

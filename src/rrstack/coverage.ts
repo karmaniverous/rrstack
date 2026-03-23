@@ -8,6 +8,10 @@
 import { DateTime } from 'luxon';
 
 import type { CompiledRule } from './compile';
+import {
+  isSimpleSubDaily,
+  nearestOccurrenceBefore,
+} from './coverage/arithmetic';
 import { enumerationHorizon } from './coverage/enumerate';
 import {
   localDayMatchesCommonPatterns,
@@ -47,6 +51,13 @@ export const ruleCoversInstant = (rule: CompiledRule, t: number): boolean => {
     const e = typeof rule.end === 'number' ? rule.end : domainMax(rule.unit);
     return s <= t && t < e;
   }
+  // O(1) fast path for simple sub-daily rules (no BY* constraints).
+  if (isSimpleSubDaily(rule)) {
+    const start = nearestOccurrenceBefore(rule, t);
+    if (start !== undefined) return start <= t && t < start + rule.fixedOffset!;
+    return false;
+  }
+
   // 0) Day-window enumeration: all starts occurring on local calendar day of t.
   {
     const local =
