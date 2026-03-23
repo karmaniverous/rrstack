@@ -111,7 +111,7 @@ const getAnchor = (rule: {
  */
 const getPeriod = (rule: { options: unknown; unit: UnixTimeUnit }): number => {
   const o = rule.options as Record<string, unknown> | null;
-  if (!o) return 0;
+  if (!o) throw new Error('Cannot compute period for a rule with no options.');
   
   const freqUnit =
     rule.unit === 'ms'
