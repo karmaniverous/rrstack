@@ -65,12 +65,8 @@ const BY_KEYS: readonly ByOptionKey[] = [
  * constraints, sub-daily frequency).
  */
 const hasNoByConstraints = (options: RRuleOptions): boolean => {
-  // Runtime note: our compiled options object is a "shaken" partial,
-  // so BY* keys may be omitted (undefined) even though the rrule type
-  // declares them as nullable fields.
-  const o = options as unknown as Record<string, unknown>;
   for (const key of BY_KEYS) {
-    if (o[key] != null) return false;
+    if (options[key] !== null) return false;
   }
   return true;
 };

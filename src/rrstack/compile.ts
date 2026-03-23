@@ -7,7 +7,6 @@
  */
 
 import { DateTime, Duration } from 'luxon';
-import { shake } from 'radash';
 import type {
   Frequency as RRuleFrequency,
   Options as RRuleOptions,
@@ -147,7 +146,30 @@ export const toRRuleOptions = (
     partial.until = toWall(options.ends, timezone, unit);
   }
 
-  return shake(partial) as RRuleOptions;
+  // Normalize: set all expected RRuleOptions keys to their defaults when
+  // absent, so the compiled object conforms to the full Options shape
+  // without requiring downstream consumers to cast through unknown.
+  return {
+    freq: partial.freq!,
+    dtstart: partial.dtstart ?? null,
+    interval: partial.interval ?? 1,
+    wkst: partial.wkst ?? null,
+    count: partial.count ?? null,
+    until: partial.until ?? null,
+    tzid: partial.tzid ?? null,
+    bysetpos: partial.bysetpos ?? null,
+    bymonth: partial.bymonth ?? null,
+    bymonthday: partial.bymonthday ?? null,
+    bynmonthday: partial.bynmonthday ?? null,
+    byyearday: partial.byyearday ?? null,
+    byweekno: partial.byweekno ?? null,
+    byweekday: partial.byweekday ?? null,
+    bynweekday: partial.bynweekday ?? null,
+    byhour: partial.byhour ?? null,
+    byminute: partial.byminute ?? null,
+    bysecond: partial.bysecond ?? null,
+    byeaster: partial.byeaster ?? null,
+  } satisfies RRuleOptions;
 };
 /**
  * Compile a JSON rule into a unit- and timezone-aware {@link CompiledRule}.
