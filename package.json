@@ -123,12 +123,9 @@
         "npm run test"
       ],
       "after:bump": [
-        "npm run build"
-      ],
-      "before:npm:release": [
         "npx auto-changelog -p",
         "npm run docs",
-        "git add -A"
+        "git add CHANGELOG.md"
       ],
       "after:release": [
         "git switch -c release/${version}",
